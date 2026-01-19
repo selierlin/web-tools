@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码工具（生成 + 解码 Tab 紧凑版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 1.2rem; /* 减少标题下方间距，更紧凑 */
+            font-size: 1.6rem; /* 缩小标题字体，节省空间 */
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.8rem; /* 减少标题下边框内边距 */
+        }
+
+        /* 优化：Tab 标签栏紧凑样式（大幅减少空间占用） */
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 1rem; /* 减少Tab栏下方间距 */
+            justify-content: center; /* 居中对齐，视觉更紧凑 */
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1.2rem; /* 减少按钮内边距，缩小尺寸 */
+            border: none;
+            background: none;
+            font-size: 0.9rem; /* 缩小按钮字体 */
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            margin: 0 0.3rem; /* 减少按钮间距 */
+        }
+
+        .tab-btn.active {
+            color: #38b2ac;
+            border-bottom-color: #38b2ac;
+            font-weight: 500;
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #4a5568;
+            border-bottom-color: #e2e8f0;
+        }
+
+        /* 新增：Tab 内容区域样式 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem; /* 减少表单间距，更紧凑 */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.6rem; /* 减少标签下方间距 */
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 0.9rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #2d3748;
+            resize: none;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #38b2ac;
+            box-shadow: 0 0 0 3px rgba(56, 178, 172, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            max-height: 200px;
+        }
+
+        .search-group {
+            margin-bottom: 1.2rem; /* 减少搜索框间距 */
+            padding: 0 0.2rem;
+        }
+
+        /* 优化：解码功能样式（增加拖拽上传相关样式） */
+        .decode-group {
+            margin: 1.5rem 0; /* 减少解码区域上下间距 */
+            padding: 1.5rem;
+            border: 1px dashed #38b2ac;
+            border-radius: 8px;
+            /* 拖拽上传核心样式 */
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* 拖拽悬浮态：高亮边框，提示用户可释放 */
+        .decode-group.drag-over {
+            border-color: #4299e1;
+            background-color: rgba(66, 153, 225, 0.05);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        /* 拖拽上传提示（默认隐藏，拖拽悬浮时显示） */
+        .drag-tip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #4299e1;
+            gap: 0.5rem;
+            /* 新增：禁止重复渲染导致闪烁，优化层级稳定性 */
+            pointer-events: none;
+        }
+
+        .decode-group.drag-over .drag-tip {
+            display: flex;
+        }
+
+        .drag-tip i {
+            font-size: 2rem;
+        }
+
+        .decode-group h3 {
+            color: #38b2ac;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .decode-btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #uploadBtn {
+            flex: 1;
+            background-color: #4299e1;
+            color: #ffffff;
+        }
+
+        #uploadBtn:hover {
+            background-color: #3182ce;
+        }
+
+        #pasteBtn {
+            flex: 1;
+            background-color: #9f7aea;
+            color: #ffffff;
+        }
+
+        #pasteBtn:hover {
+            background-color: #805ad5;
+        }
+
+        #decodeResult {
+            width: 100%;
+            min-height: 80px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 1rem;
+            background-color: #fafbfc;
+            color: #2d3748;
+            font-size: 0.9rem;
+            white-space: pre-line;
+            word-break: break-all;
+        }
+
+        #copyDecodeResult {
+            margin-top: 0.8rem;
+            background-color: #38b2ac;
+            color: #ffffff;
+            width: 100%;
+        }
+
+        #copyDecodeResult:hover {
+            background-color: #319795;
+        }
+
+        .decode-tip {
+            text-align: center;
+            color: #718096;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem; /* 减少按钮组下方间距 */
+        }
+
+        button {
+            padding: 0.9rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #generateBtn {
+            flex: 2;
+            background-color: #38b2ac;
+            color: #ffffff;
+        }
+
+        #generateBtn:hover {
+            background-color: #319795;
+        }
+
+        #resetBtn {
+            flex: 1;
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        #resetBtn:hover {
+            background-color: #cbd5e0;
+        }
+
+        #clearAllBtn {
+            flex: 1;
+            background-color: #e53e3e;
+            color: #ffffff;
+        }
+
+        #clearAllBtn:hover {
+            background-color: #c53030;
+        }
+
+        /* 紧凑网格布局 */
+        .qrcodes-wrap {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .qrcodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.8rem;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border: 1px dashed #e2e8f0;
+            border-radius: 8px;
+        }
+
+        /* 紧凑二维码卡片样式 */
+        .qrcode-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.7rem;
+            background-color: #fafbfc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .qrcode-card .close-btn {
+            position: absolute;
+            top: 0.3rem;
+            right: 0.3rem;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            color: #718096;
+            border: none;
+            padding: 0;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .qrcode-card .close-btn:hover {
+            background-color: #e53e3e;
+            color: #ffffff;
+        }
+
+        .qrcode-card .qrcode-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            max-height: 160px;
+        }
+
+        /* 紧凑布局下的内容描述 */
+        .qrcode-card .qrcode-desc {
+            font-size: 0.8rem;
+            color: #4a5568;
+            text-align: center;
+            word-break: break-all;
+            white-space: pre-line;
+            max-width: 100%;
+            padding: 0 0.3rem;
+            line-height: 1.3;
+            margin-bottom: 0.3rem;
+        }
+
+        /* 紧凑布局下的时间样式 */
+        .qrcode-card .qrcode-time {
+            font-size: 0.7rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .qrcode-card .qrcode-full-desc {
+            font-size: 0.7rem;
+            color: #38b2ac;
+            cursor: pointer;
+        }
+
+        .qrcode-card .qrcode-full-desc:hover {
+            text-decoration: underline;
+        }
+
+        /* 完整内容弹窗样式（新增复制按钮样式） */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .modal .full-content {
+            font-size: 0.95rem;
+            color: #4a5568;
+            line-height: 1.6;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            white-space: pre-line;
+            word-break: break-all;
+            margin-bottom: 1rem;
+        }
+
+        /* 新增：复制按钮样式 */
+        .modal .copy-btn {
+            background-color: #4299e1;
+            color: #ffffff;
+            width: 100%;
+            margin-bottom: 0.8rem;
+        }
+
+        .modal .copy-btn:hover {
+            background-color: #3182ce;
+        }
+
+        /* 新增：复制成功提示样式 */
+        .modal .copy-tip {
+            text-align: center;
+            color: #38b2ac;
+            font-size: 0.85rem;
+            margin-bottom: 0.8rem;
+            display: none;
+        }
+
+        .modal .close-modal {
+            background-color: #38b2ac;
+            color: #ffffff;
+            width: 100%;
+        }
+
+        .modal .close-modal:hover {
+            background-color: #319795;
+        }
+
+        .empty-tip, .search-empty-tip {
+            text-align: center;
+            padding: 2rem 0;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+    </style>
+    <!-- 引入图标库（用于拖拽提示图标，增强视觉体验） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>二维码工具（生成 + 解码）</h1>
+
+        <!-- 优化：紧凑版 Tab 标签栏 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="tab-generate">二维码生成</button>
+            <button class="tab-btn" data-tab="tab-decode">二维码解码</button>
+        </div>
+
+        <!-- Tab 1：二维码生成（原有核心功能，默认显示） -->
+        <div class="tab-content active" id="tab-generate">
+            <div class="form-group">
+                <label for="content">二维码内容（支持文本、网址、手机号、邮箱等）</label>
+                <textarea id="content" placeholder="请输入要生成二维码的内容，例如：https://www.example.com 或 13812345678"></textarea>
+            </div>
+
+            <div class="search-group">
+                <label for="searchInput">搜索二维码内容（模糊匹配）</label>
+                <input type="text" id="searchInput" placeholder="输入关键词搜索历史二维码...">
+            </div>
+
+            <div class="btn-group">
+                <button id="generateBtn">生成并添加二维码</button>
+                <button id="resetBtn">重置表单</button>
+                <button id="clearAllBtn">清空所有二维码</button>
+            </div>
+
+            <div class="qrcodes-wrap">
+                <div id="qrcodesGrid" class="qrcodes-grid">
+                    <div class="empty-tip">暂无生成的二维码，输入内容后点击生成按钮即可添加</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2：二维码解码（独立分离，新增拖拽上传） -->
+        <div class="tab-content" id="tab-decode">
+            <div class="decode-group" id="decodeDropArea">
+                <!-- 拖拽上传提示（新增） -->
+                <div class="drag-tip">
+                    <i class="fa fa-cloud-upload"></i>
+                    <span>释放图片即可完成上传解析</span>
+                </div>
+
+                <h3>二维码解码功能（支持上传/粘贴/拖拽）</h3>
+                <div class="decode-btn-group">
+                    <button id="uploadBtn">上传二维码图片解析</button>
+                    <button id="pasteBtn">粘贴二维码图片解析</button>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                <label for="decodeResult">解码结果：</label>
+                <div id="decodeResult"></div>
+                <button id="copyDecodeResult">复制解码结果</button>
+                <div class="decode-tip" id="decodeTip">复制成功！内容已存入剪贴板</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完整内容弹窗（保留原有，归属生成功能） -->
+    <div id="contentModal" class="modal">
+        <div class="modal-content">
+            <h3>二维码完整原始内容</h3>
+            <div id="fullContent" class="full-content"></div>
+            <div id="copyTip" class="copy-tip">复制成功！内容已存入剪贴板</div>
+            <button class="copy-btn" onclick="copyFullContent()">复制完整内容</button>
+            <button class="close-modal" onclick="closeModal()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 引入依赖库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script>
+        // 获取DOM元素
+        const contentInput = document.getElementById('content');
+        const generateBtn = document.getElementById('generateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const qrcodesGrid = document.getElementById('qrcodesGrid');
+        const contentModal = document.getElementById('contentModal');
+        const fullContent = document.getElementById('fullContent');
+        const searchInput = document.getElementById('searchInput');
+        const copyTip = document.getElementById('copyTip');
+        // 解码功能DOM元素
+        const uploadBtn = document.getElementById('uploadBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const fileInput = document.getElementById('fileInput');
+        const decodeResult = document.getElementById('decodeResult');
+        const copyDecodeResult = document.getElementById('copyDecodeResult');
+        const decodeTip = document.getElementById('decodeTip');
+        // Tab 相关DOM元素
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        // 拖拽上传核心DOM元素
+        const decodeDropArea = document.getElementById('decodeDropArea');
+
+        // 定义localStorage存储key，统一管理
+        const QR_STORAGE_KEY = 'qrcode_history_records';
+        // 初始化二维码序号（从本地存储读取，保证序号连续）
+        let qrCodeIndex = 1;
+        // 固定二维码尺寸
+        const DEFAULT_QR_SIZE = 250;
+        // 新增：拖拽状态锁，防止重复触发导致闪烁
+        let isDragging = false;
+
+        // ********** 优化：Tab 切换核心逻辑（保留，适配紧凑样式） **********
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 1. 获取当前要切换的Tab ID
+                const targetTab = this.dataset.tab;
+
+                // 2. 移除所有Tab的active状态（按钮 + 内容）
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                // 3. 为当前点击的按钮和对应内容添加active状态
+                this.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+
+        // 工具函数：格式化时间为 YYYY-MM-DD HH:MM:SS
+        function formatDateTime(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // 优化：工具函数 - 精准提取URL的host和末尾关键字符
+        function formatUrlContent(str) {
+            const urlRegex = /^(https?:\/\/)([^\/]+)(.*)$/i;
+            if (!urlRegex.test(str)) {
+                return str.length > 30 ? str.substring(0, 30) + '...' : str;
+            }
+
+            const matchResult = str.match(urlRegex);
+            const host = matchResult[2];
+            const restContent = matchResult[3];
+
+            const endCharRegex = /([a-zA-Z0-9]+)$/;
+            let endChars = '';
+            if (endCharRegex.test(restContent)) {
+                endChars = restContent.match(endCharRegex)[1];
+            } else {
+                endChars = restContent.slice(-10);
+            }
+
+            return endChars ? `${host}...${endChars}` : host;
+        }
+
+        // 工具函数：处理内容展示
+        function formatDisplayContent(content) {
+            const formattedContent = formatUrlContent(content);
+            return formattedContent.length > 35 ? formattedContent.substring(0, 35) + '...' : formattedContent;
+        }
+
+        // ********** localStorage 核心方法 **********
+        function getQRHistoryFromStorage() {
+            const historyStr = localStorage.getItem(QR_STORAGE_KEY);
+            if (!historyStr) return [];
+            
+            const history = JSON.parse(historyStr);
+            return history.sort((a, b) => {
+                return new Date(b.createTime) - new Date(a.createTime);
+            });
+        }
+
+        function deleteDuplicateQRFromStorage(content) {
+            let history = getQRHistoryFromStorage();
+            const nonDuplicateHistory = history.filter(record => record.content !== content);
+            localStorage.setItem(QR_STORAGE_KEY, JSON.stringify(nonDuplicateHistory));
+            qrCodeIndex = nonDuplicateHistory.length > 0 ? Math.max(...nonDuplicateHistory.map(item => item.index)) + 1 : 1;
+        }
+
+        function saveQRToStorage(qrRecord) {
+            deleteDuplicateQRFromStorage(qrRecord.content);
+            const history = getQRHistoryFromStorage();
+            history.push(qrRecord);
+            localStorage.setItem(QR_STORAGE_KEY, JSON.stringify(history));
+            qrCodeIndex = history.length + 1;
+        }
+
+        function deleteQRFromStorage(index) {
+            let history = getQRHistoryFromStorage();
+            history = history.filter(item => item.index !== index);
+            localStorage.setItem(QR_STORAGE_KEY, JSON.stringify(history));
+            qrCodeIndex = history.length > 0 ? Math.max(...history.map(item => item.index)) + 1 : 1;
+        }
+
+        function clearAllQRFromStorage() {
+            localStorage.removeItem(QR_STORAGE_KEY);
+            qrCodeIndex = 1;
+        }
+
+        // ********** 完整内容弹窗相关方法 **********
+        function openModal(content) {
+            fullContent.innerText = unescape(content);
+            contentModal.style.display = 'flex';
+            copyTip.style.display = 'none';
+        }
+
+        function closeModal() {
+            contentModal.style.display = 'none';
+            fullContent.innerText = '';
+            copyTip.style.display = 'none';
+        }
+
+        function copyFullContent() {
+            const content = fullContent.innerText;
+            if (!content) {
+                alert('暂无可复制的内容！');
+                return;
+            }
+
+            navigator.clipboard.writeText(content).then(() => {
+                copyTip.style.display = 'block';
+                setTimeout(() => {
+                    copyTip.style.display = 'none';
+                }, 3000);
+            }).catch(err => {
+                console.error('复制失败：', err);
+                alert('复制失败，请手动复制或检查浏览器权限！');
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && contentModal.style.display === 'flex') {
+                closeModal();
+            }
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === contentModal) {
+                closeModal();
+            }
+        });
+
+        // ********** 二维码渲染相关方法 **********
+        function renderQRHistory(filteredHistory = null) {
+            const history = filteredHistory 
+                ? [...filteredHistory].sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
+                : getQRHistoryFromStorage();
+            
+            if (history.length === 0) {
+                const isSearching = searchInput.value.trim() !== '';
+                const tipHtml = isSearching 
+                    ? '<div class="search-empty-tip">未找到匹配的二维码，请更换关键词重试</div>'
+                    : '<div class="empty-tip">暂无生成的二维码，输入内容后点击生成按钮即可添加</div>';
+                qrcodesGrid.innerHTML = tipHtml;
+                qrCodeIndex = 1;
+                return;
+            }
+
+            qrcodesGrid.innerHTML = '';
+            qrCodeIndex = Math.max(...history.map(item => item.index)) + 1;
+
+            history.forEach(record => {
+                const qrCard = document.createElement('div');
+                qrCard.className = 'qrcode-card';
+                qrCard.dataset.index = record.index;
+
+                const displayContent = formatDisplayContent(record.content);
+                qrCard.innerHTML = `
+                    <button class="close-btn" onclick="deleteSingleQRCode(this, ${record.index})">×</button>
+                    <img class="qrcode-img" src="${record.base64Url}" alt="第${record.index}个二维码">
+                    <div class="qrcode-desc">${displayContent}</div>
+                    <div class="qrcode-time">生成时间：${record.createTime}</div>
+                    <div class="qrcode-full-desc" onclick="openModal('${escape(record.content)}')">查看完整内容</div>
+                `;
+
+                qrcodesGrid.appendChild(qrCard);
+            });
+        }
+
+        function searchQRCode() {
+            const searchKeyword = searchInput.value.trim().toLowerCase();
+            const allHistory = getQRHistoryFromStorage();
+
+            if (!searchKeyword) {
+                renderQRHistory();
+                return;
+            }
+
+            const matchedHistory = allHistory.filter(record => 
+                record.content.toLowerCase().includes(searchKeyword)
+            );
+
+            renderQRHistory(matchedHistory);
+        }
+
+        // ********** 二维码生成相关方法 **********
+        function generateAndAddQRCode() {
+            const content = contentInput.value.trim();
+
+            if (!content) {
+                alert('请先输入要生成二维码的内容，不能为空！');
+                contentInput.focus();
+                return;
+            }
+
+            QRCode.toDataURL(content, {
+                width: DEFAULT_QR_SIZE,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            }, (error, url) => {
+                if (error) {
+                    console.error('生成二维码失败：', error);
+                    alert('生成二维码失败，请检查输入内容或刷新页面重试！');
+                    return;
+                }
+
+                const emptyTip = qrcodesGrid.querySelector('.empty-tip');
+                if (emptyTip) {
+                    qrcodesGrid.removeChild(emptyTip);
+                }
+
+                const now = new Date();
+                const qrRecord = {
+                    index: qrCodeIndex,
+                    content: content,
+                    size: DEFAULT_QR_SIZE,
+                    base64Url: url,
+                    createTime: formatDateTime(now)
+                };
+
+                saveQRToStorage(qrRecord);
+                searchQRCode();
+                contentInput.value = '';
+                contentInput.focus();
+            });
+        }
+
+        function resetForm() {
+            contentInput.value = '';
+            contentInput.focus();
+        }
+
+        function clearAllQRCode() {
+            const emptyTip = qrcodesGrid.querySelector('.empty-tip');
+            const searchEmptyTip = qrcodesGrid.querySelector('.search-empty-tip');
+            if (qrcodesGrid.children.length === 0 || 
+                (qrcodesGrid.children.length === 1 && (emptyTip || searchEmptyTip))) {
+                alert('当前没有可清空的二维码！');
+                return;
+            }
+
+            if (confirm('确定要清空所有生成的二维码吗？此操作不可恢复！')) {
+                qrcodesGrid.innerHTML = '<div class="empty-tip">暂无生成的二维码，输入内容后点击生成按钮即可添加</div>';
+                clearAllQRFromStorage();
+                searchInput.value = '';
+            }
+        }
+
+        function deleteSingleQRCode(btn, index) {
+            const qrCard = btn.parentElement;
+            qrcodesGrid.removeChild(qrCard);
+            deleteQRFromStorage(index);
+            searchQRCode();
+        }
+
+        // ********** 二维码解码核心功能（新增拖拽上传） **********
+        function decodeQRCodeFromImage(imageData) {
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            if (code) {
+                return code.data;
+            } else {
+                return null;
+            }
+        }
+
+        function getImageDataFromFile(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    callback(imageData);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 处理文件解析（抽取公共方法，供上传按钮和拖拽上传复用）
+        function handleFileDecode(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('请选择有效的图片文件！');
+                return;
+            }
+
+            getImageDataFromFile(file, function(imageData) {
+                const result = decodeQRCodeFromImage(imageData);
+                if (result) {
+                    decodeResult.textContent = result;
+                } else {
+                    decodeResult.textContent = '未能识别出二维码，请检查图片是否清晰、完整！';
+                }
+            });
+        }
+
+        function handleUploadDecode() {
+            fileInput.click();
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            handleFileDecode(file);
+            // 重置文件输入框，避免重复选择同一文件无法触发change事件
+            this.value = '';
+        });
+
+        async function handlePasteDecode() {
+            try {
+                // 优化1：移除主动查询权限，直接尝试读取剪贴板，避免冗余提示
+                const clipboardItems = await navigator.clipboard.read();
+                for (const item of clipboardItems) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const file = new File([blob], 'qrcode-paste.png', { type: type });
+                            handleFileDecode(file);
+                            return;
+                        }
+                    }
+                }
+
+                alert('剪贴板中未检测到图片，请先复制二维码图片再尝试！');
+            } catch (err) {
+                console.error('粘贴解析失败：', err);
+                // 优化2：统一友好提示，包含权限指引，不冗余
+                alert('粘贴解析失败！请先在浏览器设置中开启剪贴板读取权限，或尝试上传图片解析。');
+            }
+        }
+
+        function copyDecodeResultContent() {
+            const content = decodeResult.textContent.trim();
+            if (!content || content === '未能识别出二维码，请检查图片是否清晰、完整！') {
+                alert('暂无有效解码结果可复制！');
+                return;
+            }
+
+            navigator.clipboard.writeText(content).then(() => {
+                decodeTip.style.display = 'block';
+                setTimeout(() => {
+                    decodeTip.style.display = 'none';
+                }, 3000);
+            }).catch(err => {
+                console.error('复制解码结果失败：', err);
+                alert('复制失败，请手动复制！');
+            });
+        }
+
+        // ********** 新增：拖拽上传核心逻辑（优化闪烁问题） **********
+        // 1. 阻止浏览器默认拖拽行为（避免图片被打开）
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            decodeDropArea.addEventListener(eventName, preventDefaults, false);
+            // 优化：仅阻止解码区域的默认行为，移除document.body的全局监听，减少冲突
+            // document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // 2. 拖拽进入/悬浮：添加高亮样式，提示用户（加锁防止重复触发）
+        ['dragenter', 'dragover'].forEach(eventName => {
+            decodeDropArea.addEventListener(eventName, () => {
+                if (!isDragging) {
+                    isDragging = true;
+                    highlight();
+                }
+            }, false);
+        });
+
+        // 3. 拖拽离开/释放：移除高亮样式，恢复默认状态（解锁重置）
+        ['dragleave', 'drop'].forEach(eventName => {
+            decodeDropArea.addEventListener(eventName, () => {
+                if (isDragging) {
+                    isDragging = false;
+                    unhighlight();
+                }
+            }, false);
+        });
+
+        function highlight() {
+            decodeDropArea.classList.add('drag-over');
+        }
+
+        function unhighlight() {
+            decodeDropArea.classList.remove('drag-over');
+        }
+
+        // 4. 拖拽释放：获取文件并解析
+        decodeDropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const file = dt.files[0]; // 获取拖拽的第一个文件（仅支持单文件）
+            handleFileDecode(file);
+        }
+
+        // ********** 页面初始化 **********
+        window.onload = function() {
+            renderQRHistory();
+        };
+
+        // 绑定事件
+        generateBtn.addEventListener('click', generateAndAddQRCode);
+        resetBtn.addEventListener('click', resetForm);
+        clearAllBtn.addEventListener('click', clearAllQRCode);
+        contentInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                generateAndAddQRCode();
+            }
+        });
+        searchInput.addEventListener('input', searchQRCode);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchQRCode();
+            }
+        });
+        uploadBtn.addEventListener('click', handleUploadDecode);
+        pasteBtn.addEventListener('click', handlePasteDecode);
+        copyDecodeResult.addEventListener('click', copyDecodeResultContent);
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具集合使用页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 菜单栏样式 */
+        .menu-bar {
+            background-color: #2c3e50;
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-list {
+            display: flex;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .menu-item {
+            margin: 0;
+        }
+
+        .menu-item a {
+            display: inline-block;
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 15px 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .menu-item a:hover {
+            background-color: #34495e;
+            border-radius: 4px;
+        }
+
+        .menu-item a.active {
+            background-color: #1abc9c;
+            border-radius: 4px;
+        }
+
+        /* iframe容器样式 */
+        .iframe-container {
+            flex: 1;
+            position: relative;
+            border: none;
+            overflow: hidden;
+        }
+
+        #toolIframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .menu-item a {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 菜单栏 -->
+    <nav class="menu-bar">
+        <ul class="menu-list">
+            <li class="menu-item"><a href="javascript:;" data-src="文本加工.html" class="active">文本加工</a></li>
+            <li class="menu-item"><a href="javascript:;" data-src="编码解码.html">编码解码</a></li>
+            <li class="menu-item"><a href="javascript:;" data-src="二维码生成器.html">二维码生成器</a></li>
+            <li class="menu-item"><a href="javascript:;" data-src="加密解密.html">加密解密</a></li>
+            <li class="menu-item"><a href="javascript:;" data-src="文本对比.html">文本对比</a></li>
+            <li class="menu-item"><a href="javascript:;" data-src="JSON 格式化.html">JSON 格式化</a></li>
+        </ul>
+    </nav>
+
+    <!-- iframe容器，用于展示工具页面：src置空，避免初始加载默认工具 -->
+    <div class="iframe-container">
+        <iframe id="toolIframe" src=""></iframe>
+    </div>
+
+    <script>
+        // 1. 获取相关DOM元素
+        const menuLinks = document.querySelectorAll('.menu-item a');
+        const toolIframe = document.getElementById('toolIframe');
+        // 定义localStorage的存储键名（便于统一管理）
+        const STORAGE_KEY = 'selectedToolSrc';
+        // 定义默认工具地址，便于兜底使用
+        const DEFAULT_TOOL_SRC = '文本加工.html';
+
+        // 2. 页面DOM构建完成后，立即恢复之前保存的选中状态（无需等待资源加载）
+        function restoreSelectedTool() {
+            // 从localStorage中读取持久化存储的工具地址
+            const savedToolSrc = localStorage.getItem(STORAGE_KEY);
+            // 确定最终要加载的工具地址（有保存状态用保存的，无则用默认的）
+            const targetToolSrc = savedToolSrc || DEFAULT_TOOL_SRC;
+
+            // 遍历菜单链接，匹配目标工具并恢复状态
+            menuLinks.forEach(link => {
+                const currentToolSrc = link.getAttribute('data-src');
+                if (currentToolSrc === targetToolSrc) {
+                    // 移除所有active类，为匹配项添加active类（恢复选中样式）
+                    menuLinks.forEach(item => item.classList.remove('active'));
+                    link.classList.add('active');
+                    // 加载目标工具页面（无闪跳，因为是首次赋值src）
+                    toolIframe.src = targetToolSrc;
+                }
+            });
+        }
+
+        // 3. 为所有菜单链接绑定点击事件
+        menuLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // 3.1 移除所有菜单链接的active类（取消之前的选中状态）
+                menuLinks.forEach(item => item.classList.remove('active'));
+                
+                // 3.2 为当前点击的链接添加active类（设置当前选中状态）
+                this.classList.add('active');
+                
+                // 3.3 获取当前链接对应的工具页面地址（data-src属性值）
+                const toolSrc = this.getAttribute('data-src');
+                
+                // 3.4 持久化存储当前选中的工具地址到localStorage
+                localStorage.setItem(STORAGE_KEY, toolSrc);
+                
+                // 3.5 修改iframe的src属性，加载对应的工具页面
+                toolIframe.src = toolSrc;
+            });
+        });
+
+        // 4. 改用 DOMContentLoaded 事件，DOM构建完成即执行（比window.onload早得多）
+        document.addEventListener('DOMContentLoaded', restoreSelectedTool);
+    </script>
+</body>
+</html>

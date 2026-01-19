@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能加密/解密工具</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .algorithm-select {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: inline-block;
+            margin-right: 10px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .config-area {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .config-area.active {
+            display: block;
+        }
+
+        .config-item {
+            margin-bottom: 12px;
+        }
+
+        .config-item label {
+            width: 120px;
+            font-size: 14px;
+        }
+
+        .config-item input {
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 14px;
+            width: calc(100% - 130px);
+            max-width: 400px;
+        }
+
+        .config-item input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .text-areas {
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 120px;
+            margin-bottom: 15px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .encrypt-btn {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .encrypt-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .decrypt-btn {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .decrypt-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .copy-btn {
+            background-color: #f39c12;
+            color: #fff;
+        }
+
+        .copy-btn:hover {
+            background-color: #e67e22;
+        }
+
+        .clear-btn {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .clear-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .tips {
+            color: #7f8c8d;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .notice {
+            color: #e74c3c;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>多功能加密/解密工具</h1>
+
+        <!-- 算法选择 -->
+        <div class="algorithm-select">
+            <label for="algorithm">选择加密算法：</label>
+            <select id="algorithm">
+                <option value="AES">AES</option>
+                <option value="DES">DES</option>
+                <option value="TripleDES">TripleDES（3DES）</option>
+                <option value="RC4">RC4</option>
+                <option value="Rabbit">Rabbit</option>
+                <option value="MD5">MD5（支持密钥）</option>
+                <option value="HMAC-MD5">HMAC-MD5（标准带密钥）</option>
+                <option value="Base64">Base64</option>
+                <option value="SHA1">SHA1（支持密钥）</option>
+                <option value="HMAC-SHA1">HMAC-SHA1（标准带密钥）</option>
+                <option value="SHA256">SHA256（支持密钥）</option>
+                <option value="HMAC-SHA256">HMAC-SHA256（标准带密钥）</option>
+                <option value="SHA512">SHA512（支持密钥）</option>
+                <option value="HMAC-SHA512">HMAC-SHA512（标准带密钥）</option>
+                <option value="JS">JS 加密/解密</option>
+            </select>
+        </div>
+
+        <!-- 配置项区域（密钥、偏移量等） -->
+        <div id="configArea" class="config-area">
+            <div class="config-item">
+                <label for="secretKey">密钥（Key）：</label>
+                <input type="text" id="secretKey" placeholder="请输入密钥，不同算法有对应长度要求" value="defaultKey123456">
+            </div>
+            <div class="config-item" id="ivItem">
+                <label for="iv">偏移量（IV）：</label>
+                <input type="text" id="iv" placeholder="请输入16位偏移量（AES/DES/3DES专用）" value="defaultIv12345678">
+            </div>
+        </div>
+
+        <!-- 输入输出区域 -->
+        <div class="text-areas">
+            <textarea id="inputText" placeholder="请输入需要加密/解密的内容..."></textarea>
+            <textarea id="outputText" placeholder="加密/解密结果将显示在这里..." readonly></textarea>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="btn-group">
+            <button class="encrypt-btn" id="encryptBtn">加密/生成哈希</button>
+            <button class="decrypt-btn" id="decryptBtn">解密/解码</button>
+            <button class="copy-btn" id="copyBtn">复制结果</button>
+            <button class="clear-btn" id="clearBtn">清空内容</button>
+        </div>
+
+        <!-- 提示信息 -->
+        <div class="tips">
+            <p>📌 提示：</p>
+            <p>1. AES 算法默认使用 CBC 模式，PKCS7 填充，密钥支持 16/24/32 位（对应 AES-128/AES-192/AES-256）</p>
+            <p>2. DES 密钥长度为 8 位，TripleDES 密钥长度为 24 位，二者均需要 16 位偏移量（IV）</p>
+            <p>3. MD5/Hash（SHA系列）分为「纯哈希」和「HMAC带密钥哈希」，均为不可逆算法，仅支持生成哈希值</p>
+            <p>4. Base64 为编码格式，非加密算法，支持编码/解码，无需密钥</p>
+            <p>5. RC4/Rabbit 仅需密钥，无需偏移量（IV），密钥长度无严格限制（建议不少于16位）</p>
+            <p>6. JS 加密/解密为简单的字符串反转+字符编码转换，仅作演示用途，不具备实际安全防护能力</p>
+            <p class="notice">⚠️ 注意：该工具仅用于学习和测试，请勿用于生产环境的敏感数据加密！前端环境存在密钥暴露风险！</p>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const algorithmSelect = document.getElementById('algorithm');
+        const configArea = document.getElementById('configArea');
+        const ivItem = document.getElementById('ivItem');
+        const secretKeyInput = document.getElementById('secretKey');
+        const ivInput = document.getElementById('iv');
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const encryptBtn = document.getElementById('encryptBtn');
+        const decryptBtn = document.getElementById('decryptBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // 算法切换事件 - 控制配置项显示/隐藏（标准化优化）
+        algorithmSelect.addEventListener('change', function() {
+            const currentAlgo = this.value;
+            // 定义需要密钥配置的算法（包含对称加密、带密钥哈希）
+            const needKey = [
+                'AES', 'DES', 'TripleDES', 'RC4', 'Rabbit',
+                'MD5', 'HMAC-MD5', 'SHA1', 'HMAC-SHA1',
+                'SHA256', 'HMAC-SHA256', 'SHA512', 'HMAC-SHA512'
+            ].includes(currentAlgo);
+            // 定义需要偏移量（IV）的算法（仅CBC模式的对称加密）
+            const needIv = ['AES', 'DES', 'TripleDES'].includes(currentAlgo);
+            // 定义不可逆算法（哈希类）
+            const irreversibleAlgos = [
+                'MD5', 'HMAC-MD5', 'SHA1', 'HMAC-SHA1',
+                'SHA256', 'HMAC-SHA256', 'SHA512', 'HMAC-SHA512'
+            ].includes(currentAlgo);
+            // 定义无需任何配置的算法
+            const noConfig = ['Base64'].includes(currentAlgo);
+
+            // 显示/隐藏整体配置区域
+            if (needKey) {
+                configArea.classList.add('active');
+            } else if (noConfig) {
+                configArea.classList.remove('active');
+            } else { // JS加密/解密（保留配置区域可选，密钥可作为自定义参数）
+                configArea.classList.add('active');
+            }
+
+            // 显示/隐藏偏移量配置（仅对称加密的CBC模式需要）
+            if (needIv) {
+                ivItem.style.display = 'block';
+            } else {
+                ivItem.style.display = 'none';
+            }
+
+            // 禁用/启用解密按钮（不可逆算法无法解密）
+            if (irreversibleAlgos) {
+                decryptBtn.disabled = true;
+                decryptBtn.style.opacity = '0.6';
+                decryptBtn.style.cursor = 'not-allowed';
+            } else {
+                decryptBtn.disabled = false;
+                decryptBtn.style.opacity = '1';
+                decryptBtn.style.cursor = 'pointer';
+            }
+        });
+
+        // 初始化算法切换（触发一次change事件，加载默认配置）
+        algorithmSelect.dispatchEvent(new Event('change'));
+
+        // 加密/生成哈希按钮点击事件
+        encryptBtn.addEventListener('click', function() {
+            const currentAlgo = algorithmSelect.value;
+            const inputValue = inputText.value.trim();
+            if (!inputValue) {
+                alert('请输入需要处理的内容！');
+                return;
+            }
+
+            let result = '';
+            try {
+                switch (currentAlgo) {
+                    case 'AES':
+                        result = aesEncrypt(inputValue);
+                        break;
+                    case 'DES':
+                        result = desEncrypt(inputValue);
+                        break;
+                    case 'TripleDES':
+                        result = tripleDesEncrypt(inputValue);
+                        break;
+                    case 'RC4':
+                        result = rc4Encrypt(inputValue);
+                        break;
+                    case 'Rabbit':
+                        result = rabbitEncrypt(inputValue);
+                        break;
+                    case 'MD5':
+                        result = md5EncryptWithKey(inputValue); // 带密钥的MD5
+                        break;
+                    case 'HMAC-MD5':
+                        result = hmacMd5Encrypt(inputValue); // 标准HMAC-MD5
+                        break;
+                    case 'Base64':
+                        result = base64Encrypt(inputValue);
+                        break;
+                    case 'SHA1':
+                        result = sha1EncryptWithKey(inputValue); // 带密钥的SHA1
+                        break;
+                    case 'HMAC-SHA1':
+                        result = hmacSha1Encrypt(inputValue); // 标准HMAC-SHA1
+                        break;
+                    case 'SHA256':
+                        result = sha256EncryptWithKey(inputValue); // 带密钥的SHA256
+                        break;
+                    case 'HMAC-SHA256':
+                        result = hmacSha256Encrypt(inputValue); // 标准HMAC-SHA256
+                        break;
+                    case 'SHA512':
+                        result = sha512EncryptWithKey(inputValue); // 带密钥的SHA512
+                        break;
+                    case 'HMAC-SHA512':
+                        result = hmacSha512Encrypt(inputValue); // 标准HMAC-SHA512
+                        break;
+                    case 'JS':
+                        result = jsEncrypt(inputValue);
+                        break;
+                    default:
+                        result = '不支持该算法！';
+                }
+                outputText.value = result;
+            } catch (e) {
+                outputText.value = '处理失败：' + e.message;
+            }
+        });
+
+        // 解密/解码按钮点击事件
+        decryptBtn.addEventListener('click', function() {
+            const currentAlgo = algorithmSelect.value;
+            const inputValue = inputText.value.trim();
+            if (!inputValue) {
+                alert('请输入需要处理的内容！');
+                return;
+            }
+
+            let result = '';
+            try {
+                switch (currentAlgo) {
+                    case 'AES':
+                        result = aesDecrypt(inputValue);
+                        break;
+                    case 'DES':
+                        result = desDecrypt(inputValue);
+                        break;
+                    case 'TripleDES':
+                        result = tripleDesDecrypt(inputValue);
+                        break;
+                    case 'RC4':
+                        result = rc4Decrypt(inputValue);
+                        break;
+                    case 'Rabbit':
+                        result = rabbitDecrypt(inputValue);
+                        break;
+                    case 'Base64':
+                        result = base64Decrypt(inputValue);
+                        break;
+                    case 'JS':
+                        result = jsDecrypt(inputValue);
+                        break;
+                    default:
+                        result = '不支持该算法！';
+                }
+                outputText.value = result;
+            } catch (e) {
+                outputText.value = '处理失败：' + e.message;
+            }
+        });
+
+        // 复制结果按钮点击事件
+        copyBtn.addEventListener('click', function() {
+            const outputValue = outputText.value.trim();
+            if (!outputValue) {
+                alert('没有可复制的结果！');
+                return;
+            }
+
+            // 兼容现代浏览器的复制API
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(outputValue).then(() => {
+                    alert('结果已复制到剪贴板！');
+                }).catch(() => {
+                    // 降级方案
+                    outputText.select();
+                    document.execCommand('copy');
+                    alert('结果已复制到剪贴板！');
+                });
+            } else {
+                outputText.select();
+                document.execCommand('copy');
+                alert('结果已复制到剪贴板！');
+            }
+        });
+
+        // 清空内容按钮点击事件
+        clearBtn.addEventListener('click', function() {
+            inputText.value = '';
+            outputText.value = '';
+        });
+
+        // ---------------------- 加密/解密核心方法（标准化优化） ----------------------
+        // 1. AES 加密（CBC模式 + PKCS7填充）
+        function aesEncrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const iv = CryptoJS.enc.Utf8.parse(ivInput.value);
+            const encrypted = CryptoJS.AES.encrypt(text, key, {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return encrypted.toString();
+        }
+
+        // AES 解密
+        function aesDecrypt(cipherText) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const iv = CryptoJS.enc.Utf8.parse(ivInput.value);
+            const decrypted = CryptoJS.AES.decrypt(cipherText, key, {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+
+        // 2. DES 加密（CBC模式 + PKCS7填充）
+        function desEncrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const iv = CryptoJS.enc.Utf8.parse(ivInput.value);
+            const encrypted = CryptoJS.DES.encrypt(text, key, {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return encrypted.toString();
+        }
+
+        // DES 解密
+        function desDecrypt(cipherText) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const iv = CryptoJS.enc.Utf8.parse(ivInput.value);
+            const decrypted = CryptoJS.DES.decrypt(cipherText, key, {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+
+        // 3. TripleDES 加密（CBC模式 + PKCS7填充）
+        function tripleDesEncrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const iv = CryptoJS.enc.Utf8.parse(ivInput.value);
+            const encrypted = CryptoJS.TripleDES.encrypt(text, key, {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return encrypted.toString();
+        }
+
+        // TripleDES 解密
+        function tripleDesDecrypt(cipherText) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const iv = CryptoJS.enc.Utf8.parse(ivInput.value);
+            const decrypted = CryptoJS.TripleDES.decrypt(cipherText, key, {
+                iv: iv,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7
+            });
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+
+        // 4. RC4 加密（标准化实现）
+        function rc4Encrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const encrypted = CryptoJS.RC4.encrypt(text, key);
+            return encrypted.toString();
+        }
+
+        // RC4 解密
+        function rc4Decrypt(cipherText) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const decrypted = CryptoJS.RC4.decrypt(cipherText, key);
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+
+        // 5. Rabbit 加密（标准化实现）
+        function rabbitEncrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const encrypted = CryptoJS.Rabbit.encrypt(text, key);
+            return encrypted.toString();
+        }
+
+        // Rabbit 解密
+        function rabbitDecrypt(cipherText) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const decrypted = CryptoJS.Rabbit.decrypt(cipherText, key);
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+
+        // 6. MD5 加密（带密钥，自定义实现）
+        function md5EncryptWithKey(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            // 密钥参与哈希计算：文本 + 密钥 拼接后做MD5（常用带密钥方式）
+            const mixedText = text + CryptoJS.enc.Utf8.stringify(key);
+            return CryptoJS.MD5(mixedText).toString();
+        }
+
+        // 7. 标准 HMAC-MD5 加密（带密钥，符合行业标准）
+        function hmacMd5Encrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            return CryptoJS.HmacMD5(text, key).toString();
+        }
+
+        // 8. Base64 编码（标准化实现）
+        function base64Encrypt(text) {
+            const wordArray = CryptoJS.enc.Utf8.parse(text);
+            return CryptoJS.enc.Base64.stringify(wordArray);
+        }
+
+        // Base64 解码
+        function base64Decrypt(cipherText) {
+            const wordArray = CryptoJS.enc.Base64.parse(cipherText);
+            return wordArray.toString(CryptoJS.enc.Utf8);
+        }
+
+        // 9. SHA1 加密（带密钥，自定义实现）
+        function sha1EncryptWithKey(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const mixedText = text + CryptoJS.enc.Utf8.stringify(key);
+            return CryptoJS.SHA1(mixedText).toString();
+        }
+
+        // 10. 标准 HMAC-SHA1 加密（带密钥，符合行业标准）
+        function hmacSha1Encrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            return CryptoJS.HmacSHA1(text, key).toString();
+        }
+
+        // 11. SHA256 加密（带密钥，自定义实现）
+        function sha256EncryptWithKey(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const mixedText = text + CryptoJS.enc.Utf8.stringify(key);
+            return CryptoJS.SHA256(mixedText).toString();
+        }
+
+        // 12. 标准 HMAC-SHA256 加密（带密钥，符合行业标准）
+        function hmacSha256Encrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            return CryptoJS.HmacSHA256(text, key).toString();
+        }
+
+        // 13. SHA512 加密（带密钥，自定义实现）
+        function sha512EncryptWithKey(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            const mixedText = text + CryptoJS.enc.Utf8.stringify(key);
+            return CryptoJS.SHA512(mixedText).toString();
+        }
+
+        // 14. 标准 HMAC-SHA512 加密（带密钥，符合行业标准）
+        function hmacSha512Encrypt(text) {
+            const key = CryptoJS.enc.Utf8.parse(secretKeyInput.value);
+            return CryptoJS.HmacSHA512(text, key).toString();
+        }
+
+        // 15. JS 加密（简单演示，保留密钥可选参与）
+        function jsEncrypt(text) {
+            const key = secretKeyInput.value.trim();
+            // 密钥参与加密：文本 + 密钥 拼接后再进行反转+ASCII偏移
+            const mixedText = key ? text + key : text;
+            return mixedText.split('').reverse().map(char => {
+                return String.fromCharCode(char.charCodeAt(0) + 3);
+            }).join('');
+        }
+
+        // JS 解密（对应上面的加密逻辑）
+        function jsDecrypt(text) {
+            const key = secretKeyInput.value.trim();
+            // 先还原ASCII偏移和反转，再移除密钥（如果有）
+            const restoredText = text.split('').map(char => {
+                return String.fromCharCode(char.charCodeAt(0) - 3);
+            }).reverse().join('');
+            return key ? restoredText.slice(0, restoredText.length - key.length) : restoredText;
+        }
+    </script>
+</body>
+</html>

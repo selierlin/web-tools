@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全能信息编解码工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind 配置
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        dark: '#1D2129',
+                        light: '#F2F3F5',
+                        gray: '#86909C'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark min-h-screen flex flex-col">
+    <!-- 头部 -->
+    <header class="bg-white card-shadow py-4 px-6 sticky top-0 z-10">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-primary mb-4 md:mb-0">
+                全能信息编解码工具
+            </h1>
+            <div class="flex gap-2">
+                <button id="clearBtn" class="bg-gray-200 hover:bg-gray-300 text-dark px-4 py-2 rounded-lg btn-hover">
+                    清空内容
+                </button>
+                <button id="copyResultBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg btn-hover">
+                    复制结果
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow container mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：输入区域 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl p-5 card-shadow h-full">
+                    <h2 class="text-lg font-semibold mb-4 text-dark border-b pb-2">输入内容</h2>
+                    <textarea 
+                        id="inputText" 
+                        class="w-full h-[calc(100vh-250px)] md:h-[calc(100vh-300px)] p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        placeholder="请输入需要编解码的内容..."></textarea>
+                </div>
+            </div>
+
+            <!-- 右侧：功能选项 + 结果展示 -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- 功能选项卡 -->
+                <div class="bg-white rounded-xl p-5 card-shadow">
+                    <div class="flex flex-wrap border-b mb-4">
+                        <button id="encryptTab" class="py-2 px-4 text-primary border-b-2 border-primary font-medium">
+                            加密/编码
+                        </button>
+                        <button id="decryptTab" class="py-2 px-4 text-gray hover:text-dark transition-colors">
+                            解密/解码
+                        </button>
+                    </div>
+
+                    <!-- 加密功能列表 -->
+                    <div id="encryptFunctions" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <button data-func="unicodeEncode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Unicode编码(\u)
+                        </button>
+                        <button data-func="urlEncode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            URL编码(%)
+                        </button>
+                        <button data-func="utf16Encode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            UTF16编码(\x)
+                        </button>
+                        <button data-func="base64Encode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Base64编码
+                        </button>
+                        <button data-func="md5Compute" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            MD5计算
+                        </button>
+                        <button data-func="hexEncode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            十六进制编码
+                        </button>
+                        <button data-func="sha1Encrypt" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Sha1加密
+                        </button>
+                        <button data-func="htmlNormalEncode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            HTML普通编码
+                        </button>
+                        <button data-func="htmlDeepEncode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            HTML深度编码
+                        </button>
+                        <button data-func="htmlToJs" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            HTML转JS
+                        </button>
+                        <button data-func="gzipCompress" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Gzip压缩
+                        </button>
+                    </div>
+
+                    <!-- 解密功能列表 -->
+                    <div id="decryptFunctions" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 hidden">
+                        <button data-func="unicodeDecode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Unicode解码(\u)
+                        </button>
+                        <button data-func="urlDecode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            URL解码(%)
+                        </button>
+                        <button data-func="utf16Decode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            UTF16解码(\x)
+                        </button>
+                        <button data-func="base64Decode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Base64解码
+                        </button>
+                        <button data-func="hexDecode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            十六进制解码
+                        </button>
+                        <button data-func="htmlEntityDecode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            HTML实体解码
+                        </button>
+                        <button data-func="urlParamsParse" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            URL参数解析
+                        </button>
+                        <button data-func="jwtDecode" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            JWT解码
+                        </button>
+                        <button data-func="cookieFormat" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Cookie格式化
+                        </button>
+                        <button data-func="gzipDecompress" class="func-btn bg-light hover:bg-primary/10 text-dark py-2 px-3 rounded-lg text-sm btn-hover">
+                            Gzip解压
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 结果展示区域 -->
+                <div class="bg-white rounded-xl p-5 card-shadow">
+                    <h2 class="text-lg font-semibold mb-4 text-dark border-b pb-2">
+                        处理结果
+                        <span id="resultStatus" class="text-sm font-normal text-gray ml-2">未执行操作</span>
+                    </h2>
+                    <div class="relative">
+                        <textarea 
+                            id="resultText" 
+                            class="w-full h-[300px] p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 bg-gray-50"
+                            placeholder="处理结果将显示在这里..." readonly></textarea>
+                        <div class="absolute top-2 right-2 flex gap-2">
+                            <button id="copySingleBtn" class="bg-white/80 hover:bg-white text-gray p-2 rounded-lg btn-hover">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部 -->
+    <footer class="bg-white card-shadow py-4 px-6 mt-6">
+        <div class="container mx-auto text-center text-gray">
+            <p>全能信息编解码工具 | 支持多种编解码/加解密功能</p>
+        </div>
+    </footer>
+
+    <!-- 引入外部依赖（用于MD5、SHA1、Gzip） -->
+    <script src="https://cdn.jsdelivr.net/npm/js-md5@0.7.3/src/md5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-sha1@0.6.0/sha1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+
+    <script>
+        // DOM 元素获取
+        const encryptTab = document.getElementById('encryptTab');
+        const decryptTab = document.getElementById('decryptTab');
+        const encryptFunctions = document.getElementById('encryptFunctions');
+        const decryptFunctions = document.getElementById('decryptFunctions');
+        const inputText = document.getElementById('inputText');
+        const resultText = document.getElementById('resultText');
+        const resultStatus = document.getElementById('resultStatus');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyResultBtn = document.getElementById('copyResultBtn');
+        const copySingleBtn = document.getElementById('copySingleBtn');
+        const funcBtns = document.querySelectorAll('.func-btn');
+
+        // 选项卡切换逻辑
+        encryptTab.addEventListener('click', () => {
+            encryptTab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+            decryptTab.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+            decryptTab.classList.add('text-gray');
+            encryptFunctions.classList.remove('hidden');
+            decryptFunctions.classList.add('hidden');
+            resultStatus.textContent = "切换至加密/编码功能";
+        });
+
+        decryptTab.addEventListener('click', () => {
+            decryptTab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+            encryptTab.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-medium');
+            encryptTab.classList.add('text-gray');
+            decryptFunctions.classList.remove('hidden');
+            encryptFunctions.classList.add('hidden');
+            resultStatus.textContent = "切换至解密/解码功能";
+        });
+
+        // 清空内容
+        clearBtn.addEventListener('click', () => {
+            inputText.value = '';
+            resultText.value = '';
+            resultStatus.textContent = "内容已清空";
+            inputText.focus();
+        });
+
+        // 复制结果（两个复制按钮共用逻辑）
+        const copyToClipboard = () => {
+            if (!resultText.value) {
+                resultStatus.textContent = "无结果可复制";
+                return;
+            }
+            resultText.select();
+            document.execCommand('copy');
+            resultStatus.textContent = "结果已复制到剪贴板";
+            setTimeout(() => {
+                resultStatus.textContent = "复制成功";
+            }, 1000);
+        };
+
+        copyResultBtn.addEventListener('click', copyToClipboard);
+        copySingleBtn.addEventListener('click', copyToClipboard);
+
+        // 核心：编解码功能实现
+        const codecFunctions = {
+            // 加密/编码系列
+            unicodeEncode: (str) => {
+                return str.split('').map(char => {
+                    const code = char.charCodeAt(0);
+                    return code > 127 ? `\\u${code.toString(16).padStart(4, '0')}` : char;
+                }).join('');
+            },
+
+            urlEncode: (str) => {
+                return encodeURIComponent(str);
+            },
+
+            utf16Encode: (str) => {
+                return str.split('').map(char => {
+                    const code = char.charCodeAt(0);
+                    return `\\x${code.toString(16).padStart(2, '0')}`;
+                }).join('');
+            },
+
+            base64Encode: (str) => {
+                return btoa(unescape(encodeURIComponent(str)));
+            },
+
+            md5Compute: (str) => {
+                return md5(str);
+            },
+
+            hexEncode: (str) => {
+                let hex = '';
+                for (let i = 0; i < str.length; i++) {
+                    hex += str.charCodeAt(i).toString(16).padStart(2, '0');
+                }
+                return hex.toUpperCase();
+            },
+
+            sha1Encrypt: (str) => {
+                return sha1(str);
+            },
+
+            htmlNormalEncode: (str) => {
+                const escapeMap = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                };
+                return str.replace(/[&<>\"']/g, match => escapeMap[match]);
+            },
+
+            htmlDeepEncode: (str) => {
+                return str.split('').map(char => {
+                    const code = char.charCodeAt(0);
+                    return `&#${code};`;
+                }).join('');
+            },
+
+            htmlToJs: (str) => {
+                return str.replace(/[\\'"\n\r\t]/g, match => {
+                    const escapeMap = {
+                        '\\': '\\\\',
+                        "'": "\\'",
+                        '"': '\\"',
+                        '\n': '\\n',
+                        '\r': '\\r',
+                        '\t': '\\t'
+                    };
+                    return escapeMap[match] || match;
+                });
+            },
+
+            gzipCompress: (str) => {
+                const uint8Array = new TextEncoder().encode(str);
+                const compressed = pako.gzip(uint8Array);
+                return btoa(String.fromCharCode.apply(null, compressed));
+            },
+
+            // 解密/解码系列
+            unicodeDecode: (str) => {
+                return str.replace(/\\u([\d\w]{4})/gi, (match, hex) => {
+                    return String.fromCharCode(parseInt(hex, 16));
+                });
+            },
+
+            urlDecode: (str) => {
+                try {
+                    return decodeURIComponent(str);
+                } catch (e) {
+                    return "URL解码失败：无效的编码格式";
+                }
+            },
+
+            utf16Decode: (str) => {
+                return str.replace(/\\x([\d\w]{2})/gi, (match, hex) => {
+                    return String.fromCharCode(parseInt(hex, 16));
+                });
+            },
+
+            base64Decode: (str) => {
+                try {
+                    return decodeURIComponent(escape(atob(str)));
+                } catch (e) {
+                    return "Base64解码失败：无效的编码格式";
+                }
+            },
+
+            hexDecode: (str) => {
+                try {
+                    let strClean = str.replace(/\s+/g, '');
+                    let result = '';
+                    for (let i = 0; i < strClean.length; i += 2) {
+                        const hex = strClean.substr(i, 2);
+                        result += String.fromCharCode(parseInt(hex, 16));
+                    }
+                    return result;
+                } catch (e) {
+                    return "十六进制解码失败：无效的编码格式";
+                }
+            },
+
+            htmlEntityDecode: (str) => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = str;
+                return tempDiv.textContent || tempDiv.innerText;
+            },
+
+            urlParamsParse: (str) => {
+                try {
+                    const paramsStr = str.includes('?') ? str.split('?')[1] : str;
+                    const params = new URLSearchParams(paramsStr);
+                    let result = '{\n';
+                    params.forEach((value, key) => {
+                        result += `  "${key}": "${value.replace(/"/g, '\\"')}",\n`;
+                    });
+                    result = result.slice(0, -2) + '\n}';
+                    return result;
+                } catch (e) {
+                    return "URL参数解析失败：无效的参数格式";
+                }
+            },
+
+            jwtDecode: (str) => {
+                try {
+                    const parts = str.split('.');
+                    if (parts.length !== 3) {
+                        return "JWT解码失败：无效的JWT格式（需包含3个部分）";
+                    }
+                    const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+                    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                    return `=== JWT 头部 ===\n${JSON.stringify(header, null, 2)}\n\n=== JWT 载荷 ===\n${JSON.stringify(payload, null, 2)}\n\n=== JWT 签名 ===\n${parts[2]}（无法解密）`;
+                } catch (e) {
+                    return "JWT解码失败：无效的编码格式或内容";
+                }
+            },
+
+            cookieFormat: (str) => {
+                try {
+                    const cookies = str.split(';').map(cookie => cookie.trim());
+                    let result = '{\n';
+                    cookies.forEach(cookie => {
+                        const [key, value] = cookie.split('=');
+                        if (key) {
+                            result += `  "${key}": "${value || ''}",\n`;
+                        }
+                    });
+                    result = result.slice(0, -2) + '\n}';
+                    return result;
+                } catch (e) {
+                    return "Cookie格式化失败：无效的Cookie格式";
+                }
+            },
+
+            gzipDecompress: (str) => {
+                try {
+                    const binary = atob(str);
+                    const uint8Array = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) {
+                        uint8Array[i] = binary.charCodeAt(i);
+                    }
+                    const decompressed = pako.ungzip(uint8Array, { to: 'string' });
+                    return decompressed;
+                } catch (e) {
+                    return "Gzip解压失败：无效的压缩数据格式";
+                }
+            }
+        };
+
+        // 绑定功能按钮点击事件
+        funcBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const funcName = btn.getAttribute('data-func');
+                const inputValue = inputText.value.trim();
+                const func = codecFunctions[funcName];
+
+                if (!inputValue) {
+                    resultText.value = '';
+                    resultStatus.textContent = "请先输入需要处理的内容";
+                    return;
+                }
+
+                try {
+                    const result = func(inputValue);
+                    resultText.value = result;
+                    resultStatus.textContent = `操作成功：${btn.textContent.trim()}`;
+                } catch (e) {
+                    resultText.value = `操作失败：${e.message}`;
+                    resultStatus.textContent = `操作异常：${btn.textContent.trim()}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
