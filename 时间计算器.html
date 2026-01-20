@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能时间计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .result-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            background-color: white;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .result-item:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .label {
+            color: #2d3748;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .value {
+            color: #1e40af; /* 更深的蓝色，更醒目 */
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600; /* 加粗，进一步提升辨识度 */
+        }
+        
+        .error {
+            color: #b91c1c;
+            text-align: center;
+            padding: 12px;
+            background-color: #fef2f2;
+            border-radius: 6px;
+        }
+        
+        .hint {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        
+        /* 复制提示样式 */
+        .copy-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        
+        .copy-toast.show {
+            opacity: 1;
+        }
+        
+        /* 当前时间提示标签 */
+        .current-time-tag {
+            color: #059669;
+            font-size: 12px;
+            margin-bottom: 10px;
+            padding: 4px 8px;
+            background-color: #ecfdf5;
+            border-radius: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>多功能时间计算器</h1>
+        
+        <div class="input-group">
+            <input type="text" id="timeInput" placeholder="请输入时间（支持时间戳、日期、now/today/yesterday、纯数值等）">
+            <div class="hint">
+                支持格式示例：<br>
+                • 时间戳：1749722690（秒级）/ 1749722690000（毫秒级）<br>
+                • 标准日期：2025-06-12 18:06:25 / 2025/06/12<br>
+                • 快捷指令：now / today / yesterday<br>
+                • 英文格式：Jun 12, 2025<br>
+                • 纯数值：9000（仅解析为时长）<br>
+                <strong>提示：点击结果可复制到剪贴板 | 空输入时显示实时当前时间</strong>
+            </div>
+        </div>
+        
+        <button onclick="calculateTime()">解析时间</button>
+        
+        <div id="resultContainer" class="result-box" style="display: none;"></div>
+    </div>
+    
+    <!-- 复制成功提示框 -->
+    <div id="copyToast" class="copy-toast">复制成功！</div>
+
+    <script>
+        // 定义定时器变量，用于控制实时更新
+        let timeUpdateTimer = null;
+        
+        /**
+         * 解析秒数为时分秒格式（处理边界值：0/负数）
+         * @param {number} seconds - 总秒数
+         * @returns {Object} 包含多种时长格式的对象
+         */
+        function parseSecondsToDuration(seconds) {
+            // 处理负数/0的情况，确保数值非负
+            const totalSeconds = Math.max(Math.abs(seconds), 0);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = Math.floor(totalSeconds % 60);
+            
+            // 补零优化：确保两位数展示
+            const pad = (num) => String(num).padStart(2, '0');
+            
+            return {
+                hms: `${pad(hours)}:${pad(minutes)}:${pad(secs)}`, // 时分秒（如 02:30:00）
+                minutes: `${Math.floor(totalSeconds / 60)} 分 ${secs} 秒`, // 分+秒（如 150 分 0 秒）
+                dhms: `${days} 天 ${hours} 时 ${minutes} 分 ${secs} 秒` // 天时分秒（如 0 天 2 时 30 分 0 秒）
+            };
+        }
+
+        /**
+         * 核心解析函数（精准区分时间戳/纯数值，增加有效性校验）
+         * @param {string} input - 用户输入的时间字符串
+         * @returns {Object} { date: Date|null, type: string, rawNumber: number|null, isDurationOnly: boolean }
+         */
+        function parseTimeInput(input) {
+            const cleanInput = input.trim().toLowerCase();
+            let inputType = 'unknown';
+            let rawNumber = null;
+            let isDurationOnly = false; // 标记是否仅为时长数值（非时间戳）
+            
+            // 1. 处理快捷指令
+            if (['now', 'today', 'yesterday'].includes(cleanInput)) {
+                inputType = 'shortcut';
+                const date = new Date();
+                if (cleanInput === 'yesterday') date.setDate(date.getDate() - 1);
+                return { date, type: inputType, rawNumber, isDurationOnly };
+            }
+            
+            // 2. 处理纯数字
+            if (/^\d+$/.test(cleanInput)) {
+                rawNumber = parseInt(cleanInput);
+                const numStr = rawNumber.toString();
+                const minValidTimestamp = 946684800; // 2000-01-01 00:00:00 的秒级时间戳（过滤过小的数值）
+                
+                // 2.1 有效时间戳（10位且≥2000年 或 13位且≥2000年）
+                if ((numStr.length === 10 && rawNumber >= minValidTimestamp) || 
+                    (numStr.length === 13 && rawNumber >= minValidTimestamp * 1000)) {
+                    inputType = numStr.length === 10 ? 'timestamp_second' : 'timestamp_millisecond';
+                    const date = new Date(numStr.length === 10 ? rawNumber * 1000 : rawNumber);
+                    return { date, type: inputType, rawNumber, isDurationOnly: false };
+                } 
+                // 2.2 纯时长数值（非有效时间戳）
+                else {
+                    inputType = 'duration_number';
+                    return { date: null, type: inputType, rawNumber, isDurationOnly: true };
+                }
+            }
+            
+            // 3. 处理日期字符串
+            const parseDate = (str) => {
+                const date = new Date(str);
+                return !isNaN(date.getTime()) ? date : null;
+            };
+            
+            // 直接解析
+            let dateObj = parseDate(cleanInput);
+            if (dateObj) {
+                inputType = 'date_string';
+                return { date: dateObj, type: inputType, rawNumber, isDurationOnly };
+            }
+            
+            // 格式化转换后解析（替换/ . 为 -）
+            const normalizedDate = cleanInput.replace(/[\/.]/g, '-');
+            dateObj = parseDate(normalizedDate);
+            if (dateObj) {
+                inputType = 'date_string';
+                return { date: dateObj, type: inputType, rawNumber, isDurationOnly };
+            }
+            
+            // 4. 解析失败
+            return { date: null, type: 'unknown', rawNumber, isDurationOnly };
+        }
+
+        /**
+         * 格式化日期为标准字符串（补零优化）
+         * @param {Date} date - 日期对象
+         * @returns {string} 格式化后的字符串
+         */
+        function formatDate(date) {
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+        }
+
+        /**
+         * 复制文本到剪贴板
+         * @param {string} text - 要复制的文本
+         */
+        function copyToClipboard(text) {
+            // 使用Clipboard API复制
+            navigator.clipboard.writeText(text).then(() => {
+                // 显示复制成功提示
+                const toast = document.getElementById('copyToast');
+                toast.classList.add('show');
+                // 2秒后隐藏提示
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                // 兼容旧浏览器的备用方案
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // 显示复制成功提示
+                const toast = document.getElementById('copyToast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            });
+        }
+
+        /**
+         * 展示当前时间（空输入时调用）
+         * @param {boolean} startUpdate - 是否启动实时更新
+         */
+        function showCurrentTime(startUpdate = true) {
+            const now = new Date();
+            const resultEl = document.getElementById('resultContainer');
+            
+            // 构建当前时间结果HTML
+            let resultHTML = '<div class="current-time-tag">当前系统时间（实时更新）</div>';
+            const currentResults = [
+                { label: '标准日期时间', value: formatDate(now) },
+                { label: '秒级时间戳', value: Math.floor(now.getTime() / 1000).toString() },
+                { label: '毫秒级时间戳', value: now.getTime().toString() }
+            ];
+            
+            currentResults.forEach(item => {
+                resultHTML += `
+                    <div class="result-item" onclick="copyToClipboard('${item.value.replace(/'/g, "\\'")}')">
+                        <span class="label">${item.label}：</span>
+                        <span class="value">${item.value}</span>
+                    </div>
+                `;
+            });
+            
+            // 渲染结果
+            resultEl.innerHTML = resultHTML;
+            resultEl.style.display = 'block';
+            
+            // 启动实时更新（每秒更新一次）
+            if (startUpdate) {
+                // 先清除已有定时器，避免重复创建
+                if (timeUpdateTimer) clearInterval(timeUpdateTimer);
+                timeUpdateTimer = setInterval(() => {
+                    // 仅当输入框为空时才更新
+                    const inputEl = document.getElementById('timeInput');
+                    if (!inputEl.value.trim()) {
+                        showCurrentTime(false);
+                    }
+                }, 1000);
+            }
+        }
+
+        /**
+         * 停止实时更新当前时间
+         */
+        function stopTimeUpdate() {
+            if (timeUpdateTimer) {
+                clearInterval(timeUpdateTimer);
+                timeUpdateTimer = null;
+            }
+        }
+
+        /**
+         * 主函数（自动解析逻辑，保留输入框焦点）
+         */
+        function calculateTime() {
+            const inputEl = document.getElementById('timeInput');
+            const resultEl = document.getElementById('resultContainer');
+            const inputValue = inputEl.value.trim();
+            
+            // 重置结果
+            resultEl.innerHTML = '';
+            resultEl.style.display = 'none';
+            
+            // 停止实时更新（输入内容时不再更新当前时间）
+            stopTimeUpdate();
+            
+            // 空输入：展示当前时间并启动实时更新
+            if (!inputValue) {
+                showCurrentTime();
+                // 保留焦点
+                inputEl.focus();
+                return;
+            }
+            
+            // 解析输入
+            const { date: dateObj, type: inputType, rawNumber, isDurationOnly } = parseTimeInput(inputValue);
+            
+            // 构建结果HTML
+            let resultHTML = '';
+            
+            // 场景1：纯时长数值（如9000）
+            if (inputType === 'duration_number' && rawNumber !== null) {
+                const duration = parseSecondsToDuration(rawNumber);
+                const durationResults = [
+                    { label: '时分秒', value: duration.hms },
+                    { label: '分+秒', value: duration.minutes },
+                    { label: '天时分秒', value: duration.dhms }
+                ];
+                durationResults.forEach(item => {
+                    // 为每个结果项添加点击复制事件
+                    resultHTML += `
+                        <div class="result-item" onclick="copyToClipboard('${item.value.replace(/'/g, "\\'")}')">
+                            <span class="label">${item.label}：</span>
+                            <span class="value">${item.value}</span>
+                        </div>
+                    `;
+                });
+            }
+            // 场景2：时间相关解析（日期/时间戳/快捷指令）
+            else if (dateObj) {
+                const coreResults = [
+                    { label: '标准日期时间', value: formatDate(dateObj) },
+                    { label: '秒级时间戳', value: Math.floor(dateObj.getTime() / 1000).toString() },
+                    { label: '毫秒级时间戳', value: dateObj.getTime().toString() }
+                ];
+                coreResults.forEach(item => {
+                    // 为每个结果项添加点击复制事件（转义单引号避免语法错误）
+                    resultHTML += `
+                        <div class="result-item" onclick="copyToClipboard('${item.value.replace(/'/g, "\\'")}')">
+                            <span class="label">${item.label}：</span>
+                            <span class="value">${item.value}</span>
+                        </div>
+                    `;
+                });
+            }
+            // 场景3：解析失败
+            else {
+                resultHTML = '<div class="error">无法解析该时间格式，请检查输入</div>';
+            }
+            
+            // 渲染结果
+            resultEl.innerHTML = resultHTML;
+            resultEl.style.display = 'block';
+            
+            // 关键修复：解析完成后重新聚焦输入框，保持光标
+            inputEl.focus();
+            // 确保光标在输入框内容末尾（优化体验）
+            const cursorPos = inputEl.value.length;
+            inputEl.setSelectionRange(cursorPos, cursorPos);
+        }
+
+        // 防抖函数：避免输入过程中频繁触发解析
+        let debounceTimer = null;
+        function debounceCalculate() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                calculateTime();
+            }, 300); // 300ms防抖延迟，避免输入过程中频繁解析
+        }
+
+        // 页面加载完成后，默认展示当前时间并启动实时更新
+        window.onload = function() {
+            showCurrentTime();
+            // 聚焦输入框
+            document.getElementById('timeInput').focus();
+        };
+
+        // 页面卸载时清除定时器，避免内存泄漏
+        window.onbeforeunload = function() {
+            stopTimeUpdate();
+        };
+
+        // 绑定输入事件：输入内容变化时自动解析
+        document.getElementById('timeInput').addEventListener('input', debounceCalculate);
+        
+        // 绑定回车键（保留，兼容手动触发）
+        document.getElementById('timeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(debounceTimer);
+                calculateTime();
+                // 阻止回车键默认行为（避免页面跳转）
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
