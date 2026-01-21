@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nacos 服务管理平台（官方 API 版）</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890ff',
+                        secondary: '#8c8c8c',
+                        success: '#52c41a',
+                        warning: '#faad14',
+                        danger: '#ff4d4f',
+                        nacos: '#2687ff'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+            }
+            .table-hover-row tr:hover {
+                background-color: #f5f7fa;
+            }
+            .namespace-name {
+                font-weight: 600;
+                color: #2687ff;
+            }
+            .namespace-id {
+                font-size: 0.85em;
+                color: #8c8c8c;
+            }
+            .sortable-header {
+                cursor: pointer;
+                user-select: none;
+            }
+            .sortable-header:hover {
+                color: #2687ff;
+            }
+            .sort-icon {
+                font-size: 0.7em;
+                margin-left: 4px;
+                opacity: 0.6;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-server text-nacos text-2xl"></i>
+                <h1 class="text-xl font-bold text-gray-800">Nacos 服务管理平台</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="connection-status" class="text-sm flex items-center">
+                    <i class="fa-solid fa-circle text-gray-400 mr-1"></i>
+                    <span>未连接</span>
+                </span>
+                <button id="refresh-btn" class="bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded flex items-center">
+                    <i class="fa-solid fa-refresh mr-1"></i>
+                    <span>刷新</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 配置区域 -->
+    <div class="container mx-auto px-4 py-4">
+        <div class="bg-white rounded-lg p-4 card-shadow mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nacos 服务器地址</label>
+                    <input type="text" id="nacos-server" value=""
+                           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Namespace</label>
+                    <div class="relative">
+                        <select id="namespace-select" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none bg-white">
+                            <option value="">加载中...</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-end">
+                    <button id="save-config" class="bg-nacos hover:bg-nacos/90 text-white px-4 py-2 rounded flex items-center w-full">
+                        <i class="fa-solid fa-save mr-1"></i>
+                        <span>保存配置并连接</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <main class="container mx-auto px-4 pb-10">
+        <!-- 标签切换 -->
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="tab-list">
+                <li class="mr-2">
+                    <button id="service-tab" class="inline-block p-4 border-b-2 border-nacos text-nacos rounded-t-lg hover:text-nacos hover:bg-gray-50">
+                        <i class="fa-solid fa-list-ul mr-1"></i>服务列表
+                    </button>
+                </li>
+                <li class="mr-2">
+                    <button id="config-tab" class="inline-block p-4 border-b-2 border-transparent text-gray-500 rounded-t-lg hover:text-gray-700 hover:bg-gray-50">
+                        <i class="fa-solid fa-file-code mr-1"></i>配置列表
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 服务列表区域 -->
+        <div id="service-panel" class="block">
+            <div class="bg-white rounded-lg card-shadow mb-6">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-800">
+                        <i class="fa-solid fa-list-ul text-nacos mr-2"></i>服务列表
+                    </h2>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="service-search" placeholder="输入服务名称实时过滤..." 
+                               class="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        <button id="search-btn" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm hidden">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 加载状态 -->
+                <div id="services-loading" class="py-10 text-center hidden">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-nacos mb-2"></i>
+                    <p class="text-gray-600">正在加载服务列表...</p>
+                </div>
+                
+                <!-- 空状态 -->
+                <div id="services-empty" class="py-10 text-center hidden">
+                    <i class="fa-solid fa-folder-open text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-500">暂无服务数据</p>
+                </div>
+                
+                <!-- 错误状态 -->
+                <div id="services-error" class="py-10 text-center hidden">
+                    <i class="fa-solid fa-exclamation-circle text-4xl text-danger mb-2"></i>
+                    <p class="text-danger" id="services-error-msg">加载服务列表失败</p>
+                </div>
+                
+                <!-- 服务列表表格 -->
+                <div id="services-table-container" class="overflow-x-auto hidden">
+                    <table class="w-full table-hover-row">
+                        <thead>
+                            <tr class="bg-gray-50 text-left">
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="name">
+                                    服务名称
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-name"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="group">
+                                    分组名称
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-group"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="instanceCount">
+                                    实例数
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-instanceCount"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="healthyCount">
+                                    健康实例数
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-healthyCount"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-list">
+                            <!-- 服务列表数据将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div id="services-pagination" class="p-4 border-t border-gray-100 flex justify-between items-center hidden">
+                    <div class="text-sm text-gray-600">
+                        共 <span id="total-services">0</span> 个服务
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            上一页
+                        </button>
+                        <span id="page-info" class="text-sm px-2">第 1 页 / 共 0 页</span>
+                        <button id="next-page" class="px-4 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            下一页
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 配置列表区域 -->
+        <div id="config-panel" class="hidden">
+            <div class="bg-white rounded-lg card-shadow mb-6">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-800">
+                        <i class="fa-solid fa-file-code text-nacos mr-2"></i>配置列表
+                    </h2>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="config-search" placeholder="输入DataID/Group实时过滤..." 
+                               class="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                    </div>
+                </div>
+                
+                <!-- 加载状态 -->
+                <div id="configs-loading" class="py-10 text-center hidden">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-nacos mb-2"></i>
+                    <p class="text-gray-600">正在加载配置列表...</p>
+                </div>
+                
+                <!-- 空状态 -->
+                <div id="configs-empty" class="py-10 text-center hidden">
+                    <i class="fa-solid fa-file-empty text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-500">暂无配置数据</p>
+                </div>
+                
+                <!-- 错误状态 -->
+                <div id="configs-error" class="py-10 text-center hidden">
+                    <i class="fa-solid fa-exclamation-circle text-4xl text-danger mb-2"></i>
+                    <p class="text-danger" id="configs-error-msg">加载配置列表失败</p>
+                </div>
+                
+                <!-- 配置列表表格 -->
+                <div id="configs-table-container" class="overflow-x-auto hidden">
+                    <table class="w-full table-hover-row">
+                        <thead>
+                            <tr class="bg-gray-50 text-left">
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="dataId">
+                                    DataID
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-dataId"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="group">
+                                    Group
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-configGroup"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="appName">
+                                    应用名称
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-appName"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b sortable-header" data-sort="lastModifiedTime">
+                                    最后修改时间
+                                    <i class="fa-solid fa-sort sort-icon" id="sort-icon-lastModifiedTime"></i>
+                                </th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="configs-list">
+                            <!-- 配置列表数据将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div id="configs-pagination" class="p-4 border-t border-gray-100 flex justify-between items-center hidden">
+                    <div class="text-sm text-gray-600">
+                        共 <span id="total-configs">0</span> 个配置
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="config-prev-page" class="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            上一页
+                        </button>
+                        <span id="config-page-info" class="text-sm px-2">第 1 页 / 共 0 页</span>
+                        <button id="config-next-page" class="px-4 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            下一页
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 实例详情弹窗 -->
+        <div id="instance-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800" id="modal-title">
+                        <i class="fa-solid fa-server text-nacos mr-2"></i>服务实例详情
+                    </h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                
+                <!-- 实例加载状态 -->
+                <div id="instances-loading" class="py-10 text-center flex-grow">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-nacos mb-2"></i>
+                    <p class="text-gray-600">正在加载实例信息...</p>
+                </div>
+                
+                <!-- 实例错误状态 -->
+                <div id="instances-error" class="py-10 text-center flex-grow hidden">
+                    <i class="fa-solid fa-exclamation-circle text-4xl text-danger mb-2"></i>
+                    <p class="text-danger" id="instances-error-msg">加载实例信息失败</p>
+                </div>
+                
+                <!-- 实例列表 -->
+                <div id="instances-table-container" class="overflow-auto flex-grow">
+                    <table class="w-full table-hover-row">
+                        <thead>
+                            <tr class="bg-gray-50 text-left sticky top-0">
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">IP地址</th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">端口</th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">状态</th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">权重</th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">集群</th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">最后操作时间</th>
+                                <th class="px-4 py-3 text-sm font-medium text-gray-700 border-b">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="instances-list">
+                            <!-- 实例数据将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="p-4 border-t border-gray-100 flex justify-end">
+                    <button id="close-modal-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4 mt-auto">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-600">
+            <p>Nacos 服务管理平台（基于官方 API） &copy; 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // 全局变量
+        let currentPage = 1;
+        const pageSize = 100;
+        let totalPages = 0;
+        let totalServices = 0;
+        let currentServiceName = '';
+        let currentGroupName = '';
+        let namespaceList = [];
+        let isAutoLoad = true;
+        
+        // 排序相关全局变量
+        let sortField = '';        // 当前排序字段
+        let sortDirection = 'asc'; // asc/desc
+        let allServices = [];      // 存储所有服务数据，用于排序和过滤
+        
+        // 配置相关全局变量
+        let configCurrentPage = 1;
+        let configTotalPages = 0;
+        let configTotalConfigs = 0;
+        let configSortField = '';
+        let configSortDirection = 'asc';
+        let allConfigs = [];       // 存储所有配置数据
+        
+        // 操作实例相关变量
+        const STATE_TOKEN = 'IhyDP9Bv3mMOLNJY6n1QfUbiklAurRZo'; // 你的验签token
+        const OFFLINE_EXPIRE_DAYS = 1; // 下线实例保留天数
+        
+        // DOM 元素
+        const elements = {
+            // 基础标签切换
+            serviceTab: document.getElementById('service-tab'),
+            configTab: document.getElementById('config-tab'),
+            servicePanel: document.getElementById('service-panel'),
+            configPanel: document.getElementById('config-panel'),
+            
+            // 配置相关
+            nacosServer: document.getElementById('nacos-server'),
+            namespaceSelect: document.getElementById('namespace-select'),
+            saveConfig: document.getElementById('save-config'),
+            connectionStatus: document.getElementById('connection-status'),
+            
+            // 服务列表相关
+            servicesLoading: document.getElementById('services-loading'),
+            servicesEmpty: document.getElementById('services-empty'),
+            servicesError: document.getElementById('services-error'),
+            servicesErrorMsg: document.getElementById('services-error-msg'),
+            servicesTableContainer: document.getElementById('services-table-container'),
+            servicesList: document.getElementById('services-list'),
+            totalServices: document.getElementById('total-services'),
+            prevPage: document.getElementById('prev-page'),
+            nextPage: document.getElementById('next-page'),
+            pageInfo: document.getElementById('page-info'),
+            servicesPagination: document.getElementById('services-pagination'),
+            serviceSearch: document.getElementById('service-search'),
+            searchBtn: document.getElementById('search-btn'),
+            refreshBtn: document.getElementById('refresh-btn'),
+            
+            // 配置列表相关
+            configsLoading: document.getElementById('configs-loading'),
+            configsEmpty: document.getElementById('configs-empty'),
+            configsError: document.getElementById('configs-error'),
+            configsErrorMsg: document.getElementById('configs-error-msg'),
+            configsTableContainer: document.getElementById('configs-table-container'),
+            configsList: document.getElementById('configs-list'),
+            totalConfigs: document.getElementById('total-configs'),
+            configPrevPage: document.getElementById('config-prev-page'),
+            configNextPage: document.getElementById('config-next-page'),
+            configPageInfo: document.getElementById('config-page-info'),
+            configsPagination: document.getElementById('configs-pagination'),
+            configSearch: document.getElementById('config-search'),
+            
+            // 实例弹窗相关
+            instanceModal: document.getElementById('instance-modal'),
+            modalTitle: document.getElementById('modal-title'),
+            closeModal: document.getElementById('close-modal'),
+            closeModalBtn: document.getElementById('close-modal-btn'),
+            instancesLoading: document.getElementById('instances-loading'),
+            instancesError: document.getElementById('instances-error'),
+            instancesErrorMsg: document.getElementById('instances-error-msg'),
+            instancesTableContainer: document.getElementById('instances-table-container'),
+            instancesList: document.getElementById('instances-list')
+        };
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            bindEvents();
+            loadLocalConfig();
+            loadNamespaceList();
+            cleanExpiredOfflineInstances(); // 清理过期的下线实例
+            
+            // 自动连接
+            const savedServer = localStorage.getItem('nacosServer');
+            const savedNamespace = localStorage.getItem('namespaceId');
+            if (savedServer && savedNamespace) {
+                setTimeout(() => {
+                    elements.namespaceSelect.value = savedNamespace;
+                    connectToNacos(true);
+                }, 1000);
+            }
+        });
+
+        // 绑定所有事件
+        function bindEvents() {
+            // 标签切换事件
+            elements.serviceTab.addEventListener('click', function() {
+                elements.serviceTab.classList.add('border-nacos', 'text-nacos');
+                elements.serviceTab.classList.remove('border-transparent', 'text-gray-500');
+                elements.configTab.classList.add('border-transparent', 'text-gray-500');
+                elements.configTab.classList.remove('border-nacos', 'text-nacos');
+                elements.servicePanel.classList.remove('hidden');
+                elements.servicePanel.classList.add('block');
+                elements.configPanel.classList.add('hidden');
+                elements.configPanel.classList.remove('block');
+            });
+            
+            elements.configTab.addEventListener('click', function() {
+                elements.configTab.classList.add('border-nacos', 'text-nacos');
+                elements.configTab.classList.remove('border-transparent', 'text-gray-500');
+                elements.serviceTab.classList.add('border-transparent', 'text-gray-500');
+                elements.serviceTab.classList.remove('border-nacos', 'text-nacos');
+                elements.configPanel.classList.remove('hidden');
+                elements.configPanel.classList.add('block');
+                elements.servicePanel.classList.add('hidden');
+                elements.servicePanel.classList.remove('block');
+                
+                // 切换到配置标签时自动加载配置列表
+                if (elements.namespaceSelect.value) {
+                    loadConfigs();
+                }
+            });
+            
+            // 保存配置并连接
+            elements.saveConfig.addEventListener('click', () => connectToNacos(false));
+            
+            // 刷新按钮（同时刷新服务和配置）
+            elements.refreshBtn.addEventListener('click', function() {
+                currentPage = 1;
+                loadServices();
+                configCurrentPage = 1;
+                loadConfigs();
+            });
+            
+            // 服务分页按钮
+            elements.prevPage.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadServices();
+                }
+            });
+            
+            elements.nextPage.addEventListener('click', function() {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadServices();
+                }
+            });
+            
+            // 配置分页按钮
+            elements.configPrevPage.addEventListener('click', function() {
+                if (configCurrentPage > 1) {
+                    configCurrentPage--;
+                    filterAndRenderConfigs();
+                }
+            });
+            
+            elements.configNextPage.addEventListener('click', function() {
+                if (configCurrentPage < configTotalPages) {
+                    configCurrentPage++;
+                    filterAndRenderConfigs();
+                }
+            });
+            
+            // 服务实时搜索过滤
+            elements.serviceSearch.addEventListener('input', function() {
+                filterAndRenderServices();
+            });
+            
+            // 配置实时搜索过滤
+            elements.configSearch.addEventListener('input', function() {
+                filterAndRenderConfigs();
+            });
+            
+            // 关闭实例弹窗
+            elements.closeModal.addEventListener('click', closeInstanceModal);
+            elements.closeModalBtn.addEventListener('click', closeInstanceModal);
+            elements.instanceModal.addEventListener('click', function(e) {
+                if (e.target === elements.instanceModal) {
+                    closeInstanceModal();
+                }
+            });
+            
+            // 服务器地址或namespace变化时保存
+            elements.nacosServer.addEventListener('change', function() {
+                localStorage.setItem('nacosServer', elements.nacosServer.value);
+                loadNamespaceList();
+            });
+            
+            elements.namespaceSelect.addEventListener('change', function() {
+                localStorage.setItem('namespaceId', elements.namespaceSelect.value);
+                // 切换namespace时重新加载配置
+                configCurrentPage = 1;
+                loadConfigs();
+            });
+            
+            // 服务排序事件绑定（事件委托）
+            document.addEventListener('click', function(e) {
+                // 服务列表排序
+                const serviceHeader = e.target.closest('.sortable-header[data-sort^="name"], .sortable-header[data-sort^="group"], .sortable-header[data-sort^="instanceCount"], .sortable-header[data-sort^="healthyCount"]');
+                if (serviceHeader) {
+                    const field = serviceHeader.dataset.sort;
+                    if (field) {
+                        toggleServiceSort(field);
+                    }
+                }
+                
+                // 配置列表排序
+                const configHeader = e.target.closest('.sortable-header[data-sort^="dataId"], .sortable-header[data-sort^="group"], .sortable-header[data-sort^="appName"], .sortable-header[data-sort^="lastModifiedTime"]');
+                if (configHeader) {
+                    const field = configHeader.dataset.sort;
+                    if (field) {
+                        toggleConfigSort(field);
+                    }
+                }
+                
+                // 查看服务实例（原有逻辑）
+                const viewInstanceBtn = e.target.closest('.view-instance-btn');
+                if (viewInstanceBtn) {
+                    const serviceName = viewInstanceBtn.dataset.servicename;
+                    const groupName = viewInstanceBtn.dataset.groupname;
+                    openInstanceModal(serviceName, groupName);
+                }
+            });
+        }
+
+        // 从本地存储加载配置
+        function loadLocalConfig() {
+            const savedServer = localStorage.getItem('nacosServer');
+            const savedNamespace = localStorage.getItem('namespaceId');
+            
+            if (savedServer) elements.nacosServer.value = savedServer;
+        }
+
+        // 加载Namespace列表
+        async function loadNamespaceList() {
+            const serverUrl = elements.nacosServer.value;
+            
+            if (!serverUrl) return;
+            
+            try {
+                const baseUrl = serverUrl.replace(/\/$/, '');
+                const url = `${baseUrl}/v1/console/namespaces`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    mode: 'cors',
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误，状态码：${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result && result.code === 200 && Array.isArray(result.data)) {
+                    namespaceList = result.data;
+                    renderNamespaceSelect(namespaceList);
+                } else {
+                    fallbackLoadNamespace();
+                }
+            } catch (error) {
+                console.error('加载Namespace列表失败:', error);
+                fallbackLoadNamespace();
+            }
+        }
+
+        // 备用方案加载namespace
+        function fallbackLoadNamespace() {
+            namespaceList = [
+                {
+                    "namespace": "",
+                    "namespaceShowName": "public（默认命名空间）"
+                }
+            ];
+            renderNamespaceSelect(namespaceList);
+        }
+
+        // 渲染Namespace下拉选择框
+        function renderNamespaceSelect(namespaces) {
+            elements.namespaceSelect.innerHTML = '';
+            
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '请选择Namespace';
+            elements.namespaceSelect.appendChild(defaultOption);
+            
+            namespaces.forEach(ns => {
+                const option = document.createElement('option');
+                option.value = ns.namespace || '';
+                
+                const displayName = ns.namespaceShowName || '未命名命名空间';
+                const displayId = ns.namespace || 'public';
+                
+                option.textContent = `${displayName} [${displayId}]`;
+                option.dataset.name = displayName;
+                option.dataset.id = displayId;
+                
+                elements.namespaceSelect.appendChild(option);
+            });
+            
+            const savedNamespace = localStorage.getItem('namespaceId');
+            if (savedNamespace) {
+                elements.namespaceSelect.value = savedNamespace;
+            }
+        }
+
+        // 连接到Nacos服务器
+        function connectToNacos(isAuto) {
+            const selectedNamespace = elements.namespaceSelect.value;
+            if (!selectedNamespace && !isAuto) {
+                alert('请先选择一个Namespace！');
+                return;
+            }
+            
+            localStorage.setItem('nacosServer', elements.nacosServer.value);
+            localStorage.setItem('namespaceId', selectedNamespace);
+            
+            elements.connectionStatus.innerHTML = `
+                <i class="fa-solid fa-circle text-yellow-500 mr-1"></i>
+                <span>${isAuto ? '自动连接中...' : '连接中...'}</span>
+            `;
+            
+            currentPage = 1;
+            configCurrentPage = 1;
+            loadServices();
+            loadConfigs();
+        }
+
+        // ========== 服务列表相关逻辑（原有） ==========
+        // 切换服务排序字段和方向
+        function toggleServiceSort(field) {
+            // 重置所有服务排序图标
+            resetServiceSortIcons();
+            
+            // 如果点击的是当前排序字段，切换排序方向
+            if (sortField === field) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                // 否则设置新的排序字段，默认升序
+                sortField = field;
+                sortDirection = 'asc';
+            }
+            
+            // 更新排序图标
+            updateServiceSortIcon(field);
+            
+            // 过滤并渲染排序后的服务列表
+            filterAndRenderServices();
+        }
+
+        // 重置所有服务排序图标
+        function resetServiceSortIcons() {
+            const sortIcons = [
+                document.getElementById('sort-icon-name'),
+                document.getElementById('sort-icon-group'),
+                document.getElementById('sort-icon-instanceCount'),
+                document.getElementById('sort-icon-healthyCount')
+            ];
+            
+            sortIcons.forEach(icon => {
+                if (icon) {
+                    icon.className = 'fa-solid fa-sort sort-icon';
+                    icon.style.opacity = '0.6';
+                }
+            });
+        }
+
+        // 更新服务排序图标
+        function updateServiceSortIcon(field) {
+            const iconId = `sort-icon-${field}`;
+            const icon = document.getElementById(iconId);
+            
+            if (!icon) {
+                console.warn(`排序图标元素 ${iconId} 未找到`);
+                return;
+            }
+            
+            if (sortDirection === 'asc') {
+                icon.className = 'fa-solid fa-sort-up sort-icon';
+            } else {
+                icon.className = 'fa-solid fa-sort-down sort-icon';
+            }
+            icon.style.opacity = '1';
+        }
+
+        // 排序服务列表
+        function sortServices(services) {
+            if (!sortField || !services || services.length === 0) return services;
+            
+            return [...services].sort((a, b) => {
+                let valueA, valueB;
+                
+                a = a || {};
+                b = b || {};
+                
+                switch (sortField) {
+                    case 'name':
+                        valueA = (a.name || '').toLowerCase();
+                        valueB = (b.name || '').toLowerCase();
+                        break;
+                    case 'group':
+                        valueA = (a.groupName || '').toLowerCase();
+                        valueB = (b.groupName || '').toLowerCase();
+                        break;
+                    case 'instanceCount':
+                        valueA = Number(a.ipCount) || 0;
+                        valueB = Number(b.ipCount) || 0;
+                        break;
+                    case 'healthyCount':
+                        valueA = Number(a.healthyInstanceCount) || 0;
+                        valueB = Number(b.healthyInstanceCount) || 0;
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (sortDirection === 'asc') {
+                    if (typeof valueA === 'string') {
+                        return valueA.localeCompare(valueB);
+                    } else {
+                        return valueA - valueB;
+                    }
+                } else {
+                    if (typeof valueA === 'string') {
+                        return valueB.localeCompare(valueA);
+                    } else {
+                        return valueB - valueA;
+                    }
+                }
+            });
+        }
+
+        // 实时过滤服务列表
+        function filterAndRenderServices() {
+            const searchKeyword = elements.serviceSearch.value.trim().toLowerCase();
+            
+            let filteredServices = allServices || [];
+            if (searchKeyword) {
+                filteredServices = filteredServices.filter(service => {
+                    if (!service) return false;
+                    return (service.name && service.name.toLowerCase().includes(searchKeyword)) || 
+                           (service.groupName && service.groupName.toLowerCase().includes(searchKeyword));
+                });
+            }
+            
+            const sortedServices = sortServices(filteredServices);
+            
+            totalServices = filteredServices.length;
+            totalPages = Math.ceil(totalServices / pageSize);
+            
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const currentPageServices = sortedServices.slice(startIndex, endIndex);
+            
+            renderServicesList(currentPageServices);
+            updateServicePagination();
+            elements.totalServices.textContent = totalServices;
+        }
+
+        // 加载服务列表
+        async function loadServices() {
+            const selectedNamespace = elements.namespaceSelect.value;
+            if (!selectedNamespace) return;
+            
+            if (!allServices || allServices.length === 0) {
+                showServicesLoading();
+            }
+            const selectedOption = elements.namespaceSelect.options[elements.namespaceSelect.selectedIndex];
+            const dataName = selectedOption.dataset.name; 
+
+            let groupName = dataName.indexOf("iot") > -1 ? 'IOT_GROUP' : 'DEFAULT_GROUP'
+            try {
+                const baseUrl = elements.nacosServer.value.replace(/\/$/, '');
+                const url = `${baseUrl}/v1/ns/service/list?` + new URLSearchParams({
+                    namespaceId: selectedNamespace,
+                    pageNo: 1,
+                    pageSize: 1000,
+                    serviceNameParam: '',
+                    groupName: groupName
+                });
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    mode: 'cors',
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP 错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const adaptData = {
+                    count: data.count || 0,
+                    serviceList: (data.doms || []).map(serviceName => ({
+                        name: serviceName,
+                        groupName: groupName,
+                        ipCount: 0,
+                        healthyInstanceCount: 0
+                    }))
+                };
+                
+                allServices = adaptData.serviceList || [];
+                totalServices = adaptData.count || 0;
+                totalPages = Math.ceil(totalServices / pageSize);
+                
+                elements.connectionStatus.innerHTML = `
+                    <i class="fa-solid fa-circle text-success mr-1"></i>
+                    <span>已连接 (${totalServices} 个服务, ${configTotalConfigs || 0} 个配置)</span>
+                `;
+                
+                filterAndRenderServices();
+                
+                elements.servicesTableContainer.classList.remove('hidden');
+                elements.servicesPagination.classList.remove('hidden');
+                elements.servicesLoading.classList.add('hidden');
+                elements.servicesEmpty.classList.add('hidden');
+                elements.servicesError.classList.add('hidden');
+                
+                loadServicesInstanceCountSilently(allServices, selectedNamespace);
+                
+            } catch (error) {
+                console.error('加载服务列表失败:', error);
+                
+                elements.connectionStatus.innerHTML = `
+                    <i class="fa-solid fa-circle text-danger mr-1"></i>
+                    <span>连接失败</span>
+                `;
+                
+                elements.servicesErrorMsg.textContent = `加载失败: ${error.message}`;
+                elements.servicesError.classList.remove('hidden');
+                elements.servicesLoading.classList.add('hidden');
+                elements.servicesEmpty.classList.add('hidden');
+                elements.servicesTableContainer.classList.add('hidden');
+                elements.servicesPagination.classList.add('hidden');
+            }
+        }
+
+        // 异步静默加载每个服务的实例数
+        async function loadServicesInstanceCountSilently(services, namespaceId) {
+            if (!services || services.length === 0) return;
+            
+            const batchSize = 5;
+            for (let i = 0; i < services.length; i += batchSize) {
+                const batch = services.slice(i, i + batchSize);
+                
+                const promises = batch.map(service => {
+                    return new Promise(async (resolve) => {
+                        try {
+                            if (!service || !service.name) {
+                                resolve();
+                                return;
+                            }
+                            
+                            const baseUrl = elements.nacosServer.value.replace(/\/$/, '');
+                            const allInstancesUrl = `${baseUrl}/v1/ns/instance/list?` + new URLSearchParams({
+                                serviceName: service.name,
+                                groupName: service.groupName,
+                                namespaceId: namespaceId,
+                                healthyOnly: false
+                            });
+                            
+                            const response = await fetch(allInstancesUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                mode: 'cors',
+                                credentials: 'same-origin'
+                            });
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                const allInstances = data.hosts || [];
+                                const healthyInstances = allInstances.filter(instance => instance.healthy);
+                                
+                                service.ipCount = allInstances.length;
+                                service.healthyInstanceCount = healthyInstances.length;
+                                
+                                updateServiceInstanceCountSilently(service.name, allInstances.length, healthyInstances.length);
+                            }
+                        } catch (error) {
+                            console.error(`加载服务 ${service?.name} 实例数失败:`, error);
+                        }
+                        resolve();
+                    });
+                });
+                
+                await Promise.all(promises);
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            filterAndRenderServices();
+        }
+
+        // 静默更新单个服务的实例数显示
+        function updateServiceInstanceCountSilently(serviceName, totalCount, healthyCount) {
+            if (!serviceName) return;
+            
+            const rows = elements.servicesList.querySelectorAll('tr');
+            rows.forEach(row => {
+                const serviceNameCell = row.querySelector('td:first-child');
+                if (serviceNameCell && serviceNameCell.textContent.trim() === serviceName) {
+                    const ipCountCell = row.querySelectorAll('td')[2];
+                    const healthyCountCell = row.querySelectorAll('td')[3];
+                    
+                    if (ipCountCell) {
+                        ipCountCell.innerHTML = `
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                                ${totalCount}
+                            </span>
+                        `;
+                    }
+                    
+                    if (healthyCountCell) {
+                        healthyCountCell.innerHTML = `
+                            <span class="bg-success/10 text-success px-2 py-1 rounded-full text-xs">
+                                ${healthyCount}
+                            </span>
+                        `;
+                    }
+                }
+            });
+        }
+
+        // 渲染服务列表
+        function renderServicesList(services) {
+            elements.servicesList.innerHTML = '';
+            
+            if (!services || services.length === 0) {
+                elements.servicesTableContainer.classList.add('hidden');
+                elements.servicesEmpty.classList.remove('hidden');
+                return;
+            }
+            
+            elements.servicesEmpty.classList.add('hidden');
+            elements.servicesTableContainer.classList.remove('hidden');
+            
+            services.forEach(service => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 hover:bg-gray-50';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm">${service.name || '-'}</td>
+                    <td class="px-4 py-3 text-sm">${service.groupName || '-'}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                            ${service.ipCount || 0}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        <span class="bg-success/10 text-success px-2 py-1 rounded-full text-xs">
+                            ${service.healthyInstanceCount || 0}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        <button class="view-instance-btn text-primary hover:text-primary/80 flex items-center" 
+                                data-servicename="${service.name}" data-groupname="${service.groupName}">
+                            <i class="fa-solid fa-eye mr-1"></i>查看实例
+                        </button>
+                    </td>
+                `;
+                
+                elements.servicesList.appendChild(tr);
+            });
+        }
+
+        // 更新服务分页
+        function updateServicePagination() {
+            elements.prevPage.disabled = currentPage <= 1;
+            elements.nextPage.disabled = currentPage >= totalPages;
+            elements.pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages || 1} 页`;
+        }
+
+        // 显示服务加载状态
+        function showServicesLoading() {
+            elements.servicesLoading.classList.remove('hidden');
+            elements.servicesEmpty.classList.add('hidden');
+            elements.servicesError.classList.add('hidden');
+            elements.servicesTableContainer.classList.add('hidden');
+            elements.servicesPagination.classList.add('hidden');
+        }
+
+        // 打开实例弹窗
+        function openInstanceModal(serviceName, groupName) {
+            currentServiceName = serviceName;
+            currentGroupName = groupName;
+            
+            elements.modalTitle.textContent = `服务实例详情 - ${serviceName}`;
+            elements.instanceModal.classList.remove('hidden');
+            elements.instancesLoading.classList.remove('hidden');
+            elements.instancesError.classList.add('hidden');
+            elements.instancesTableContainer.classList.add('hidden');
+            
+            loadServiceInstances(serviceName, groupName);
+        }
+
+        // 关闭实例弹窗
+        function closeInstanceModal() {
+            elements.instanceModal.classList.add('hidden');
+        }
+
+        // 加载服务实例
+        async function loadServiceInstances(serviceName, groupName) {
+            const selectedNamespace = elements.namespaceSelect.value;
+            if (!selectedNamespace) return;
+            
+            try {
+                const baseUrl = elements.nacosServer.value.replace(/\/$/, '');
+                const url = `${baseUrl}/v1/ns/instance/list?` + new URLSearchParams({
+                    serviceName: serviceName,
+                    groupName: groupName,
+                    namespaceId: selectedNamespace,
+                    healthyOnly: false
+                });
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    mode: 'cors',
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP 错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const instances = data.hosts || [];
+                
+                elements.instancesLoading.classList.add('hidden');
+                elements.instancesTableContainer.classList.remove('hidden');
+                
+                renderInstancesList(instances);
+                
+            } catch (error) {
+                console.error('加载实例列表失败:', error);
+                elements.instancesLoading.classList.add('hidden');
+                elements.instancesError.classList.remove('hidden');
+                elements.instancesErrorMsg.textContent = `加载失败: ${error.message}`;
+            }
+        }
+
+        // 渲染实例列表
+        function renderInstancesList(instances) {
+            elements.instancesList.innerHTML = '';
+            
+            if (!instances || instances.length === 0) {
+                elements.instancesList.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <i class="fa-solid fa-server text-2xl mb-2"></i>
+                            <p>暂无实例数据</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            instances.forEach(instance => {
+                const statusClass = instance.healthy ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger';
+                const statusText = instance.healthy ? '健康' : '不健康';
+                const lastModified = instance.lastBeat ? new Date(instance.lastBeat).toLocaleString() : '-';
+                
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 hover:bg-gray-50';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm">${instance.ip || '-'}</td>
+                    <td class="px-4 py-3 text-sm">${instance.port || '-'}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <span class="${statusClass} px-2 py-1 rounded-full text-xs">${statusText}</span>
+                    </td>
+                    <td class="px-4 py-3 text-sm">${instance.weight || 1.0}</td>
+                    <td class="px-4 py-3 text-sm">${instance.clusterName || 'DEFAULT'}</td>
+                    <td class="px-4 py-3 text-sm">${lastModified}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <button class="text-gray-500 hover:text-gray-700 disabled:opacity-50" 
+                                ${instance.healthy ? '' : 'disabled'}>
+                            <i class="fa-solid fa-power-off mr-1"></i>下线
+                        </button>
+                    </td>
+                `;
+                
+                elements.instancesList.appendChild(tr);
+            });
+        }
+
+        // ========== 配置列表新增逻辑（适配自定义接口） ==========
+        // 切换配置排序字段和方向
+        function toggleConfigSort(field) {
+            // 重置所有配置排序图标
+            resetConfigSortIcons();
+            
+            // 如果点击的是当前排序字段，切换排序方向
+            if (configSortField === field) {
+                configSortDirection = configSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                // 否则设置新的排序字段，默认升序
+                configSortField = field;
+                configSortDirection = 'asc';
+            }
+            
+            // 更新排序图标
+            updateConfigSortIcon(field);
+            
+            // 过滤并渲染排序后的配置列表
+            filterAndRenderConfigs();
+        }
+
+        // 重置所有配置排序图标
+        function resetConfigSortIcons() {
+            const sortIcons = [
+                document.getElementById('sort-icon-dataId'),
+                document.getElementById('sort-icon-configGroup'),
+                document.getElementById('sort-icon-appName'),
+                document.getElementById('sort-icon-lastModifiedTime')
+            ];
+            
+            sortIcons.forEach(icon => {
+                if (icon) {
+                    icon.className = 'fa-solid fa-sort sort-icon';
+                    icon.style.opacity = '0.6';
+                }
+            });
+        }
+
+        // 更新配置排序图标
+        function updateConfigSortIcon(field) {
+            let iconId = '';
+            if (field === 'group') iconId = 'sort-icon-configGroup';
+            else iconId = `sort-icon-${field}`;
+            
+            const icon = document.getElementById(iconId);
+            
+            if (!icon) {
+                console.warn(`排序图标元素 ${iconId} 未找到`);
+                return;
+            }
+            
+            if (configSortDirection === 'asc') {
+                icon.className = 'fa-solid fa-sort-up sort-icon';
+            } else {
+                icon.className = 'fa-solid fa-sort-down sort-icon';
+            }
+            icon.style.opacity = '1';
+        }
+
+        // 排序配置列表
+        function sortConfigs(configs) {
+            if (!configSortField || !configs || configs.length === 0) return configs;
+            
+            return [...configs].sort((a, b) => {
+                let valueA, valueB;
+                
+                a = a || {};
+                b = b || {};
+                
+                switch (configSortField) {
+                    case 'dataId':
+                        valueA = (a.dataId || '').toLowerCase();
+                        valueB = (b.dataId || '').toLowerCase();
+                        break;
+                    case 'group':
+                        valueA = (a.group || '').toLowerCase();
+                        valueB = (b.group || '').toLowerCase();
+                        break;
+                    case 'appName':
+                        valueA = (a.appName || '').toLowerCase();
+                        valueB = (b.appName || '').toLowerCase();
+                        break;
+                    case 'lastModifiedTime':
+                        valueA = a.lastModifiedTime || 0;
+                        valueB = b.lastModifiedTime || 0;
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (configSortDirection === 'asc') {
+                    if (typeof valueA === 'string') {
+                        return valueA.localeCompare(valueB);
+                    } else {
+                        return valueA - valueB;
+                    }
+                } else {
+                    if (typeof valueA === 'string') {
+                        return valueB.localeCompare(valueA);
+                    } else {
+                        return valueB - valueA;
+                    }
+                }
+            });
+        }
+
+        // 实时过滤配置列表
+        function filterAndRenderConfigs() {
+            const searchKeyword = elements.configSearch.value.trim().toLowerCase();
+            
+            // 过滤配置
+            let filteredConfigs = allConfigs || [];
+            if (searchKeyword) {
+                filteredConfigs = filteredConfigs.filter(config => {
+                    if (!config) return false;
+                    return (config.dataId && config.dataId.toLowerCase().includes(searchKeyword)) || 
+                           (config.group && config.group.toLowerCase().includes(searchKeyword));
+                });
+            }
+            
+            // 排序配置
+            const sortedConfigs = sortConfigs(filteredConfigs);
+            
+            // 更新总数和分页
+            configTotalConfigs = filteredConfigs.length;
+            configTotalPages = Math.ceil(configTotalConfigs / pageSize);
+            
+            // 截取当前页数据
+            const startIndex = (configCurrentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const currentPageConfigs = sortedConfigs.slice(startIndex, endIndex);
+            
+            // 渲染
+            renderConfigsList(currentPageConfigs);
+            updateConfigPagination();
+            elements.totalConfigs.textContent = configTotalConfigs;
+            
+            // 更新连接状态中的配置数量
+            if (elements.connectionStatus.querySelector('.text-success')) {
+                elements.connectionStatus.innerHTML = `
+                    <i class="fa-solid fa-circle text-success mr-1"></i>
+                    <span>已连接 (${totalServices} 个服务, ${configTotalConfigs} 个配置)</span>
+                `;
+            }
+        }
+
+        // 加载配置列表（适配自定义接口）
+        async function loadConfigs() {
+            const selectedNamespace = elements.namespaceSelect.value;
+            if (!selectedNamespace) return;
+            
+            showConfigsLoading();
+            
+            try {
+                // 获取基础配置
+                const baseUrl = elements.nacosServer.value.replace(/\/$/, '');
+
+                // 构建自定义接口参数
+                const params = new URLSearchParams({
+                    dataId: '',
+                    group: '',
+                    appName: '',
+                    config_tags: '',
+                    pageNo: 1,
+                    pageSize: 100,
+                    tenant: selectedNamespace, // tenant对应命名空间
+                    search: 'accurate',
+                    username: 'nacos'
+                });
+                
+                const url = `${baseUrl}/v1/cs/configs?${params.toString()}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    mode: 'cors',
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP 错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 适配配置数据格式
+                allConfigs = Array.isArray(data) ? data : (data.pageItems || []);
+                configTotalConfigs = allConfigs.length;
+                configTotalPages = Math.ceil(configTotalConfigs / pageSize);
+                
+                // 立即显示配置列表
+                filterAndRenderConfigs();
+                
+                // 显示表格和分页
+                elements.configsTableContainer.classList.remove('hidden');
+                elements.configsPagination.classList.remove('hidden');
+                elements.configsLoading.classList.add('hidden');
+                elements.configsEmpty.classList.add('hidden');
+                elements.configsError.classList.add('hidden');
+                
+            } catch (error) {
+                console.error('加载配置列表失败:', error);
+                
+                elements.configsErrorMsg.textContent = `加载失败: ${error.message}`;
+                elements.configsError.classList.remove('hidden');
+                elements.configsLoading.classList.add('hidden');
+                elements.configsEmpty.classList.add('hidden');
+                elements.configsTableContainer.classList.add('hidden');
+                elements.configsPagination.classList.add('hidden');
+            }
+        }
+
+        // 渲染配置列表（增加查看和编辑按钮）
+        function renderConfigsList(configs) {
+            elements.configsList.innerHTML = '';
+            
+            if (!configs || configs.length === 0) {
+                elements.configsTableContainer.classList.add('hidden');
+                elements.configsEmpty.classList.remove('hidden');
+                return;
+            }
+            
+            elements.configsEmpty.classList.add('hidden');
+            elements.configsTableContainer.classList.remove('hidden');
+            
+            // 获取基础URL和命名空间
+            const baseNacosUrl = elements.nacosServer.value;
+            const namespace = elements.namespaceSelect.value;
+            
+            configs.forEach(config => {
+                // 格式化时间
+                const lastModifiedTime = config.lastModifiedTime 
+                    ? new Date(config.lastModifiedTime).toLocaleString() 
+                    : '-';
+                
+                // 构建查看和编辑链接
+                const dataId = encodeURIComponent(config.dataId || '');
+                const group = encodeURIComponent(config.group || 'DEFAULT_GROUP');
+                const tenant = encodeURIComponent(namespace);
+                
+                // 查看链接
+                const viewUrl = `${baseNacosUrl}/#/configdetail?serverId=center&dataId=${dataId}&group=${group}&namespace=${tenant}&edasAppName=&searchDataId=&searchGroup=&pageSize=10&pageNo=1`;
+                
+                // 编辑链接
+                const editUrl = `${baseNacosUrl}/#/configeditor?serverId=center&dataId=${dataId}&group=${group}&namespace=${tenant}&edasAppName=&edasAppId=&searchDataId=&searchGroup=&pageSize=10&pageNo=1`;
+                
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 hover:bg-gray-50';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-sm font-medium">${config.dataId || '-'}</td>
+                    <td class="px-4 py-3 text-sm">${config.group || 'DEFAULT_GROUP'}</td>
+                    <td class="px-4 py-3 text-sm">${config.appName || '-'}</td>
+                    <td class="px-4 py-3 text-sm">${lastModifiedTime}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <div class="flex space-x-2">
+                            <a href="${viewUrl}" target="_blank" class="text-primary hover:text-primary/80 flex items-center">
+                                <i class="fa-solid fa-eye mr-1"></i>查看
+                            </a>
+                            <a href="${editUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 flex items-center">
+                                <i class="fa-solid fa-edit mr-1"></i>编辑
+                            </a>
+                        </div>
+                    </td>
+                `;
+                
+                elements.configsList.appendChild(tr);
+            });
+        }
+
+        // 更新配置分页
+        function updateConfigPagination() {
+            elements.configPrevPage.disabled = configCurrentPage <= 1;
+            elements.configNextPage.disabled = configCurrentPage >= configTotalPages;
+            elements.configPageInfo.textContent = `第 ${configCurrentPage} 页 / 共 ${configTotalPages || 1} 页`;
+        }
+
+        // 显示配置加载状态
+        function showConfigsLoading() {
+            elements.configsLoading.classList.remove('hidden');
+            elements.configsEmpty.classList.add('hidden');
+            elements.configsError.classList.add('hidden');
+            elements.configsTableContainer.classList.add('hidden');
+            elements.configsPagination.classList.add('hidden');
+        }
+
+        // 清理过期的下线实例（原有逻辑，保留）
+        function cleanExpiredOfflineInstances() {
+            // 此处为原有逻辑占位，可根据实际需求实现
+        }
+    </script>
+</body>
+</html>
