@@ -3,536 +3,571 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON 格式化</title>
+    <title>JSON 格式化工具</title>
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --success-color: #2ec4b6;
+            --warning-color: #f77f00;
+            --danger-color: #d62828;
+            --secondary-color: #64748b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft YaHei", "Consolas", "Monaco", monospace;
+            font-family: "Inter", "system-ui", "-apple-system", "Microsoft YaHei", sans-serif;
         }
 
         body {
-            background-color: #f5f7fa;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
         }
 
         .container {
             width: 100%;
-            max-width: 1600px; /* 固定最大宽度，避免页面过宽 */
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            max-width: 1400px;
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
+            border: 1px solid var(--border-color);
         }
 
+        /* 顶部导航 */
         .tool-header {
-            background-color: #2c3e50;
+            background-color: #1e293b;
             color: #ffffff;
-            padding: 16px 24px;
-            font-size: 18px;
-            font-weight: 600;
-            border-bottom: 2px solid #34495e;
+            padding: 18px 24px;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
         }
 
-        /* 核心优化1：精简按钮栏，移除冗余功能，按优先级排序 */
+        .tool-header::before {
+            content: "{ }";
+            margin-right: 12px;
+            color: var(--success-color);
+            font-family: monospace;
+        }
+
+        /* 控制栏优化 */
         .tool-controls {
             padding: 16px 24px;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.3s ease;
-            display: flex;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            white-space: nowrap;
         }
 
-        .btn-primary {
-            background-color: #3498db;
-            color: #ffffff;
-        }
+        .btn:active { transform: scale(0.96); }
 
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
 
-        .btn-success {
-            background-color: #2ecc71;
-            color: #ffffff;
-        }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { opacity: 0.9; }
 
-        .btn-success:hover {
-            background-color: #27ae60;
-        }
+        .btn-warning { background-color: var(--warning-color); color: white; }
+        .btn-warning:hover { opacity: 0.9; }
 
-        .btn-warning {
-            background-color: #f39c12;
-            color: #ffffff;
-        }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { opacity: 0.9; }
 
-        .btn-warning:hover {
-            background-color: #e67e22;
-        }
+        .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background-color: #e2e8f0; }
 
-        .btn-danger {
-            background-color: #e74c3c;
-            color: #ffffff;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        .btn-secondary {
-            background-color: #95a5a6;
-            color: #ffffff;
-        }
-
-        .btn-secondary:hover {
-            background-color: #7f8c8d;
-        }
-
-        /* 核心优化2：固定输入输出区宽度，解决抖动问题 */
+        /* 内容区响应式布局 */
         .tool-content {
-            padding: 24px;
+            padding: 20px;
             display: flex;
-            gap: 24px;
-            height: calc(100vh - 180px);
-            min-height: 600px;
+            gap: 20px;
+            height: calc(100vh - 200px);
+            min-height: 500px;
         }
 
-        /* 固定输入区宽度，输出区占剩余空间（以输出区为核心） */
         .json-input-panel {
-            width: 400px; /* 固定宽度，不再变化 */
-            flex-shrink: 0; /* 禁止收缩，避免宽度变化 */
+            width: 35%; /* 比例分配 */
+            min-width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            height: 100%;
+            gap: 10px;
         }
 
-        /* 输出区占满剩余宽度，支持弹性扩展 */
         .json-output-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            height: 100%;
+            gap: 10px;
+            min-width: 0; /* 防止内容溢出撑开容器 */
         }
 
         .label {
-            font-size: 16px;
-            color: #2c3e50;
-            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
         }
 
         textarea {
             width: 100%;
             flex: 1;
             padding: 16px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
             font-size: 14px;
             line-height: 1.6;
             resize: none;
-            background-color: #fdfdfd;
-            font-family: "Consolas", "Monaco", monospace;
+            background-color: #f8fafc;
+            color: #334155;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            transition: border-color 0.2s;
         }
 
         textarea:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: var(--primary-color);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
         }
 
-        /* FEHelper 风格输出区（稳定布局） */
+        /* 树形输出区美化 */
         .json-output-tree {
             flex: 1;
             padding: 16px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
             background: #ffffff;
-            overflow-y: auto;
-            font-family: "Consolas", "Monaco", monospace;
+            overflow: auto;
+            font-family: "Cascadia Code", "Consolas", monospace;
             font-size: 14px;
-            white-space: pre;
-            color: #333333;
-            line-height: 1.7;
+            line-height: 1.8;
+            position: relative;
         }
 
-        /* 语法高亮与折叠样式 */
-        .fe-key { color: #0033cc; }
-        .fe-string { color: #008000; }
-        .fe-number { color: #cc6600; }
-        .fe-boolean { color: #cc00cc; }
-        .fe-null { color: #666666; }
-        .fe-bracket { color: #666666; font-weight: 500; }
-        .fe-collapse-note { color: #999999; font-size: 12px; }
-        .fe-highlight { background-color: #e8f4fd; border-radius: 2px; }
+        /* 滚动条美化 */
+        .json-output-tree::-webkit-scrollbar { width: 8px; height: 8px; }
+        .json-output-tree::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .json-output-tree::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* FEHelper 语法高亮细节 */
+        .fe-key { color: #2563eb; font-weight: 500; }
+        .fe-string { color: #059669; }
+        .fe-number { color: #d97706; }
+        .fe-boolean { color: #7c3aed; }
+        .fe-null { color: #94a3b8; font-style: italic; }
+        .fe-bracket { color: #64748b; }
+        .fe-highlight { background-color: #f1f5f9; border-radius: 4px; }
 
         .fe-toggle {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
             margin-right: 6px;
-            text-align: center;
-            line-height: 18px;
             font-size: 12px;
-            background: #f0f0f0;
-            border-radius: 3px;
+            background: #f1f5f9;
+            border-radius: 4px;
             cursor: pointer;
-            color: #666666;
+            color: #64748b;
             user-select: none;
+            border: 1px solid var(--border-color);
         }
 
-        .fe-toggle:hover { 
-            background: #e0e0e0;
-            box-shadow: 0 0 2px rgba(0,0,0,0.1);
-        }
+        .fe-toggle:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
 
-        /* 输出区子按钮栏 */
+        /* 输出区子控制栏 */
         .output-sub-controls {
             display: flex;
             gap: 8px;
-            margin-bottom: 8px;
-            align-items: center;
+            margin-bottom: 2px;
         }
 
         .sub-btn {
-            padding: 4px 12px;
-            border: none;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            background-color: #f8f9fa;
-            color: #2c3e50;
-            transition: all 0.2s ease;
+            font-weight: 500;
+            background-color: #ffffff;
+            color: var(--text-muted);
+            transition: all 0.2s;
         }
 
         .sub-btn:hover {
-            background-color: #e9ecef;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background-color: #f0f7ff;
         }
 
         .result-tip {
             font-size: 12px;
-            color: #7f8c8d;
+            color: var(--text-muted);
             margin-top: 4px;
+            padding-left: 4px;
         }
 
-        /* 响应式适配：小屏幕下恢复垂直布局 */
+        /* 手机端适配 */
         @media (max-width: 992px) {
+            body { padding: 8px; }
+
+            .tool-header { padding: 14px 18px; font-size: 18px; }
+
             .tool-content {
                 flex-direction: column;
                 height: auto;
                 min-height: auto;
+                gap: 16px;
+                padding: 16px;
             }
 
             .json-input-panel {
-                width: 100%; /* 小屏幕下占满宽度 */
-                height: 300px;
+                width: 100%;
+                height: 260px;
+                min-width: unset;
             }
 
             .json-output-panel {
-                height: 400px;
+                height: 500px;
+            }
+
+            .tool-controls {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .btn {
+                flex: 1 1 calc(50% - 10px); /* 按钮两列排布 */
+                justify-content: center;
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .sub-btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                flex: 1 1 100%; /* 极小屏幕单列排布 */
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="tool-header">JSON 格式化</div>
-        <!-- 核心优化2：精简按钮栏，移除冗余功能 -->
-        <div class="tool-controls">
-            <button class="btn btn-success" id="sortBtn">🔤 键名排序</button>
-            <button class="btn btn-warning" id="compressBtn">📦 压缩JSON</button>
-            <button class="btn btn-danger" id="clearBtn">🗑 清空内容</button>
-            <button class="btn btn-secondary" id="copyFormatBtn">📋 复制格式化</button>
-            <button class="btn btn-secondary" id="copyCompressBtn">📋 复制压缩</button>
-        </div>
-        <div class="tool-content">
-            <!-- 核心优化1：固定输入区宽度 -->
-            <div class="json-input-panel">
-                <label class="label" for="jsonInput">📥 输入区（实时格式化）</label>
-                <textarea id="jsonInput" placeholder="请输入或粘贴JSON数据...
-示例：
-{\"name\":\"JSON工具\",\"version\":1.0,\"features\":[\"格式化\",\"排序\"]}"></textarea>
-                <div class="result-tip" id="resultTip">就绪，输入内容实时格式化</div>
-            </div>
-            <!-- 输出区占满剩余宽度 -->
-            <div class="json-output-panel">
-                <label class="label">📤 输出区（FEHelper 风格）</label>
-                <div class="output-sub-controls">
-                    <button class="sub-btn" id="expandAllBtn">🔓 展开所有</button>
-                    <button class="sub-btn" id="collapseAllBtn">🔒 折叠所有</button>
-                </div>
-                <div id="jsonOutputTree" class="json-output-tree"></div>
-                <textarea id="jsonFormatText" style="display: none;"></textarea>
-                <textarea id="jsonCompressText" style="display: none;"></textarea>
-            </div>
-        </div>
+<div class="container">
+    <div class="tool-header">JSON 格式化工具</div>
+
+    <div class="tool-controls">
+        <button class="btn btn-success" id="sortBtn"><span>🔤</span> 键名排序</button>
+        <button class="btn btn-warning" id="compressBtn"><span>📦</span> 压缩 JSON</button>
+        <button class="btn btn-danger" id="clearBtn"><span>🗑</span> 清空内容</button>
+        <button class="btn btn-secondary" id="copyFormatBtn"><span>📋</span> 复制格式化</button>
+        <button class="btn btn-secondary" id="copyCompressBtn"><span>📋</span> 复制压缩</button>
     </div>
 
-    <script>
-        // DOM元素获取
-        const jsonInput = document.getElementById('jsonInput');
-        const jsonOutputTree = document.getElementById('jsonOutputTree');
-        const jsonFormatText = document.getElementById('jsonFormatText');
-        const jsonCompressText = document.getElementById('jsonCompressText');
-        const sortBtn = document.getElementById('sortBtn');
-        const compressBtn = document.getElementById('compressBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const copyFormatBtn = document.getElementById('copyFormatBtn');
-        const copyCompressBtn = document.getElementById('copyCompressBtn');
-        const expandAllBtn = document.getElementById('expandAllBtn');
-        const collapseAllBtn = document.getElementById('collapseAllBtn');
-        const resultTip = document.getElementById('resultTip');
+    <div class="tool-content">
+        <div class="json-input-panel">
+            <div class="label">
+                <span>📥 输入区</span>
+            </div>
+            <textarea id="jsonInput" spellcheck="false" placeholder="在此粘贴 JSON 代码..."></textarea>
+            <div class="result-tip" id="resultTip">就绪</div>
+        </div>
 
-        // 工具函数：提示信息
-        function showTip(message, isError = false) {
-            resultTip.textContent = message;
-            resultTip.style.color = isError ? '#e74c3c' : '#7f8c8d';
-            setTimeout(() => {
-                if (!isError) resultTip.style.color = '#7f8c8d';
-            }, 3000);
+        <div class="json-output-panel">
+            <div class="label">
+                <span>📤 树形预览</span>
+                <div class="output-sub-controls">
+                    <button class="sub-btn" id="expandAllBtn">🔓 展开</button>
+                    <button class="sub-btn" id="collapseAllBtn">🔒 折叠</button>
+                </div>
+            </div>
+            <div id="jsonOutputTree" class="json-output-tree"></div>
+            <!-- 隐藏的辅助文本域，保持逻辑不变 -->
+            <textarea id="jsonFormatText" style="display: none;"></textarea>
+            <textarea id="jsonCompressText" style="display: none;"></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * 业务逻辑代码保持原封不动
+     */
+    const jsonInput = document.getElementById('jsonInput');
+    const jsonOutputTree = document.getElementById('jsonOutputTree');
+    const jsonFormatText = document.getElementById('jsonFormatText');
+    const jsonCompressText = document.getElementById('jsonCompressText');
+    const sortBtn = document.getElementById('sortBtn');
+    const compressBtn = document.getElementById('compressBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyFormatBtn = document.getElementById('copyFormatBtn');
+    const copyCompressBtn = document.getElementById('copyCompressBtn');
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+    const resultTip = document.getElementById('resultTip');
+
+    function showTip(message, isError = false) {
+        resultTip.textContent = message;
+        resultTip.style.color = isError ? 'var(--danger-color)' : 'var(--text-muted)';
+        setTimeout(() => {
+            if (!isError) resultTip.style.color = 'var(--text-muted)';
+        }, 3000);
+    }
+
+    function parseJson(jsonStr) {
+        try {
+            if (!jsonStr.trim()) return null;
+            return JSON.parse(jsonStr);
+        } catch (error) {
+            showTip(`格式错误：${error.message}`, true);
+            return null;
         }
+    }
 
-        // 工具函数：解析JSON
-        function parseJson(jsonStr) {
-            try {
-                if (!jsonStr.trim()) return null;
-                return JSON.parse(jsonStr);
-            } catch (error) {
-                showTip(`格式错误：${error.message}`, true);
-                return null;
-            }
+    function sortJsonKeys(obj) {
+        if (Array.isArray(obj)) return obj.map(sortJsonKeys);
+        if (obj && typeof obj === 'object' && obj !== null) {
+            return Object.keys(obj).sort().reduce((sorted, key) => {
+                sorted[key] = sortJsonKeys(obj[key]);
+                return sorted;
+            }, {});
         }
+        return obj;
+    }
 
-        // 工具函数：排序JSON键名
-        function sortJsonKeys(obj) {
-            if (Array.isArray(obj)) return obj.map(sortJsonKeys);
-            if (obj && typeof obj === 'object' && obj !== null) {
-                return Object.keys(obj).sort().reduce((sorted, key) => {
-                    sorted[key] = sortJsonKeys(obj[key]);
-                    return sorted;
-                }, {});
-            }
-            return obj;
+    function formatJson(obj) {
+        try {
+            const formatted = JSON.stringify(obj, null, 4);
+            jsonFormatText.value = formatted;
+            return formatted;
+        } catch (error) {
+            showTip(`格式化失败：${error.message}`, true);
+            return '';
         }
+    }
 
-        // 工具函数：格式化/压缩JSON
-        function formatJson(obj) {
-            try {
-                const formatted = JSON.stringify(obj, null, 4);
-                jsonFormatText.value = formatted;
-                return formatted;
-            } catch (error) {
-                showTip(`格式化失败：${error.message}`, true);
-                return '';
-            }
+    function compressJson(obj) {
+        try {
+            const compressed = JSON.stringify(obj);
+            jsonCompressText.value = compressed;
+            return compressed;
+        } catch (error) {
+            showTip(`压缩失败：${error.message}`, true);
+            return '';
         }
+    }
 
-        function compressJson(obj) {
-            try {
-                const compressed = JSON.stringify(obj);
-                jsonCompressText.value = compressed;
-                return compressed;
-            } catch (error) {
-                showTip(`压缩失败：${error.message}`, true);
-                return '';
-            }
+    async function copyToClipboard(textArea, successMsg) {
+        const value = textArea.value.trim();
+        if (!value) {
+            showTip('暂无内容可复制', true);
+            return;
         }
-
-        // 工具函数：复制功能
-        async function copyToClipboard(textArea, successMsg) {
-            const value = textArea.value.trim();
-            if (!value) {
-                showTip('暂无内容可复制', true);
-                return;
-            }
-            try {
-                await navigator.clipboard.writeText(value);
-                showTip(successMsg);
-            } catch (error) {
-                showTip(`复制失败：${error.message}`, true);
-            }
+        try {
+            await navigator.clipboard.writeText(value);
+            showTip(successMsg);
+        } catch (error) {
+            showTip(`复制失败：${error.message}`, true);
         }
+    }
 
-        // 核心：渲染FEHelper风格树形结构
-        function renderJsonTree(data) {
-            if (!data) {
-                jsonOutputTree.innerHTML = '';
-                return;
-            }
-            // 同步生成格式化和压缩结果
-            formatJson(data);
-            compressJson(data);
-
-            function buildTreeHtml(obj, depth = 0, parentPath = []) {
-                const indent = '  '.repeat(depth);
-                let html = '';
-
-                if (Array.isArray(obj)) {
-                    const count = obj.length;
-                    html += `<span class="fe-bracket">[</span> `;
-                    html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">⊖</span>`;
-                    html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 项)</span>`;
-                    html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
-
-                    obj.forEach((item, index) => {
-                        const path = [...parentPath, `[${index}]`];
-                        html += `<div style="margin-left: ${(depth + 1) * 20}px;" onmouseenter="this.classList.add('fe-highlight')" onmouseleave="this.classList.remove('fe-highlight')">`;
-                        html += `${indent}  <span class="fe-key">[${index}]</span>: `;
-                        html += typeof item === 'object' && item !== null ? buildTreeHtml(item, depth + 1, path) : formatPrimitive(item);
-                        html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
-                        html += `</div>`;
-                    });
-                    html += `</div><span class="fe-bracket">]</span>`;
-                } else if (typeof obj === 'object' && obj !== null) {
-                    const keys = Object.keys(obj);
-                    const count = keys.length;
-                    html += `<span class="fe-bracket">{</span> `;
-                    html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">⊖</span>`;
-                    html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 个属性)</span>`;
-                    html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
-
-                    keys.forEach((key, index) => {
-                        const value = obj[key];
-                        const path = [...parentPath, key];
-                        html += `<div style="margin-left: ${(depth + 1) * 20}px;" onmouseenter="this.classList.add('fe-highlight')" onmouseleave="this.classList.remove('fe-highlight')">`;
-                        html += `${indent}  <span class="fe-key">"${key}"</span>: `;
-                        html += typeof value === 'object' && value !== null ? buildTreeHtml(value, depth + 1, path) : formatPrimitive(value);
-                        html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
-                        html += `</div>`;
-                    });
-                    html += `</div><span class="fe-bracket">}</span>`;
-                } else {
-                    html += formatPrimitive(obj);
-                }
-                return html;
-            }
-
-            function formatPrimitive(value) {
-                if (typeof value === 'string') return `<span class="fe-string">"${value}"</span>`;
-                if (typeof value === 'number') return `<span class="fe-number">${value}</span>`;
-                if (typeof value === 'boolean') return `<span class="fe-boolean">${value}</span>`;
-                if (value === null) return `<span class="fe-null">null</span>`;
-                return '';
-            }
-
-            jsonOutputTree.innerHTML = buildTreeHtml(data);
-            bindToggleEvents();
-        }
-
-        // 绑定折叠/展开事件
-        function bindToggleEvents() {
-            document.querySelectorAll('.fe-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const path = this.getAttribute('data-path');
-                    const children = document.querySelector(`.fe-tree-children[data-path="${path}"]`);
-                    const note = document.querySelector(`.fe-collapse-note[data-path="${path}"]`);
-                    if (children && note) {
-                        const isExpanded = this.textContent === '⊖';
-                        this.textContent = isExpanded ? '⊕' : '⊖';
-                        children.style.display = isExpanded ? 'none' : 'block';
-                        note.style.display = isExpanded ? 'inline' : 'none';
-                    }
-                });
-            });
-        }
-
-        // 一键展开/折叠所有
-        function expandAllNodes() {
-            document.querySelectorAll('.fe-toggle').forEach(toggle => {
-                toggle.textContent = '⊖';
-                const path = toggle.getAttribute('data-path');
-                document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'block');
-                document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'none');
-            });
-            showTip('已展开所有节点');
-        }
-
-        function collapseAllNodes() {
-            document.querySelectorAll('.fe-toggle').forEach(toggle => {
-                toggle.textContent = '⊕';
-                const path = toggle.getAttribute('data-path');
-                document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'none');
-                document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'inline');
-            });
-            showTip('已折叠所有节点');
-        }
-
-        // 输入区实时格式化
-        let formatTimer = null;
-        jsonInput.addEventListener('input', function() {
-            clearTimeout(formatTimer);
-            formatTimer = setTimeout(() => {
-                const inputValue = this.value.trim();
-                if (!inputValue) {
-                    jsonOutputTree.innerHTML = '';
-                    jsonFormatText.value = '';
-                    jsonCompressText.value = '';
-                    showTip('就绪，输入内容实时格式化');
-                    return;
-                }
-                const parsedJson = parseJson(inputValue);
-                if (parsedJson) {
-                    const formatted = formatJson(parsedJson);
-                    const cursorPos = this.selectionStart;
-                    this.value = formatted;
-                    this.selectionStart = this.selectionEnd = Math.min(cursorPos, formatted.length);
-                    renderJsonTree(parsedJson);
-                    showTip('JSON 已实时格式化');
-                }
-            }, 300);
-        });
-
-        // 按钮事件绑定
-        sortBtn.addEventListener('click', () => {
-            const parsed = parseJson(jsonInput.value.trim());
-            if (parsed) {
-                const sorted = sortJsonKeys(parsed);
-                jsonInput.value = formatJson(sorted);
-                renderJsonTree(sorted);
-                showTip('键名排序完成');
-            }
-        });
-
-        compressBtn.addEventListener('click', () => {
-            const parsed = parseJson(jsonInput.value.trim());
-            if (parsed) {
-                jsonInput.value = compressJson(parsed);
-                renderJsonTree(parsed);
-                showTip('JSON 压缩完成');
-            }
-        });
-
-        clearBtn.addEventListener('click', () => {
-            jsonInput.value = '';
+    function renderJsonTree(data) {
+        if (!data) {
             jsonOutputTree.innerHTML = '';
-            jsonFormatText.value = '';
-            jsonCompressText.value = '';
-            showTip('已清空所有内容');
-        });
+            return;
+        }
+        formatJson(data);
+        compressJson(data);
 
-        copyFormatBtn.addEventListener('click', () => copyToClipboard(jsonFormatText, '格式化结果已复制'));
-        copyCompressBtn.addEventListener('click', () => copyToClipboard(jsonCompressText, '压缩结果已复制'));
-        expandAllBtn.addEventListener('click', expandAllNodes);
-        collapseAllBtn.addEventListener('click', collapseAllNodes);
-    </script>
+        function buildTreeHtml(obj, depth = 0, parentPath = []) {
+            const indent = '  '.repeat(depth);
+            let html = '';
+
+            if (Array.isArray(obj)) {
+                const count = obj.length;
+                html += `<span class="fe-bracket">[</span> `;
+                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">⊖</span>`;
+                html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 项)</span>`;
+                html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
+
+                obj.forEach((item, index) => {
+                    const path = [...parentPath, `arr_${index}`];
+                    html += `<div style="padding-left: 20px;" onmouseenter="this.classList.add('fe-highlight')" onmouseleave="this.classList.remove('fe-highlight')">`;
+                    html += `<span class="fe-key">[${index}]</span>: `;
+                    html += typeof item === 'object' && item !== null ? buildTreeHtml(item, depth + 1, path) : formatPrimitive(item);
+                    html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
+                    html += `</div>`;
+                });
+                html += `</div><span class="fe-bracket">]</span>`;
+            } else if (typeof obj === 'object' && obj !== null) {
+                const keys = Object.keys(obj);
+                const count = keys.length;
+                html += `<span class="fe-bracket">{</span> `;
+                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">⊖</span>`;
+                html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 属性)</span>`;
+                html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
+
+                keys.forEach((key, index) => {
+                    const value = obj[key];
+                    const path = [...parentPath, key.replace(/\W/g, '_')];
+                    html += `<div style="padding-left: 20px;" onmouseenter="this.classList.add('fe-highlight')" onmouseleave="this.classList.remove('fe-highlight')">`;
+                    html += `<span class="fe-key">"${key}"</span>: `;
+                    html += typeof value === 'object' && value !== null ? buildTreeHtml(value, depth + 1, path) : formatPrimitive(value);
+                    html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
+                    html += `</div>`;
+                });
+                html += `</div><span class="fe-bracket">}</span>`;
+            } else {
+                html += formatPrimitive(obj);
+            }
+            return html;
+        }
+
+        function formatPrimitive(value) {
+            if (typeof value === 'string') return `<span class="fe-string">"${value}"</span>`;
+            if (typeof value === 'number') return `<span class="fe-number">${value}</span>`;
+            if (typeof value === 'boolean') return `<span class="fe-boolean">${value}</span>`;
+            if (value === null) return `<span class="fe-null">null</span>`;
+            return '';
+        }
+
+        jsonOutputTree.innerHTML = buildTreeHtml(data);
+        bindToggleEvents();
+    }
+
+    function bindToggleEvents() {
+        document.querySelectorAll('.fe-toggle').forEach(toggle => {
+            toggle.onclick = function() {
+                const path = this.getAttribute('data-path');
+                const children = document.querySelector(`.fe-tree-children[data-path="${path}"]`);
+                const note = document.querySelector(`.fe-collapse-note[data-path="${path}"]`);
+                if (children && note) {
+                    const isExpanded = this.textContent === '⊖';
+                    this.textContent = isExpanded ? '⊕' : '⊖';
+                    children.style.display = isExpanded ? 'none' : 'block';
+                    note.style.display = isExpanded ? 'inline' : 'none';
+                }
+            };
+        });
+    }
+
+    function expandAllNodes() {
+        document.querySelectorAll('.fe-toggle').forEach(toggle => {
+            toggle.textContent = '⊖';
+            const path = toggle.getAttribute('data-path');
+            document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'block');
+            document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'none');
+        });
+        showTip('已全部展开');
+    }
+
+    function collapseAllNodes() {
+        document.querySelectorAll('.fe-toggle').forEach(toggle => {
+            toggle.textContent = '⊕';
+            const path = toggle.getAttribute('data-path');
+            document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'none');
+            document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'inline');
+        });
+        showTip('已全部折叠');
+    }
+
+    let formatTimer = null;
+    jsonInput.addEventListener('input', function() {
+        clearTimeout(formatTimer);
+        formatTimer = setTimeout(() => {
+            const inputValue = this.value.trim();
+            if (!inputValue) {
+                jsonOutputTree.innerHTML = '';
+                jsonFormatText.value = '';
+                jsonCompressText.value = '';
+                showTip('就绪');
+                return;
+            }
+            const parsedJson = parseJson(inputValue);
+            if (parsedJson) {
+                const formatted = formatJson(parsedJson);
+                const cursorPos = this.selectionStart;
+                this.value = formatted;
+                this.selectionStart = this.selectionEnd = Math.min(cursorPos, formatted.length);
+                renderJsonTree(parsedJson);
+                showTip('实时格式化完成');
+            }
+        }, 400);
+    });
+
+    sortBtn.addEventListener('click', () => {
+        const parsed = parseJson(jsonInput.value.trim());
+        if (parsed) {
+            const sorted = sortJsonKeys(parsed);
+            jsonInput.value = formatJson(sorted);
+            renderJsonTree(sorted);
+            showTip('键名排序完成');
+        }
+    });
+
+    compressBtn.addEventListener('click', () => {
+        const parsed = parseJson(jsonInput.value.trim());
+        if (parsed) {
+            jsonInput.value = compressJson(parsed);
+            renderJsonTree(parsed);
+            showTip('压缩完成');
+        }
+    });
+
+    clearBtn.addEventListener('click', () => {
+        jsonInput.value = '';
+        jsonOutputTree.innerHTML = '';
+        jsonFormatText.value = '';
+        jsonCompressText.value = '';
+        showTip('内容已清空');
+    });
+
+    copyFormatBtn.addEventListener('click', () => copyToClipboard(jsonFormatText, '格式化代码已复制'));
+    copyCompressBtn.addEventListener('click', () => copyToClipboard(jsonCompressText, '压缩代码已复制'));
+    expandAllBtn.addEventListener('click', expandAllNodes);
+    collapseAllBtn.addEventListener('click', collapseAllNodes);
+</script>
 </body>
 </html>

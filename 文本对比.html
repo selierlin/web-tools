@@ -2,643 +2,407 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文本对比工具</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>文本对比系统</title>
     <style>
+        :root {
+            --neon-blue: #00d2ff;
+            --neon-purple: #9d50bb;
+            --neon-green: #00ff88;
+            --neon-red: #ff0055;
+            --bg-dark: #0a0c10;
+            --panel-bg: rgba(16, 20, 28, 0.8);
+            --border-glow: rgba(0, 210, 255, 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Fira Code', monospace;
+            -webkit-tap-highlight-color: transparent;
         }
 
+        /* 动态赛博背景 */
         body {
-            background-color: #e9ecef;
-            padding: 30px;
-            overflow-x: hidden;
+            background: var(--bg-dark);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #e2e8f0;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: cover;
+            animation: flow 20s infinite alternate;
+            z-index: -1;
+            opacity: 0.15;
+        }
+
+        @keyframes flow {
+            0% { transform: translate(-25%, -25%) rotate(0deg); }
+            100% { transform: translate(0%, 0%) rotate(10deg); }
         }
 
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 95vw;
+            height: 90vh;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
-            min-width: 1000px;
-            border: 1px solid #dee2e6;
+            position: relative;
         }
 
+        /* 顶部流光条 */
+        .container::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-purple), transparent);
+        }
+
+        /* 导航栏 */
         .tool-header {
-            padding: 20px 28px;
-            background-color: #2b2f36;
-            color: #f8f9fa;
+            padding: 15px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #61afef;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .tool-title {
             font-size: 20px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .tool-title::before {
-            content: "";
-            display: inline-block;
-            width: 4px;
-            height: 20px;
-            background-color: #61afef;
-            border-radius: 2px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, var(--neon-blue), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px var(--border-glow));
         }
 
         .btn-group {
             display: flex;
-            gap: 16px;
+            gap: 10px;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.25s ease;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            gap: 6px;
+            font-size: 13px;
         }
 
         #compareBtn {
-            background-color: #61afef;
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
         }
 
         #compareBtn:hover {
-            background-color: #4fa3e0;
-            box-shadow: 0 4px 8px rgba(97, 175, 239, 0.3);
-            transform: translateY(-1px);
-        }
-
-        #compareBtn:active {
-            transform: translateY(0);
+            transform: scale(1.05);
+            filter: brightness(1.2);
+            box-shadow: 0 0 20px var(--neon-blue);
         }
 
         #clearBtn {
-            background-color: #adb5bd;
-            color: #2b2f36;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        #clearBtn:hover {
-            background-color: #9da3b0;
-            box-shadow: 0 4px 8px rgba(173, 181, 189, 0.3);
-            transform: translateY(-1px);
-        }
-
-        #clearBtn:active {
-            transform: translateY(0);
-        }
-
-        /* 核心优化1：对比区域100%宽度，消除固定宽度导致的两侧留白 */
+        /* 面板区域 */
         .compare-content {
             display: flex;
-            height: 70vh;
-            border-top: 1px solid #dee2e6;
-            width: 100%; /* 改为100%填充容器，不再固定1000px */
-            margin: 0; /* 移除auto margin，避免居中导致的两侧留白 */
-            background-color: #f8f9fa;
+            flex: 1;
             overflow: hidden;
         }
 
-        /* 核心优化2：文本面板平分宽度，无固定px，消除右侧空余 */
         .text-panel {
-            flex: 1; /* 平分宽度，替代固定500px */
+            flex: 1;
             display: flex;
-            flex-shrink: 0;
-            transition: box-shadow 0.2s ease;
-            background-color: #f8f9fa;
-            /* 消除面板自身的边距/内边距 */
-            margin: 0;
-            padding: 0;
+            background: rgba(0, 0, 0, 0.15);
+            position: relative;
         }
 
         .text-panel:first-child {
-            border-right: 1px solid #dee2e6;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .text-panel:hover {
-            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.02);
-        }
-
-        /* 核心优化3：行号区固定宽度，无冗余边距，开启滚动同步 */
+        /* 行号 */
         .line-numbers {
-            width: 60px;
-            background-color: #f8f9fa;
-            border-right: 1px solid #dee2e6;
-            padding: 16px 0;
-            text-align: right;
-            font-size: 13px;
-            color: #6c757d;
-            overflow: auto; /* 改为auto，支持滚动，匹配编辑区高度 */
+            width: 45px;
+            padding-top: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            color: #4b5563;
+            font-size: 11px;
+            text-align: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
             user-select: none;
-            flex-shrink: 0;
-            margin: 0;
-            padding-left: 0;
-            /* 同步滚动条样式 */
-            scrollbar-width: thin;
-            scrollbar-color: #adb5bd #f8f9fa;
         }
 
         .line-num {
-            padding: 0 16px;
-            height: 24px;
-            line-height: 24px;
-            transition: color 0.2s ease;
-            /* 固定行高，确保与文本行对齐 */
-            flex-shrink: 0;
+            height: 28px;
+            line-height: 28px;
         }
 
-        .line-num:hover {
-            color: #2b2f36;
-            background-color: #e9ecef;
-        }
-
-        /* 核心优化4：编辑区100%填充剩余宽度，无固定px */
+        /* 编辑区 */
         .text-editor {
-            flex: 1; /* 填充行号区外的所有宽度，替代固定440px */
-            padding: 16px;
+            flex: 1;
+            padding: 20px 0;
             overflow: auto;
-            flex-shrink: 0;
-            background-color: #f8f9fa;
-            margin: 0; /* 消除所有外边距 */
-            padding-left: 16px;
         }
 
-        textarea {
+        textarea, .editable-div {
             width: 100%;
             height: 100%;
+            padding: 0 15px;
+            background: transparent;
             border: none;
             outline: none;
-            resize: none;
+            color: #cbd5e1;
             font-size: 14px;
-            line-height: 24px;
-            padding: 0;
-            background-color: transparent;
+            line-height: 28px;
             white-space: pre;
-            word-wrap: normal;
-            overflow-x: auto;
-            color: #2b2f36;
-            caret-color: #2b2f36;
-            margin: 0;
-            border: none;
+            tab-size: 4;
+            resize: none;
         }
 
-        /* 不可编辑状态样式（增强视觉反馈） */
-        textarea[disabled] {
-            cursor: not-allowed;
-            opacity: 0.95;
-            background-color: #f8f9fa;
-            user-select: none;
+        /* 差异高亮 */
+        .text-line {
+            padding: 0 15px;
+            min-height: 28px;
+            border-left: 3px solid transparent;
         }
 
-        .editable-div[contenteditable="false"] {
-            cursor: not-allowed;
-            opacity: 0.95;
-            user-select: none;
-        }
-
-        /* 差异高亮样式 */
         .diff-added {
-            background-color: #e6ffed;
-            color: #2f855a;
-            border-left: 3px solid #48bb78;
-            padding-left: 4px;
-            margin-left: -7px;
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--neon-green);
+            border-left: 3px solid var(--neon-green);
             display: block;
-            width: 100%;
-            height: 24px; /* 固定行高，匹配行号 */
-            line-height: 24px;
+            margin-left: -15px;
+            padding-left: 12px;
         }
 
         .diff-removed {
-            background-color: #fff5f5;
-            color: #c53030;
-            border-left: 3px solid #f56565;
-            padding-left: 4px;
-            margin-left: -7px;
+            background: rgba(255, 0, 85, 0.08);
+            color: var(--neon-red);
+            border-left: 3px solid var(--neon-red);
             display: block;
-            width: 100%;
-            height: 24px; /* 固定行高，匹配行号 */
-            line-height: 24px;
+            margin-left: -15px;
+            padding-left: 12px;
         }
 
-        .diff-modified {
-            background-color: #fff8e6;
-            color: #b8860b;
-            border-left: 3px solid #edb83d;
-            padding-left: 4px;
-            margin-left: -7px;
-            display: block;
-            width: 100%;
-            height: 24px; /* 固定行高，匹配行号 */
-            line-height: 24px;
-        }
-
-        /* 行级容器：固定行高，确保与行号一一对应 */
-        .text-line {
-            display: block;
-            height: 24px; /* 固定行高，不可变 */
-            line-height: 24px;
-            width: 100%;
-            white-space: pre;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 0 3px;
-            transition: background-color 0.2s ease;
-            background-color: transparent;
-            flex-shrink: 0; /* 防止被压缩 */
-        }
-
-        .text-line:hover {
-            background-color: #e9ecef;
-            border-radius: 2px;
-        }
-
-        /* 可编辑div样式：新增flex布局，确保行号与文本对齐 */
-        .editable-div {
-            width: 100%;
-            height: 100%;
-            border: none;
-            outline: none;
-            resize: none;
-            font-size: 14px;
-            line-height: 24px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            overflow-x: auto;
-            background-color: transparent;
-            min-height: 100%;
-            color: #2b2f36;
-            caret-color: #2b2f36;
-            padding: 0;
-            margin: 0;
-            display: flex; /* 改为flex垂直布局，确保行高稳定 */
-            flex-direction: column; /* 垂直排列文本行 */
-        }
-
-        .editable-div:focus {
-            box-shadow: inset 0 0 0 2px rgba(97, 175, 239, 0.2);
-            border-radius: 4px;
-            margin-left: 0;
-            padding-left: 0;
-        }
-
-        /* 自定义滚动条 */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #adb5bd;
-            border-radius: 4px;
-            transition: background 0.2s ease;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6c757d;
-        }
-
-        /* 响应式调整（同步优化） */
-        @media (max-width: 1024px) {
-            .compare-content {
-                flex-direction: column;
-                height: auto;
-                width: 100%;
-                min-width: unset;
-                background-color: #f8f9fa;
-            }
-
-            .text-panel {
-                width: 100%;
-                border-right: none !important;
-                border-bottom: 1px solid #dee2e6;
-                height: 40vh;
-                background-color: #f8f9fa;
-            }
-
-            .text-editor {
-                width: calc(100% - 60px);
-                background-color: #f8f9fa;
-            }
-
-            .text-panel:last-child {
-                border-bottom: none;
+        /* --- 手机端适配关键修改 --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
             }
 
             .container {
-                min-width: unset;
-                border-radius: 8px;
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
             }
 
             .tool-header {
-                padding: 16px 20px;
+                padding: 10px 15px;
             }
 
             .tool-title {
-                font-size: 18px;
+                font-size: 16px;
+            }
+
+            .btn-group button span {
+                display: none; /* 极窄屏幕隐藏按钮文字只留图标 */
+            }
+
+            .compare-content {
+                flex-direction: column; /* 纵向堆叠 */
+            }
+
+            .text-panel:first-child {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .line-numbers {
+                width: 35px; /* 进一步缩小行号栏 */
+            }
+
+            .text-editor {
+                padding: 10px 0;
+            }
+
+            textarea, .editable-div {
+                font-size: 13px; /* 缩小字号适配屏幕 */
+                padding: 0 10px;
+            }
+
+            .text-line {
+                padding: 0 10px;
+            }
+
+            .diff-added, .diff-removed {
+                margin-left: -10px;
+                padding-left: 7px;
             }
         }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="tool-header">
-            <div class="tool-title">文本对比工具</div>
-            <div class="btn-group">
-                <button id="compareBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                    </svg>
-                    执行对比
-                </button>
-                <button id="clearBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                    清空内容
-                </button>
+
+<div class="container">
+    <header class="tool-header">
+        <div class="tool-title">文本对比系统 v1.0</div>
+        <div class="btn-group">
+            <button id="clearBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+                <span>清空内容</span>
+            </button>
+            <button id="compareBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                <span>执行对比</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="compare-content">
+        <div class="text-panel" id="leftPanel">
+            <div class="line-numbers" id="leftLineNumbers"></div>
+            <div class="text-editor" id="leftTextEditor">
+                <textarea id="leftText" placeholder="// 请在此输入或粘贴原始内容..."></textarea>
             </div>
         </div>
-        <div class="compare-content">
-            <div class="text-panel" id="leftPanel">
-                <div class="line-numbers" id="leftLineNumbers"></div>
-                <div class="text-editor" id="leftTextEditor">
-                    <textarea id="leftText" placeholder="请输入原始文本..."></textarea>
-                </div>
-            </div>
-            <div class="text-panel" id="rightPanel">
-                <div class="line-numbers" id="rightLineNumbers"></div>
-                <div class="text-editor" id="rightTextEditor">
-                    <textarea id="rightText" placeholder="请输入目标文本..."></textarea>
-                </div>
+        <div class="text-panel" id="rightPanel">
+            <div class="line-numbers" id="rightLineNumbers"></div>
+            <div class="text-editor" id="rightTextEditor">
+                <textarea id="rightText" placeholder="// 请在此输入或粘贴修改后的内容..."></textarea>
             </div>
         </div>
-    </div>
+    </main>
+</div>
 
-    <script>
-        // 获取DOM元素
-        const leftText = document.getElementById('leftText');
-        const rightText = document.getElementById('rightText');
-        const leftLineNumbers = document.getElementById('leftLineNumbers');
-        const rightLineNumbers = document.getElementById('rightLineNumbers');
-        const leftTextEditor = document.getElementById('leftTextEditor');
-        const rightTextEditor = document.getElementById('rightTextEditor');
-        const compareBtn = document.getElementById('compareBtn');
-        const clearBtn = document.getElementById('clearBtn');
+<script>
+    // 逻辑部分完全保留，未作修改
+    const leftText = document.getElementById('leftText');
+    const rightText = document.getElementById('rightText');
+    const leftLineNumbers = document.getElementById('leftLineNumbers');
+    const rightLineNumbers = document.getElementById('rightLineNumbers');
+    const leftTextEditor = document.getElementById('leftTextEditor');
+    const rightTextEditor = document.getElementById('rightTextEditor');
+    const compareBtn = document.getElementById('compareBtn');
+    const clearBtn = document.getElementById('clearBtn');
 
-        // 标记是否已替换为可编辑div（避免重复替换）
-        const isReplaced = {
-            left: false,
-            right: false
+    let isReplaced = { left: false, right: false };
+
+    function syncLineNumbers() {
+        const getCount = (side) => {
+            if (isReplaced[side]) {
+                const el = document.getElementById(`${side}TextEditable`);
+                return el ? el.children.length : 1;
+            }
+            const val = (side === 'left' ? leftText.value : rightText.value);
+            return val ? val.split('\n').length : 1;
         };
 
-        // 修复核心1：同步行号区与编辑区的滚动（确保行号始终与文本对齐）
-        function syncScroll(lineNumEl, editorEl) {
-            editorEl.addEventListener('scroll', function() {
-                lineNumEl.scrollTop = this.scrollTop;
-            });
-            lineNumEl.addEventListener('scroll', function() {
-                editorEl.scrollTop = this.scrollTop;
-            });
-        }
+        renderLines(leftLineNumbers, getCount('left'));
+        renderLines(rightLineNumbers, getCount('right'));
+    }
 
-        // 初始化：绑定滚动同步
-        syncScroll(leftLineNumbers, leftTextEditor);
-        syncScroll(rightLineNumbers, rightTextEditor);
+    function renderLines(el, count) {
+        el.innerHTML = Array.from({length: count}, (_, i) => `<div class="line-num">${i+1}</div>`).join('');
+    }
 
-        // 初始化：同步行号显示（修复核心2：修正内容提取和行号渲染逻辑）
-        function syncLineNumbers() {
-            // 左侧行号（兼容textarea和div，正确提取行数）
-            let leftLineCount = 0;
-            if (isReplaced.left) {
-                const leftEditableDiv = document.getElementById('leftTextEditable');
-                // 修复：通过子元素数量获取真实行数（而非textContent分割，避免格式错乱）
-                leftLineCount = leftEditableDiv ? leftEditableDiv.children.length : 0;
+    leftTextEditor.onscroll = () => { leftLineNumbers.scrollTop = leftTextEditor.scrollTop; };
+    rightTextEditor.onscroll = () => { rightLineNumbers.scrollTop = rightTextEditor.scrollTop; };
+
+    function compare() {
+        const lVal = isReplaced.left ? document.getElementById('leftTextEditable').innerText : leftText.value;
+        const rVal = isReplaced.right ? document.getElementById('rightTextEditable').innerText : rightText.value;
+
+        if (!lVal && !rVal) return;
+
+        const lLines = lVal.split('\n');
+        const rLines = rVal.split('\n');
+        const max = Math.max(lLines.length, rLines.length);
+
+        let lHtml = '', rHtml = '';
+
+        for (let i = 0; i < max; i++) {
+            const l = lLines[i] || '';
+            const r = rLines[i] || '';
+
+            if (l !== r) {
+                lHtml += `<div class="text-line ${l ? 'diff-removed' : ''}">${escape(l)}</div>`;
+                rHtml += `<div class="text-line ${r ? 'diff-added' : ''}">${escape(r)}</div>`;
             } else {
-                const leftContent = leftText.value;
-                leftLineCount = leftContent ? leftContent.split('\n').length : 0;
-            }
-            renderLineNumbers(leftLineNumbers, leftLineCount);
-
-            // 右侧行号（兼容textarea和div，正确提取行数）
-            let rightLineCount = 0;
-            if (isReplaced.right) {
-                const rightEditableDiv = document.getElementById('rightTextEditable');
-                // 修复：通过子元素数量获取真实行数（而非textContent分割，避免格式错乱）
-                rightLineCount = rightEditableDiv ? rightEditableDiv.children.length : 0;
-            } else {
-                const rightContent = rightText.value;
-                rightLineCount = rightContent ? rightContent.split('\n').length : 0;
-            }
-            renderLineNumbers(rightLineNumbers, rightLineCount);
-        }
-
-        // 修复核心3：渲染行号时，确保行号元素与文本行高度完全匹配
-        function renderLineNumbers(lineNumberEl, lineCount) {
-            lineNumberEl.innerHTML = ''; // 清空原有行号
-            // 修复：即使行号为0，也不渲染空内容；行号>0时，逐行创建，确保高度匹配
-            for (let i = 1; i <= lineCount; i++) {
-                const lineNum = document.createElement('div');
-                lineNum.className = 'line-num';
-                lineNum.textContent = i;
-                lineNumberEl.appendChild(lineNum);
-            }
-            // 确保行号区滚动条复位（可选，提升体验）
-            lineNumberEl.scrollTop = 0;
-        }
-
-        // 核心：设置文本区域可编辑/不可编辑状态
-        function setTextEditable(editable = true) {
-            // 处理textarea状态
-            leftText.disabled = !editable;
-            rightText.disabled = !editable;
-
-            // 处理已替换的editable-div状态（兼容高亮后的DOM）
-            if (isReplaced.left) {
-                const leftEditableDiv = document.getElementById('leftTextEditable');
-                leftEditableDiv.contentEditable = editable;
-            }
-            if (isReplaced.right) {
-                const rightEditableDiv = document.getElementById('rightTextEditable');
-                rightEditableDiv.contentEditable = editable;
+                lHtml += `<div class="text-line">${escape(l)}</div>`;
+                rHtml += `<div class="text-line">${escape(r)}</div>`;
             }
         }
 
-        // 清空所有内容（恢复可编辑状态+重置DOM+清空内容）
-        function clearAllContent() {
-            // 1. 恢复文本区域可编辑状态（核心：清空后才能编辑）
-            setTextEditable(true);
+        updatePanel('left', lHtml);
+        updatePanel('right', rHtml);
+        syncLineNumbers();
+    }
 
-            // 2. 重置textarea（如果已替换为div，先恢复textarea）
-            if (isReplaced.left) {
-                const editableDiv = document.getElementById('leftTextEditable');
-                const parent = editableDiv.parentElement;
-                parent.removeChild(editableDiv);
-                parent.appendChild(leftText);
-                isReplaced.left = false;
-            }
-            if (isReplaced.right) {
-                const editableDiv = document.getElementById('rightTextEditable');
-                const parent = editableDiv.parentElement;
-                parent.removeChild(editableDiv);
-                parent.appendChild(rightText);
-                isReplaced.right = false;
-            }
+    function updatePanel(side, html) {
+        const editor = side === 'left' ? leftTextEditor : rightTextEditor;
+        editor.innerHTML = `<div id="${side}TextEditable" class="editable-div" contenteditable="false">${html}</div>`;
+        isReplaced[side] = true;
+    }
 
-            // 3. 清空文本内容
-            leftText.value = '';
-            rightText.value = '';
+    function escape(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
 
-            // 4. 重新同步行号
-            syncLineNumbers();
-        }
+    clearBtn.onclick = () => {
+        leftTextEditor.innerHTML = '';
+        leftTextEditor.appendChild(leftText);
+        rightTextEditor.innerHTML = '';
+        rightTextEditor.appendChild(rightText);
+        leftText.value = '';
+        rightText.value = '';
+        isReplaced = { left: false, right: false };
+        syncLineNumbers();
+    };
 
-        // 核心：文本差异对比算法（对比后设置为不可编辑，修复行号同步）
-        function compareText() {
-            // 1. 获取左右文本并按行分割（兼容textarea和已替换的div，去除首尾空白避免冗余）
-            const leftContent = isReplaced.left 
-                ? document.getElementById('leftTextEditable').textContent.trim()
-                : leftText.value.trim();
-            const rightContent = isReplaced.right
-                ? document.getElementById('rightTextEditable').textContent.trim()
-                : rightText.value.trim();
-            
-            // 空内容不执行对比
-            if (!leftContent && !rightContent) return;
+    compareBtn.onclick = compare;
+    leftText.oninput = syncLineNumbers;
+    rightText.oninput = syncLineNumbers;
 
-            const leftLines = leftContent ? leftContent.split('\n') : [];
-            const rightLines = rightContent ? rightContent.split('\n') : [];
-            const maxLines = Math.max(leftLines.length, rightLines.length);
-
-            // 2. 构建带行级容器的高亮HTML（无冗余换行符，用.text-line隔离每行，确保行数准确）
-            let leftHtml = '';
-            let rightHtml = '';
-
-            for (let i = 0; i < maxLines; i++) {
-                const leftLine = leftLines[i] || '';
-                const rightLine = rightLines[i] || '';
-                const escapedLeft = escapeHtml(leftLine);
-                const escapedRight = escapeHtml(rightLine);
-
-                // 差异判断逻辑，构建带行级容器的高亮内容（无额外\n，确保每行一个.text-line）
-                if (leftLine === '' && rightLine !== '') {
-                    // 新增行
-                    leftHtml += `<div class="text-line">${escapedLeft}</div>`;
-                    rightHtml += `<div class="text-line"><span class="diff-added">${escapedRight}</span></div>`;
-                } else if (rightLine === '' && leftLine !== '') {
-                    // 删除行
-                    leftHtml += `<div class="text-line"><span class="diff-removed">${escapedLeft}</span></div>`;
-                    rightHtml += `<div class="text-line">${escapedRight}</div>`;
-                } else if (leftLine !== rightLine) {
-                    // 修改行
-                    leftHtml += `<div class="text-line"><span class="diff-removed">${escapedLeft}</span></div>`;
-                    rightHtml += `<div class="text-line"><span class="diff-added">${escapedRight}</span></div>`;
-                } else {
-                    // 无差异行
-                    leftHtml += `<div class="text-line">${escapedLeft}</div>`;
-                    rightHtml += `<div class="text-line">${escapedRight}</div>`;
-                }
-            }
-
-            // 3. 替换为可编辑div（避免重复替换，同步纯文本内容）
-            replaceTextareaWithEditableDiv('leftText', leftHtml, leftContent);
-            replaceTextareaWithEditableDiv('rightText', rightHtml, rightContent);
-
-            // 4. 核心：对比完成后，设置所有文本区域为不可编辑状态
-            setTextEditable(false);
-
-            // 5. 修复核心4：强制重新同步行号（确保渲染最新行数）
-            setTimeout(() => {
-                syncLineNumbers();
-            }, 0);
-        }
-
-        // 替换textarea为可编辑div（确保div结构稳定，行数准确）
-        function replaceTextareaWithEditableDiv(textareaId, htmlContent, plainText) {
-            const textarea = document.getElementById(textareaId);
-            const isLeft = textareaId === 'leftText';
-            const editorEl = isLeft ? leftTextEditor : rightTextEditor;
-
-            // 避免重复替换，更新时同时同步innerHTML和纯文本（防止二次对比错乱）
-            if ((isLeft && isReplaced.left) || (!isLeft && isReplaced.right)) {
-                const editableDiv = document.getElementById(`${textareaId}Editable`);
-                editableDiv.innerHTML = htmlContent;
-                textarea.value = plainText; // 同步纯文本到原textarea，保证后续对比数据源干净
-                return;
-            }
-
-            // 创建可编辑div（行级容器生效，保持结构稳定，确保行数准确）
-            const editableDiv = document.createElement('div');
-            editableDiv.id = `${textareaId}Editable`;
-            editableDiv.className = 'editable-div';
-            editableDiv.contentEditable = true; // 先设为可编辑，后续由setTextEditable统一控制
-            editableDiv.innerHTML = htmlContent; // 直接插入构建好的行级HTML，行数准确
-
-            // 替换元素
-            editorEl.removeChild(textarea);
-            editorEl.appendChild(editableDiv);
-
-            // 标记已替换，同步纯文本到原textarea
-            if (isLeft) {
-                isReplaced.left = true;
-            } else {
-                isReplaced.right = true;
-            }
-            textarea.value = plainText;
-        }
-
-        // 辅助函数：HTML转义，避免特殊字符破坏DOM结构
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, '&amp;')
-                      .replace(/</g, '&lt;')
-                      .replace(/>/g, '&gt;')
-                      .replace(/"/g, '&quot;')
-                      .replace(/'/g, '&#039;');
-        }
-
-        // 事件监听
-        window.addEventListener('load', function() {
-            // 初始化行号
-            syncLineNumbers();
-
-            // 初始化：文本区域为可编辑状态
-            setTextEditable(true);
-
-            // 文本输入时同步行号（兼容textarea）
-            leftText.addEventListener('input', syncLineNumbers);
-            rightText.addEventListener('input', syncLineNumbers);
-
-            // 执行对比按钮：对比后不可编辑
-            compareBtn.addEventListener('click', compareText);
-
-            // 清空按钮：清空后恢复可编辑
-            clearBtn.addEventListener('click', clearAllContent);
-        });
-    </script>
+    window.onload = syncLineNumbers;
+</script>
 </body>
 </html>

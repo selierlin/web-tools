@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>文本批量加工处理</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
@@ -11,27 +11,68 @@
             padding: 0;
             box-sizing: border-box;
             font-family: "Microsoft YaHei", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 粒子背景容器 */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50, #202020);
         }
 
         body {
-            background-color: #f5f7fa;
             padding: 2rem;
+            position: relative;
+            min-height: 100vh;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 2rem;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 2rem;
-            font-weight: 600;
+            background: linear-gradient(90deg, #3498db, #1abc9c, #9b59b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 2.5rem;
+            font-weight: 700;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #1abc9c);
+            border-radius: 2px;
+            margin: 1rem auto 0;
+            animation: gradientMove 3s ease infinite alternate;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; width: 80px; }
+            100% { background-position: 100% 50%; width: 160px; }
         }
 
         .text-area-group {
@@ -41,74 +82,60 @@
             align-items: center;
         }
 
-        @media (max-width: 768px) {
-            .text-area-group {
-                flex-direction: column;
-            }
-            .transfer-btn-wrap {
-                margin: 1rem 0;
-                width: 100%;
-            }
-        }
-
         .text-box {
             flex: 1;
+            position: relative;
+            width: 100%;
+        }
+
+        .text-box::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #3498db, #9b59b6, #1abc9c);
+            border-radius: 14px;
+            z-index: -1;
+            opacity: 0.15;
+            filter: blur(5px);
         }
 
         .transfer-btn-wrap {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-width: 160px;
+            min-width: 100px;
         }
 
         .transfer-btn {
-            padding: 0.8rem 1.2rem;
             border: none;
-            border-radius: 8px;
-            background-color: #1abc9c;
+            background: linear-gradient(45deg, #1abc9c, #16a085);
             color: #fff;
-            font-size: 1.2rem;
-            font-weight: 500;
+            font-size: 1.5rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            display: flex !important;
+            transition: all 0.4s ease;
+            display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 2px 6px rgba(26, 188, 156, 0.3);
-            width: 80px;
-            height: 80px;
+            box-shadow: 0 4px 15px rgba(26, 188, 156, 0.4);
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-        }
-
-        @media (max-width: 768px) {
-            .transfer-btn {
-                padding: 0.8rem 1.8rem;
-                width: 100%;
-                height: auto;
-                border-radius: 8px;
-            }
+            position: relative;
+            z-index: 2;
         }
 
         .transfer-btn:hover {
-            background-color: #16a085;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(22, 160, 133, 0.4);
-        }
-
-        .transfer-btn:active {
-            transform: translateY(0);
-        }
-
-        .transfer-btn i {
-            margin: 0;
+            transform: translateY(-5px) rotate(180deg);
+            background: linear-gradient(45deg, #16a085, #1abc9c);
         }
 
         label {
             display: block;
             margin-bottom: 0.8rem;
-            color: #34495e;
+            color: #ecf0f1;
             font-weight: 500;
             font-size: 1.05rem;
         }
@@ -117,28 +144,27 @@
             width: 100%;
             height: 300px;
             padding: 1rem;
-            border: 1px solid #dce4ec;
-            border-radius: 8px;
-            resize: vertical;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            resize: none;
             font-size: 1rem;
-            color: #2c3e50;
+            color: #ecf0f1;
             line-height: 1.6;
-            transition: border-color 0.3s ease;
-            /* 优化：禁用自动换行，减少渲染压力 */
-            white-space: pre;
-            overflow-x: auto;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         textarea:focus {
             outline: none;
             border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            box-shadow: 0 0 12px rgba(52, 152, 219, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .btn-group {
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 1.2rem;
             flex-wrap: wrap;
             margin-bottom: 2rem;
         }
@@ -146,429 +172,359 @@
         button {
             padding: 0.8rem 1.8rem;
             border: none;
-            border-radius: 8px;
-            background-color: #34495e;
+            border-radius: 50px;
+            background-color: rgba(52, 73, 94, 0.5);
             color: #fff;
             font-size: 1rem;
             font-weight: 500;
-            cursor: not-allowed;
-            transition: all 0.3s ease;
+            cursor: pointer;
+            transition: all 0.4s ease;
             display: none;
+            position: relative;
+            overflow: hidden;
         }
 
-        button.active {
-            display: block;
-            cursor: pointer;
-        }
+        button.active { display: block; }
 
-        button#btn1.active {
-            background-color: #3498db;
-        }
-
-        button#btn1.active:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-        }
-
-        button#btn2.active {
-            background-color: #2ecc71;
-        }
-
-        button#btn2.active:hover {
-            background-color: #27ae60;
-            transform: translateY(-2px);
-        }
-
-        button#btn3.active {
-            background-color: #e67e22;
-        }
-
-        button#btn3.active:hover {
-            background-color: #d35400;
-            transform: translateY(-2px);
-        }
-
-        button#btn4.active {
-            background-color: #e74c3c;
-        }
-
-        button#btn4.active:hover {
-            background-color: #c0392b;
-            transform: translateY(-2px);
-        }
-
-        button.copy-btn {
-            display: block;
-            background-color: #9b59b6;
-            cursor: pointer;
-        }
-
-        button.copy-btn:hover {
-            background-color: #8e44ad;
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
+        button#btn1.active { background: linear-gradient(45deg, #3498db, #2980b9); }
+        button#btn2.active { background: linear-gradient(45deg, #2ecc71, #27ae60); }
+        button#btn3.active { background: linear-gradient(45deg, #e67e22, #d35400); }
+        button#btn4.active { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        button.copy-btn { display: block; background: linear-gradient(45deg, #9b59b6, #8e44ad); }
 
         .tip {
             text-align: center;
-            color: #7f8c8d;
+            color: #bdc3c7;
             font-size: 0.9rem;
             margin-top: 1rem;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
         }
 
+        /* 优化引号选择器样式 */
         .quote-select {
-            text-align: center;
-            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.2rem 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .quote-select::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #2ecc71, #27ae60, #1abc9c);
+            border-radius: 14px;
+            z-index: -1;
+            opacity: 0.1;
+            filter: blur(4px);
         }
 
         .quote-select label {
-            display: inline-block;
-            margin-right: 1rem;
-            color: #34495e;
+            margin: 0;
+            font-size: 1.05rem;
+            color: #f1f1f1;
+            font-weight: 500;
         }
 
         .quote-select select {
-            padding: 0.4rem 0.8rem;
-            border: 1px solid #dce4ec;
-            border-radius: 4px;
-            font-size: 0.9rem;
+            padding: 0.7rem 1.2rem;
+            border-radius: 50px;
+            background: rgba(0, 0, 0, 0.25);
+            color: #ecf0f1;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            min-width: 180px;
+            outline: none;
         }
 
-        /* 新增：处理中加载提示样式 */
-        .loading {
-            display: inline-block;
-            margin-left: 0.5rem;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .quote-select select:hover,
+        .quote-select select:focus {
+            border-color: #2ecc71;
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.2);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* --- 手机端适配关键修改 --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 1.2rem;
+                border-radius: 15px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .text-area-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .transfer-btn-wrap {
+                min-width: 100%;
+                margin: 0.5rem 0;
+            }
+
+            .transfer-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+                /* 手机端点击后不需要旋转180度，改为上下指向感 */
+                transform: rotate(90deg);
+            }
+
+            .transfer-btn:hover {
+                transform: rotate(90deg) scale(1.1);
+            }
+
+            textarea {
+                height: 180px; /* 减小高度，让屏幕能装下更多内容 */
+                font-size: 0.95rem;
+            }
+
+            .btn-group {
+                gap: 0.8rem;
+            }
+
+            button {
+                width: 100%; /* 按钮全宽，方便点击 */
+                padding: 0.7rem 1rem;
+                font-size: 0.9rem;
+                border-radius: 10px; /* 手机端稍微方正一点更好看 */
+            }
+
+            /* 手机端引号选择器适配 */
+            .quote-select {
+                flex-direction: column;
+                gap: 0.8rem;
+                padding: 1rem;
+                text-align: center;
+            }
+
+            .quote-select label {
+                font-size: 0.95rem;
+            }
+
+            .quote-select select {
+                min-width: 100%;
+                padding: 0.6rem 1rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* 动画效果 */
+        .container > * {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>文本批量加工处理</h1>
+<div id="particles-js"></div>
 
-        <div class="quote-select">
-            <label for="quoteType">功能2 - 选择引号类型：</label>
-            <select id="quoteType">
-                <option value="single">单引号 (')</option>
-                <option value="double">双引号 (")</option>
-            </select>
-        </div>
+<div class="container">
+    <h1>文本批量加工处理</h1>
 
-        <div class="text-area-group">
-            <div class="text-box">
-                <label for="inputText">输入文本：</label>
-                <textarea id="inputText" placeholder="请粘贴需要处理的批量文本..."></textarea>
-            </div>
-
-            <div class="transfer-btn-wrap">
-                <button class="transfer-btn" id="transferBtn">
-                    <i class="fa fa-arrow-left" aria-hidden="true"></i>
-                </button>
-            </div>
-
-            <div class="text-box">
-                <label for="outputText">输出结果：</label>
-                <textarea id="outputText" placeholder="处理后的结果将显示在这里..." readonly></textarea>
-            </div>
-        </div>
-
-        <div class="btn-group">
-            <button id="btn1">功能1：多行 → 单行逗号拼接</button>
-            <button id="btn2">功能2：多行 → 带引号单行逗号拼接</button>
-            <button id="btn3">功能3：单行逗号拼接 → 多行</button>
-            <button id="btn4">功能4：带引号逗号拼接 → 无引号多行</button>
-            <button class="copy-btn" id="copyBtn">复制输出结果</button>
-        </div>
-
-        <div class="tip" id="tipInfo">温馨提示：输入文本后，将自动显示可用功能按钮</div>
+    <!-- 优化后的引号选择区域 -->
+    <div class="quote-select">
+        <label for="quoteType">选择引号类型：</label>
+        <select id="quoteType">
+            <option value="single">单引号 (')</option>
+            <option value="double">双引号 (")</option>
+        </select>
     </div>
 
-    <script>
-        // 获取DOM元素
-        const inputText = document.getElementById('inputText');
-        const outputText = document.getElementById('outputText');
-        const btn1 = document.getElementById('btn1');
-        const btn2 = document.getElementById('btn2');
-        const btn3 = document.getElementById('btn3');
-        const btn4 = document.getElementById('btn4');
-        const copyBtn = document.getElementById('copyBtn');
-        const transferBtn = document.getElementById('transferBtn');
-        const quoteType = document.getElementById('quoteType');
-        const tipInfo = document.getElementById('tipInfo');
+    <div class="text-area-group">
+        <div class="text-box">
+            <label for="inputText">输入文本：</label>
+            <textarea id="inputText" placeholder="请粘贴需要处理的批量文本..."></textarea>
+        </div>
 
-        // 工具函数1：节流函数（限制函数执行频率）
-        const throttle = (fn, delay = 500) => {
-            let timer = null;
-            return (...args) => {
-                if (timer) return;
-                timer = setTimeout(() => {
-                    fn.apply(this, args);
-                    timer = null;
-                }, delay);
-            };
+        <div class="transfer-btn-wrap">
+            <button class="transfer-btn" id="transferBtn" title="结果回传到输入框">
+                <i class="fa fa-exchange" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="text-box">
+            <label for="outputText">输出结果：</label>
+            <textarea id="outputText" placeholder="处理后的结果将显示在这里..." readonly></textarea>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button id="btn1">功能1：多行 → 单行逗号拼接</button>
+        <button id="btn2">功能2：多行 → 引号逗号拼接</button>
+        <button id="btn3">功能3：逗号拼接 → 多行</button>
+        <button id="btn4">功能4：引号拼接 → 无引号多行</button>
+        <button class="copy-btn" id="copyBtn">复制输出结果</button>
+    </div>
+
+    <div class="tip" id="tipInfo">温馨提示：输入文本后，自动显示功能按钮</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+    // 逻辑部分保持不变
+    particlesJS('particles-js', {
+        "particles": {
+            "number": {"value": 50},
+            "color": {"value": ["#3498db", "#1abc9c", "#9b59b6"]},
+            "shape": {"type": "circle"},
+            "opacity": {"value": 0.3},
+            "size": {"value": 3},
+            "line_linked": {"enable": true, "distance": 150, "opacity": 0.1},
+            "move": {"enable": true, "speed": 1}
+        },
+        "interactivity": {
+            "events": {"onhover": {"enable": true, "mode": "grab"}, "onclick": {"enable": true, "mode": "push"}}
+        }
+    });
+
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+    const btn1 = document.getElementById('btn1');
+    const btn2 = document.getElementById('btn2');
+    const btn3 = document.getElementById('btn3');
+    const btn4 = document.getElementById('btn4');
+    const copyBtn = document.getElementById('copyBtn');
+    const transferBtn = document.getElementById('transferBtn');
+    const quoteType = document.getElementById('quoteType');
+    const tipInfo = document.getElementById('tipInfo');
+
+    const throttle = (fn, delay = 500) => {
+        let timer = null;
+        return (...args) => {
+            if (timer) return;
+            timer = setTimeout(() => { fn.apply(this, args); timer = null; }, delay);
         };
+    };
 
-        // 工具函数2：去除字符串两端空白
-        const trimStr = (str) => str.replace(/^\s+|\s+$/g, '');
+    const trimStr = (str) => str.replace(/^\s+|\s+$/g, '');
 
-        // 工具函数3：高性能批量文本处理（替换数组高阶函数，使用for循环）
-        const batchProcessText = {
-            // 功能1：多行 → 单行逗号拼接
-            multiToSingle: (text) => {
-                const lines = text.split(/\r?\n/);
-                const result = [];
-                // 使用for循环，减少函数调用开销
-                for (let i = 0, len = lines.length; i < len; i++) {
-                    const line = trimStr(lines[i]);
-                    if (line) result.push(line);
-                }
-                return result.join(',');
-            },
-
-            // 功能2：多行 → 带引号单行逗号拼接
-            multiToSingleWithQuote: (text, quote) => {
-                const lines = text.split(/\r?\n/);
-                const result = [];
-                for (let i = 0, len = lines.length; i < len; i++) {
-                    const line = trimStr(lines[i]);
-                    if (line) result.push(`${quote}${line}${quote}`);
-                }
-                return result.join(',');
-            },
-
-            // 功能3：单行逗号拼接 → 多行
-            singleToMulti: (text) => {
-                const items = text.split(',');
-                const result = [];
-                for (let i = 0, len = items.length; i < len; i++) {
-                    const item = trimStr(items[i]);
-                    if (item) result.push(item);
-                }
-                return result.join('\n');
-            },
-
-            // 功能4：带引号逗号拼接 → 无引号多行
-            singleQuotedToMultiUnquoted: (text) => {
-                // 先批量去除引号，再分割
-                const withoutQuotes = text.replace(/["']/g, '');
-                const items = withoutQuotes.split(',');
-                const result = [];
-                for (let i = 0, len = items.length; i < len; i++) {
-                    const item = trimStr(items[i]);
-                    if (item) result.push(item);
-                }
-                return result.join('\n');
+    const batchProcessText = {
+        multiToSingle: (text) => {
+            const lines = text.split(/\r?\n/);
+            const result = [];
+            for (let i = 0; i < lines.length; i++) {
+                const line = trimStr(lines[i]);
+                if (line) result.push(line);
             }
-        };
-
-        // 提示信息显示函数
-        const showTip = (message, color) => {
-            tipInfo.textContent = message;
-            tipInfo.style.color = color;
-
-            setTimeout(() => {
-                const inputVal = trimStr(inputText.value);
-                if (!inputVal) {
-                    tipInfo.textContent = '温馨提示：输入文本后，将自动显示可用功能按钮';
-                    tipInfo.style.color = '#7f8c8d';
-                }
-            }, 3000);
-        };
-
-        // 核心逻辑：判断输入类型，动态显示按钮（添加节流优化）
-        const judgeInputTypeAndShowButtons = () => {
-            btn1.classList.remove('active');
-            btn2.classList.remove('active');
-            btn3.classList.remove('active');
-            btn4.classList.remove('active');
-
-            const inputVal = trimStr(inputText.value);
-            if (!inputVal) {
-                showTip('温馨提示：输入文本后，将自动显示可用功能按钮', '#7f8c8d');
-                return;
+            return result.join(',');
+        },
+        multiToSingleWithQuote: (text, quote) => {
+            const lines = text.split(/\r?\n/);
+            const result = [];
+            for (let i = 0; i < lines.length; i++) {
+                const line = trimStr(lines[i]);
+                if (line) result.push(`${quote}${line}${quote}`);
             }
-
-            const isMultiLine = inputVal.includes('\n');
-            const isSingleLineWithComma = !isMultiLine && inputVal.includes(',');
-            const isQuotedSingleLine = isSingleLineWithComma && (inputVal.includes('"') || inputVal.includes("'"));
-
-            if (isMultiLine) {
-                btn1.classList.add('active');
-                btn2.classList.add('active');
-                showTip('检测到多行文本，可使用功能1、功能2进行处理', '#3498db');
-            } else if (isQuotedSingleLine) {
-                btn3.classList.add('active');
-                btn4.classList.add('active');
-                showTip('检测到带引号逗号拼接文本，可使用功能3、功能4进行处理', '#e74c3c');
-            } else if (isSingleLineWithComma) {
-                btn3.classList.add('active');
-                showTip('检测到单行逗号拼接文本，可使用功能3进行处理', '#e67e22');
-            } else {
-                btn1.classList.add('active');
-                btn2.classList.add('active');
-                btn3.classList.add('active');
-                btn4.classList.add('active');
-                showTip('检测到单行无逗号文本，所有功能均可用', '#2ecc71');
+            return result.join(',');
+        },
+        singleToMulti: (text) => {
+            const items = text.split(',');
+            const result = [];
+            for (let i = 0; i < items.length; i++) {
+                const item = trimStr(items[i]);
+                if (item) result.push(item);
             }
-        };
+            return result.join('\n');
+        },
+        singleQuotedToMultiUnquoted: (text) => {
+            const withoutQuotes = text.replace(/["']/g, '');
+            const items = withoutQuotes.split(',');
+            const result = [];
+            for (let i = 0; i < items.length; i++) {
+                const item = trimStr(items[i]);
+                if (item) result.push(item);
+            }
+            return result.join('\n');
+        }
+    };
 
-        // 包装节流函数，限制判断逻辑执行频率
-        const throttledJudge = throttle(judgeInputTypeAndShowButtons, 600);
+    const showTip = (message, color) => {
+        tipInfo.textContent = message;
+        tipInfo.style.color = color || '#bdc3c7';
+        tipInfo.style.borderLeftColor = color || '#3498db';
+    };
 
-        // 新增：粘贴事件监听，专门处理批量粘贴场景
-        inputText.addEventListener('paste', (e) => {
-            // 粘贴完成后延迟执行判断（确保数据已完整写入textarea）
-            setTimeout(() => {
-                judgeInputTypeAndShowButtons();
-                showTip('批量文本粘贴完成，可进行后续处理', '#16a085');
-            }, 100);
-        });
+    const judgeInputTypeAndShowButtons = () => {
+        btn1.classList.remove('active');
+        btn2.classList.remove('active');
+        btn3.classList.remove('active');
+        btn4.classList.remove('active');
 
-        // 监听输入变化（使用节流后的函数）
-        inputText.addEventListener('input', throttledJudge);
+        const inputVal = trimStr(inputText.value);
+        if (!inputVal) {
+            showTip('温馨提示：输入文本后，自动显示功能按钮');
+            return;
+        }
 
-        // 页面初始化执行一次判断
+        const isMultiLine = inputVal.includes('\n');
+        const isComma = inputVal.includes(',');
+
+        if (isMultiLine) {
+            btn1.classList.add('active');
+            btn2.classList.add('active');
+        } else if (isComma) {
+            btn3.classList.add('active');
+            if (inputVal.includes('"') || inputVal.includes("'")) btn4.classList.add('active');
+        } else {
+            btn1.classList.add('active'); btn2.classList.add('active');
+            btn3.classList.add('active'); btn4.classList.add('active');
+        }
+    };
+
+    inputText.addEventListener('input', throttle(judgeInputTypeAndShowButtons, 300));
+
+    transferBtn.addEventListener('click', () => {
+        if (!trimStr(outputText.value)) return showTip('无内容可回传', '#e74c3c');
+        inputText.value = outputText.value;
         judgeInputTypeAndShowButtons();
+        showTip('结果已回传', '#1abc9c');
+    });
 
-        // 回传按钮点击事件（优化：批量赋值，仅触发一次DOM更新）
-        transferBtn.addEventListener('click', () => {
-            const outputVal = outputText.value;
-            const validOutputVal = trimStr(outputVal);
+    btn1.addEventListener('click', () => { outputText.value = batchProcessText.multiToSingle(inputText.value); });
+    btn2.addEventListener('click', () => {
+        const quote = quoteType.value === 'single' ? "'" : '"';
+        outputText.value = batchProcessText.multiToSingleWithQuote(inputText.value, quote);
+    });
+    btn3.addEventListener('click', () => { outputText.value = batchProcessText.singleToMulti(inputText.value); });
+    btn4.addEventListener('click', () => { outputText.value = batchProcessText.singleQuotedToMultiUnquoted(inputText.value); });
 
-            if (!validOutputVal) {
-                showTip('输出区域无有效内容可转移！', 'red');
-                return;
-            }
-
-            // 优化：先清空输入框，再一次性赋值（减少DOM操作）
-            inputText.value = '';
-            inputText.value = outputVal;
-            // 触发判断（使用节流函数，避免重复执行）
-            throttledJudge();
-            showTip('输出结果已成功转移到输入文本，可进行二次加工！', '#16a085');
-        });
-
-        // 功能1：优化后批量处理
-        btn1.addEventListener('click', () => {
-            const inputVal = inputText.value;
-            if (!trimStr(inputVal)) {
-                showTip('请先输入需要处理的文本！', 'red');
-                return;
-            }
-
-            // 显示处理中提示
-            showTip('正在处理大量数据，请稍候...', '#3498db');
-            // 优化：使用requestIdleCallback或setTimeout，避免阻塞主线程
-            setTimeout(() => {
-                try {
-                    const result = batchProcessText.multiToSingle(inputVal);
-                    // 一次性赋值给输出框，仅触发1次DOM重排
-                    outputText.value = result;
-                    showTip('功能1处理完成！（数据已批量转换）', '#27ae60');
-                } catch (err) {
-                    showTip('处理失败！请检查数据格式', 'red');
-                    console.error('处理失败：', err);
-                }
-            }, 0);
-        });
-
-        // 功能2：优化后批量处理
-        btn2.addEventListener('click', () => {
-            const inputVal = inputText.value;
-            if (!trimStr(inputVal)) {
-                showTip('请先输入需要处理的文本！', 'red');
-                return;
-            }
-
-            showTip('正在处理大量数据，请稍候...', '#2ecc71');
-            setTimeout(() => {
-                try {
-                    const quote = quoteType.value === 'single' ? "'" : '"';
-                    const result = batchProcessText.multiToSingleWithQuote(inputVal, quote);
-                    outputText.value = result;
-                    showTip('功能2处理完成！（数据已批量转换）', '#27ae60');
-                } catch (err) {
-                    showTip('处理失败！请检查数据格式', 'red');
-                    console.error('处理失败：', err);
-                }
-            }, 0);
-        });
-
-        // 功能3：优化后批量处理
-        btn3.addEventListener('click', () => {
-            const inputVal = inputText.value;
-            if (!trimStr(inputVal)) {
-                showTip('请先输入需要处理的文本！', 'red');
-                return;
-            }
-
-            showTip('正在处理大量数据，请稍候...', '#e67e22');
-            setTimeout(() => {
-                try {
-                    const result = batchProcessText.singleToMulti(inputVal);
-                    outputText.value = result;
-                    showTip('功能3处理完成！（数据已批量转换）', '#27ae60');
-                } catch (err) {
-                    showTip('处理失败！请检查数据格式', 'red');
-                    console.error('处理失败：', err);
-                }
-            }, 0);
-        });
-
-        // 功能4：优化后批量处理
-        btn4.addEventListener('click', () => {
-            const inputVal = inputText.value;
-            if (!trimStr(inputVal)) {
-                showTip('请先输入需要处理的文本！', 'red');
-                return;
-            }
-
-            showTip('正在处理大量数据，请稍候...', '#e74c3c');
-            setTimeout(() => {
-                try {
-                    const result = batchProcessText.singleQuotedToMultiUnquoted(inputVal);
-                    outputText.value = result;
-                    showTip('功能4处理完成！（数据已批量去引号并转换）', '#e74c3c');
-                } catch (err) {
-                    showTip('处理失败！请检查数据格式', 'red');
-                    console.error('处理失败：', err);
-                }
-            }, 0);
-        });
-
-        // 复制功能（优化：处理大量文本复制）
-        copyBtn.addEventListener('click', async () => {
-            const outputVal = outputText.value;
-            if (!trimStr(outputVal)) {
-                showTip('输出区域无有效内容可复制！', 'red');
-                return;
-            }
-
-            try {
-                // 优化：大量文本复制，使用剪贴板API的容错处理
-                await navigator.clipboard.writeText(outputVal);
-                showTip('复制成功！大量数据已保存到剪贴板', '#9b59b6');
-            } catch (err) {
-                // 降级方案：手动选中复制
-                outputText.select();
-                document.execCommand('copy');
-                showTip('复制成功（降级方案）！结果已保存到剪贴板', '#9b59b6');
-                console.error('剪贴板API失败，使用降级方案：', err);
-            }
-        });
-    </script>
+    copyBtn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(outputText.value);
+            showTip('复制成功', '#9b59b6');
+        } catch (e) {
+            outputText.select();
+            document.execCommand('copy');
+            showTip('复制成功', '#9b59b6');
+        }
+    });
+</script>
 </body>
 </html>
