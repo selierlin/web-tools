@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>日期计算器</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.15);
+            --text: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body {
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container { width: 100%; max-width: 450px; }
+
+        h1 {
+            text-align: center; font-size: 1.6rem; margin: 20px 0 30px;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .section-title {
+            font-size: 0.9rem; color: #94a3b8; margin-bottom: 15px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* 智能输入框 */
+        .smart-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .smart-input-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .smart-input-wrapper input[type="text"] {
+            flex: 1; padding: 14px 16px; background: transparent;
+            border: none; color: white; font-size: 1.1rem; outline: none; width: 100%;
+        }
+
+        /* 日历图标区域 */
+        .calendar-btn {
+            width: 46px; height: 46px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #94a3b8; border-left: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .calendar-btn:active { background: rgba(255,255,255,0.1); color: var(--primary); }
+
+        /* 真正隐藏的日期控件 */
+        .hidden-date-input {
+            position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none;
+        }
+
+        /* 结果区 */
+        .result-group {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px; padding: 15px; margin-top: 15px;
+        }
+
+        .res-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .res-row:last-child { margin-bottom: 0; }
+        .res-label { font-size: 0.85rem; color: #94a3b8; }
+        .res-value { font-weight: 600; color: #fff; font-size: 1.1rem; }
+        .highlight { color: #f472b6; text-shadow: 0 0 10px rgba(244,114,182,0.3); }
+
+        .offset-input {
+            width: 100%; padding: 12px; background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border); border-radius: 12px;
+            color: #fff; text-align: center; font-size: 1.1rem; outline: none;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        small { color: #64748b; font-size: 0.75rem; display: block; margin-top: 5px; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>DATE CALCULATOR</h1>
+
+    <div class="card">
+        <div class="section-title">📅 日期推算 (加/减天数)</div>
+        <div class="smart-input-wrapper">
+            <input type="text" id="baseDate" placeholder="输入 20251231" maxlength="8">
+            <!-- 点击这个 div 触发隐藏的 input -->
+            <div class="calendar-btn" onclick="openPicker('basePicker')">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+            <input type="date" id="basePicker" class="hidden-date-input" onchange="onPickerChange(this, 'baseDate')">
+        </div>
+
+        <input type="number" id="dayOffset" class="offset-input" value="7">
+        <small>* 输入负数如 -60 代表向前推算</small>
+
+        <div class="result-group">
+            <div class="res-row">
+                <span class="res-label">目标日期</span>
+                <span class="res-value highlight" id="targetDate">-</span>
+            </div>
+            <div class="res-row">
+                <span class="res-label">星期几</span>
+                <span class="res-value" id="targetWeek">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">📏 日期间隔计算</div>
+        <div class="grid-2">
+            <div class="smart-input-wrapper">
+                <input type="text" id="dateA" placeholder="日期 A" maxlength="8">
+                <div class="calendar-btn" onclick="openPicker('pickerA')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+                <input type="date" id="pickerA" class="hidden-date-input" onchange="onPickerChange(this, 'dateA')">
+            </div>
+            <div class="smart-input-wrapper">
+                <input type="text" id="dateB" placeholder="日期 B" maxlength="8">
+                <div class="calendar-btn" onclick="openPicker('pickerB')">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+                <input type="date" id="pickerB" class="hidden-date-input" onchange="onPickerChange(this, 'dateB')">
+            </div>
+        </div>
+
+        <div class="result-group">
+            <div class="res-row">
+                <span class="res-label">相差天数</span>
+                <span class="res-value highlight" id="diffDays">-</span>
+            </div>
+            <div class="res-row">
+                <span class="res-label">相差小时</span>
+                <span class="res-value" id="diffHours">-</span>
+            </div>
+            <div class="res-row">
+                <span class="res-label">总分钟数</span>
+                <span class="res-value" id="diffMinutes">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. 弹出日历的核心方法
+    function openPicker(pickerId) {
+        const picker = document.getElementById(pickerId);
+        // 使用现代浏览器标准 API 弹出选择器
+        if (picker.showPicker) {
+            picker.showPicker();
+        } else {
+            // 兼容旧版浏览器
+            picker.click();
+        }
+    }
+
+    // 2. 日历选定后的回调
+    function onPickerChange(picker, textId) {
+        if (picker.value) {
+            // 将 2025-12-31 转为 20251231
+            const val = picker.value.replace(/-/g, '');
+            document.getElementById(textId).value = val;
+            runCalculations();
+        }
+    }
+
+    // 3. 初始加载
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date();
+        const formatted = formatDate(today);
+        
+        document.getElementById('baseDate').value = formatted;
+        document.getElementById('dateA').value = formatted;
+        document.getElementById('dateB').value = "20251231";
+
+        // 绑定手动输入的监听
+        ['baseDate', 'dayOffset', 'dateA', 'dateB'].forEach(id => {
+            document.getElementById(id).addEventListener('input', runCalculations);
+        });
+
+        runCalculations();
+    });
+
+    // 核心计算函数
+    function runCalculations() {
+        calcOffset();
+        calcDiff();
+    }
+
+    function formatDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}${m}${d}`;
+    }
+
+    function smartParseDate(str) {
+        if (!str || str.length !== 8) return null;
+        const y = parseInt(str.substring(0, 4));
+        const m = parseInt(str.substring(4, 6)) - 1;
+        const d = parseInt(str.substring(6, 8));
+        const date = new Date(y, m, d);
+        return (date.getFullYear() === y && date.getMonth() === m && date.getDate() === d) ? date : null;
+    }
+
+    function calcOffset() {
+        const baseStr = document.getElementById('baseDate').value;
+        const offset = parseInt(document.getElementById('dayOffset').value) || 0;
+        const date = smartParseDate(baseStr);
+        const targetEl = document.getElementById('targetDate');
+        const weekEl = document.getElementById('targetWeek');
+
+        if (date) {
+            date.setDate(date.getDate() + offset);
+            const weekDays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+            targetEl.innerText = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+            weekEl.innerText = weekDays[date.getDay()];
+        } else {
+            targetEl.innerText = "格式: YYYYMMDD";
+            weekEl.innerText = "-";
+        }
+    }
+
+    function calcDiff() {
+        const dateA = smartParseDate(document.getElementById('dateA').value);
+        const dateB = smartParseDate(document.getElementById('dateB').value);
+        const dEl = document.getElementById('diffDays');
+        const hEl = document.getElementById('diffHours');
+        const mEl = document.getElementById('diffMinutes');
+
+        if (dateA && dateB) {
+            const ms = Math.abs(dateB - dateA);
+            dEl.innerText = Math.floor(ms / 86400000).toLocaleString() + " 天";
+            hEl.innerText = Math.floor(ms / 3600000).toLocaleString() + " 小时";
+            mEl.innerText = Math.floor(ms / 60000).toLocaleString() + " 分钟";
+        } else {
+            dEl.innerText = "-"; hEl.innerText = "-"; mEl.innerText = "-";
+        }
+    }
+</script>
+</body>
+</html>
