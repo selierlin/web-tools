@@ -4,17 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>极简工具箱 | Toolbox</title>
-    <!-- 引入外部字体和图标 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4f46e5; /* 主题色：靛蓝 */
+            --primary-color: #4f46e5;
             --primary-hover: #4338ca;
-            --bg-dark: #0f172a;      /* 背景色：深色 */
-            --nav-bg: #1e293b;       /* 导航色 */
+            --bg-dark: #0f172a;
+            --nav-bg: #1e293b;
             --text-light: #f8fafc;
             --text-muted: #94a3b8;
-            --accent: #10b981;       /* 强调色：翠绿 */
         }
 
         * {
@@ -40,7 +38,7 @@
             align-items: center;
             padding: 0 24px;
             height: 64px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             z-index: 10;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
@@ -61,10 +59,10 @@
         /* 菜单列表容器 */
         .menu-wrapper {
             flex: 1;
-            overflow-x: auto; /* 手机端支持滑动 */
-            scrollbar-width: none; /* Firefox 隐藏滚动条 */
+            overflow-x: auto;
+            scrollbar-width: none;
         }
-        .menu-wrapper::-webkit-scrollbar { display: none; } /* Chrome 隐藏滚动条 */
+        .menu-wrapper::-webkit-scrollbar { display: none; }
 
         .menu-list {
             display: flex;
@@ -81,13 +79,8 @@
             padding: 8px 16px;
             border-radius: 8px;
             font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             white-space: nowrap;
-        }
-
-        .menu-item a i {
-            font-size: 1.1rem;
         }
 
         .menu-item a:hover {
@@ -101,60 +94,44 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
         }
 
-        /* iframe 容器 */
-        .iframe-container {
+        /* iframe 容器区域 */
+        #content-main {
             flex: 1;
             position: relative;
-            background: #fff; /* 默认页面背景，视你的子工具页面而定 */
-            overflow: hidden;
+            background: #fff; /* 这里设为白色，因为大部分工具页背景是白的 */
         }
 
-        /* 加载进度条动画 */
-        .loader {
+        /* 单个 iframe 的样式 */
+        .tool-iframe {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 3px;
-            background: linear-gradient(to right, var(--primary-color), var(--accent));
-            z-index: 20;
-            transform: scaleX(0);
-            transform-origin: 0 50%;
-            transition: transform 0.4s ease-out;
-            display: none;
-        }
-
-        .loader.loading {
-            display: block;
-            animation: progress 2s infinite ease-in-out;
-        }
-
-        @keyframes progress {
-            0% { transform: scaleX(0); }
-            50% { transform: scaleX(0.7); }
-            100% { transform: scaleX(1); opacity: 0; }
-        }
-
-        #toolIframe {
-            width: 100%;
             height: 100%;
             border: none;
+            display: none; /* 默认隐藏 */
+        }
+
+        /* 当前选中的 iframe */
+        .tool-iframe.active {
             display: block;
         }
 
-        /* 响应式调整 */
-        @media (max-width: 1024px) {
-            .logo span { display: none; } /* 小屏幕隐藏文字只留图标 */
-            .logo i { font-size: 1.5rem; }
+        /* 加载提示 */
+        .loading-mask {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            color: #666;
         }
     </style>
 </head>
 <body>
 
-<!-- 加载条 -->
-<div id="loader" class="loader"></div>
-
-<!-- 顶部导航 -->
 <header>
     <div class="logo">
         <i class="fas fa-toolbox"></i>
@@ -163,80 +140,77 @@
 
     <nav class="menu-wrapper">
         <ul class="menu-list">
-            <li class="menu-item"><a href="javascript:;" data-src="文本加工.html"><i class="fas fa-file-alt"></i>文本加工</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="编码解码.html"><i class="fas fa-terminal"></i>编码解码</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="二维码生成器.html"><i class="fas fa-qrcode"></i>二维码</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="加密解密.html"><i class="fas fa-shield-alt"></i>加密解密</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="文本对比.html"><i class="fas fa-columns"></i>文本对比</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="JSON 格式化.html"><i class="fas fa-code"></i>JSON格式</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="时间计算器.html"><i class="fas fa-clock"></i>时间计算</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="日期计算器.html"><i class="fas fa-calendar-alt"></i>日期计算</a></li>
-            <li class="menu-item"><a href="javascript:;" data-src="Nacos 服务管理.html"><i class="fas fa-server"></i>Nacos管理</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="text-process" data-src="文本加工.html"><i class="fas fa-file-alt"></i>文本加工</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="codec" data-src="编码解码.html"><i class="fas fa-terminal"></i>编码解码</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="qrcode" data-src="二维码生成器.html"><i class="fas fa-qrcode"></i>二维码</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="crypto" data-src="加密解密.html"><i class="fas fa-shield-alt"></i>加密解密</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="diff" data-src="文本对比.html"><i class="fas fa-columns"></i>文本对比</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="json" data-src="JSON 格式化.html"><i class="fas fa-code"></i>JSON格式</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="time" data-src="时间计算器.html"><i class="fas fa-clock"></i>时间计算</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="date" data-src="日期计算器.html"><i class="fas fa-calendar-alt"></i>日期计算</a></li>
+            <li class="menu-item"><a href="javascript:;" data-id="nacos" data-src="Nacos 服务管理.html"><i class="fas fa-server"></i>Nacos管理</a></li>
         </ul>
     </nav>
 </header>
 
-<!-- iframe容器 -->
-<main class="iframe-container">
-    <iframe id="toolIframe" src=""></iframe>
+<!-- iframe 管理容器 -->
+<main id="content-main">
+    <!-- 这里会动态生成 iframe -->
 </main>
 
 <script>
     const menuLinks = document.querySelectorAll('.menu-item a');
-    const toolIframe = document.getElementById('toolIframe');
-    const loader = document.getElementById('loader');
-    const STORAGE_KEY = 'selectedToolSrc';
-    const DEFAULT_TOOL_SRC = '文本加工.html';
+    const contentMain = document.getElementById('content-main');
+    const STORAGE_KEY = 'activeToolId';
+    const DEFAULT_TOOL_ID = 'text-process';
 
-    // 切换工具逻辑
-    function loadTool(src) {
-        if (!src) return;
+    // 核心函数：切换工具
+    function switchTool(toolId) {
+        const targetLink = document.querySelector(`[data-id="${toolId}"]`);
+        if (!targetLink) return;
 
-        // 样式切换
-        menuLinks.forEach(link => {
-            const currentSrc = link.getAttribute('data-src');
-            if (currentSrc === src) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
+        const src = targetLink.getAttribute('data-src');
 
-        // 只有当 src 变化时才加载
-        if (toolIframe.src.indexOf(src) === -1) {
-            showLoader();
-            toolIframe.src = src;
-            localStorage.setItem(STORAGE_KEY, src);
+        // 1. 更新菜单 UI
+        menuLinks.forEach(link => link.classList.remove('active'));
+        targetLink.classList.add('active');
+
+        // 2. 隐藏所有已存在的 iframe
+        const allIframes = document.querySelectorAll('.tool-iframe');
+        allIframes.forEach(iframe => iframe.classList.remove('active'));
+
+        // 3. 检查是否已经创建过这个工具的 iframe
+        let targetIframe = document.querySelector(`.tool-iframe[data-id="${toolId}"]`);
+
+        if (!targetIframe) {
+            // 如果没创建，则新建一个
+            targetIframe = document.createElement('iframe');
+            targetIframe.className = 'tool-iframe';
+            targetIframe.setAttribute('data-id', toolId);
+            targetIframe.src = src;
+            contentMain.appendChild(targetIframe);
         }
+
+        // 4. 显示当前 iframe
+        targetIframe.classList.add('active');
+
+        // 5. 记录状态
+        localStorage.setItem(STORAGE_KEY, toolId);
     }
 
-    // 加载动画控制
-    function showLoader() {
-        loader.classList.remove('loading');
-        void loader.offsetWidth; // 触发重绘
-        loader.classList.add('loading');
-    }
-
-    function hideLoader() {
-        loader.classList.remove('loading');
-    }
-
-    // 监听 iframe 加载完成
-    toolIframe.addEventListener('load', hideLoader);
-
-    // 点击事件
+    // 绑定点击事件
     menuLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            const src = this.getAttribute('data-src');
-            loadTool(src);
+            const toolId = this.getAttribute('data-id');
+            switchTool(toolId);
         });
     });
 
-    // 恢复状态
+    // 页面加载时恢复
     document.addEventListener('DOMContentLoaded', () => {
-        const savedToolSrc = localStorage.getItem(STORAGE_KEY);
-        loadTool(savedToolSrc || DEFAULT_TOOL_SRC);
+        const savedToolId = localStorage.getItem(STORAGE_KEY);
+        switchTool(savedToolId || DEFAULT_TOOL_ID);
     });
 </script>
 </body>

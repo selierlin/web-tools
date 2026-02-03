@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文本批量加工处理</title>
+    <title>文本批量加工处理 (性能增强版)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft YaHei", Arial, sans-serif;
+            font-family: "Consolas", "Monaco", "Microsoft YaHei", monospace;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 粒子背景容器 */
         #particles-js {
             position: fixed;
             width: 100%;
@@ -54,25 +53,6 @@
             margin-bottom: 2.5rem;
             font-weight: 700;
             font-size: 2.2rem;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        h1::after {
-            content: '';
-            display: block;
-            width: 120px;
-            height: 4px;
-            background: linear-gradient(90deg, #3498db, #1abc9c);
-            border-radius: 2px;
-            margin: 1rem auto 0;
-            animation: gradientMove 3s ease infinite alternate;
-        }
-
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; width: 80px; }
-            100% { background-position: 100% 50%; width: 160px; }
         }
 
         .text-area-group {
@@ -84,82 +64,76 @@
 
         .text-box {
             flex: 1;
-            position: relative;
-            width: 100%;
+            min-width: 0;
         }
 
-        .text-box::before {
-            content: '';
-            position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            background: linear-gradient(45deg, #3498db, #9b59b6, #1abc9c);
-            border-radius: 14px;
-            z-index: -1;
-            opacity: 0.15;
-            filter: blur(5px);
+        /* 核心编辑器容器优化 */
+        .editor-wrapper {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            height: 350px; /* 固定高度防止超出屏幕 */
+            position: relative;
+        }
+
+        /* 行号区优化：使用 pre 保持格式 */
+        .line-numbers {
+            width: 45px;
+            padding: 1rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            color: #7f8c8d;
+            text-align: right;
+            padding-right: 8px;
+            font-size: 14px;
+            line-height: 22.4px; /* 1.4 * 16px 精确行高 */
+            user-select: none;
+            overflow: hidden;
+            white-space: pre;
+            pointer-events: none; /* 防止干扰主文本框点击 */
+            will-change: transform;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            resize: none;
+            font-size: 14px;
+            line-height: 22.4px; /* 必须与行号区完全一致 */
+            color: #ecf0f1;
+            outline: none;
+            overflow: auto;
+            white-space: pre; /* 大量数据下关闭自动换行以保证行号对应 */
+            word-wrap: normal;
         }
 
         .transfer-btn-wrap {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-width: 100px;
+            min-width: 80px;
         }
 
         .transfer-btn {
             border: none;
             background: linear-gradient(45deg, #1abc9c, #16a085);
             color: #fff;
-            font-size: 1.5rem;
             cursor: pointer;
             transition: all 0.4s ease;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             box-shadow: 0 4px 15px rgba(26, 188, 156, 0.4);
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            position: relative;
-            z-index: 2;
         }
 
-        .transfer-btn:hover {
-            transform: translateY(-5px) rotate(180deg);
-            background: linear-gradient(45deg, #16a085, #1abc9c);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.8rem;
-            color: #ecf0f1;
-            font-weight: 500;
-            font-size: 1.05rem;
-        }
-
-        textarea {
-            width: 100%;
-            height: 300px;
-            padding: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            resize: none;
-            font-size: 1rem;
-            color: #ecf0f1;
-            line-height: 1.6;
-            transition: all 0.3s ease;
-            background: rgba(0, 0, 0, 0.2);
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 12px rgba(52, 152, 219, 0.3), inset 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
+        .transfer-btn:hover { transform: translateY(-5px); }
 
         .btn-group {
             display: flex;
@@ -175,170 +149,49 @@
             border-radius: 50px;
             background-color: rgba(52, 73, 94, 0.5);
             color: #fff;
-            font-size: 1rem;
-            font-weight: 500;
             cursor: pointer;
-            transition: all 0.4s ease;
             display: none;
-            position: relative;
-            overflow: hidden;
         }
 
         button.active { display: block; }
-
         button#btn1.active { background: linear-gradient(45deg, #3498db, #2980b9); }
         button#btn2.active { background: linear-gradient(45deg, #2ecc71, #27ae60); }
         button#btn3.active { background: linear-gradient(45deg, #e67e22, #d35400); }
         button#btn4.active { background: linear-gradient(45deg, #e74c3c, #c0392b); }
-        button.copy-btn { display: block; background: linear-gradient(45deg, #9b59b6, #8e44ad); }
+        .copy-btn { display: block !important; background: linear-gradient(45deg, #9b59b6, #8e44ad); }
 
-        .tip {
-            text-align: center;
-            color: #bdc3c7;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            padding: 0.8rem;
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 8px;
-            border-left: 3px solid #3498db;
-        }
-
-        /* 优化引号选择器样式 */
         .quote-select {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 1rem;
             margin-bottom: 1.5rem;
-            padding: 1.2rem 1.5rem;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            position: relative;
-        }
-
-        .quote-select::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            background: linear-gradient(45deg, #2ecc71, #27ae60, #1abc9c);
-            border-radius: 14px;
-            z-index: -1;
-            opacity: 0.1;
-            filter: blur(4px);
-        }
-
-        .quote-select label {
-            margin: 0;
-            font-size: 1.05rem;
-            color: #f1f1f1;
-            font-weight: 500;
+            color: #fff;
         }
 
         .quote-select select {
-            padding: 0.7rem 1.2rem;
-            border-radius: 50px;
-            background: rgba(0, 0, 0, 0.25);
-            color: #ecf0f1;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            min-width: 180px;
-            outline: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            background: #2c3e50;
+            color: #fff;
+            border: 1px solid #444;
         }
 
-        .quote-select select:hover,
-        .quote-select select:focus {
-            border-color: #2ecc71;
-            box-shadow: 0 0 8px rgba(46, 204, 113, 0.2);
+        .tip {
+            text-align: center;
+            color: #bdc3c7;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
         }
 
-        /* --- 手机端适配关键修改 --- */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 1.2rem;
-                border-radius: 15px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-                margin-bottom: 1.5rem;
-            }
-
-            .text-area-group {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .transfer-btn-wrap {
-                min-width: 100%;
-                margin: 0.5rem 0;
-            }
-
-            .transfer-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-                /* 手机端点击后不需要旋转180度，改为上下指向感 */
-                transform: rotate(90deg);
-            }
-
-            .transfer-btn:hover {
-                transform: rotate(90deg) scale(1.1);
-            }
-
-            textarea {
-                height: 180px; /* 减小高度，让屏幕能装下更多内容 */
-                font-size: 0.95rem;
-            }
-
-            .btn-group {
-                gap: 0.8rem;
-            }
-
-            button {
-                width: 100%; /* 按钮全宽，方便点击 */
-                padding: 0.7rem 1rem;
-                font-size: 0.9rem;
-                border-radius: 10px; /* 手机端稍微方正一点更好看 */
-            }
-
-            /* 手机端引号选择器适配 */
-            .quote-select {
-                flex-direction: column;
-                gap: 0.8rem;
-                padding: 1rem;
-                text-align: center;
-            }
-
-            .quote-select label {
-                font-size: 0.95rem;
-            }
-
-            .quote-select select {
-                min-width: 100%;
-                padding: 0.6rem 1rem;
-                font-size: 0.95rem;
-            }
-        }
-
-        /* 动画效果 */
-        .container > * {
-            animation: fadeInUp 0.6s ease forwards;
-            opacity: 0;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+            body { padding: 10px; }
+            .container { padding: 1.2rem; }
+            .text-area-group { flex-direction: column; }
+            .editor-wrapper { height: 250px; }
+            .transfer-btn { transform: rotate(90deg); }
         }
     </style>
 </head>
@@ -348,9 +201,8 @@
 <div class="container">
     <h1>文本批量加工处理</h1>
 
-    <!-- 优化后的引号选择区域 -->
     <div class="quote-select">
-        <label for="quoteType">选择引号类型：</label>
+        <label>引号类型：</label>
         <select id="quoteType">
             <option value="single">单引号 (')</option>
             <option value="double">双引号 (")</option>
@@ -359,28 +211,34 @@
 
     <div class="text-area-group">
         <div class="text-box">
-            <label for="inputText">输入文本：</label>
-            <textarea id="inputText" placeholder="请粘贴需要处理的批量文本..."></textarea>
+            <label style="color:#eee; margin-bottom:5px; display:block;">输入文本：</label>
+            <div class="editor-wrapper">
+                <div class="line-numbers" id="inputLineNums">1</div>
+                <textarea id="inputText" placeholder="请粘贴需要处理的文本..." spellcheck="false"></textarea>
+            </div>
         </div>
 
         <div class="transfer-btn-wrap">
-            <button class="transfer-btn" id="transferBtn" title="结果回传到输入框">
-                <i class="fa fa-exchange" aria-hidden="true"></i>
+            <button class="transfer-btn" id="transferBtn">
+                <i class="fa fa-chevron-left"></i>
             </button>
         </div>
 
         <div class="text-box">
-            <label for="outputText">输出结果：</label>
-            <textarea id="outputText" placeholder="处理后的结果将显示在这里..." readonly></textarea>
+            <label style="color:#eee; margin-bottom:5px; display:block;">输出结果：</label>
+            <div class="editor-wrapper">
+                <div class="line-numbers" id="outputLineNums">1</div>
+                <textarea id="outputText" placeholder="结果显示区域..." readonly spellcheck="false"></textarea>
+            </div>
         </div>
     </div>
 
     <div class="btn-group">
-        <button id="btn1">功能1：多行 → 单行逗号拼接</button>
-        <button id="btn2">功能2：多行 → 引号逗号拼接</button>
-        <button id="btn3">功能3：逗号拼接 → 多行</button>
-        <button id="btn4">功能4：引号拼接 → 无引号多行</button>
-        <button class="copy-btn" id="copyBtn">复制输出结果</button>
+        <button id="btn1">多行 → 逗号拼接</button>
+        <button id="btn2">多行 → 引号逗号拼接</button>
+        <button id="btn3">逗号拼接 → 多行</button>
+        <button id="btn4">引号拼接 → 无引号多行</button>
+        <button class="copy-btn" id="copyBtn">复制结果</button>
     </div>
 
     <div class="tip" id="tipInfo">温馨提示：输入文本后，自动显示功能按钮</div>
@@ -388,141 +246,119 @@
 
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
-    // 逻辑部分保持不变
+    // 基础粒子背景
     particlesJS('particles-js', {
         "particles": {
-            "number": {"value": 50},
-            "color": {"value": ["#3498db", "#1abc9c", "#9b59b6"]},
-            "shape": {"type": "circle"},
-            "opacity": {"value": 0.3},
-            "size": {"value": 3},
+            "number": {"value": 30},
+            "color": {"value": "#ffffff"},
+            "opacity": {"value": 0.2},
+            "size": {"value": 2},
             "line_linked": {"enable": true, "distance": 150, "opacity": 0.1},
             "move": {"enable": true, "speed": 1}
-        },
-        "interactivity": {
-            "events": {"onhover": {"enable": true, "mode": "grab"}, "onclick": {"enable": true, "mode": "push"}}
         }
     });
 
     const inputText = document.getElementById('inputText');
     const outputText = document.getElementById('outputText');
-    const btn1 = document.getElementById('btn1');
-    const btn2 = document.getElementById('btn2');
-    const btn3 = document.getElementById('btn3');
-    const btn4 = document.getElementById('btn4');
-    const copyBtn = document.getElementById('copyBtn');
-    const transferBtn = document.getElementById('transferBtn');
-    const quoteType = document.getElementById('quoteType');
+    const inputLineNums = document.getElementById('inputLineNums');
+    const outputLineNums = document.getElementById('outputLineNums');
     const tipInfo = document.getElementById('tipInfo');
 
-    const throttle = (fn, delay = 500) => {
-        let timer = null;
-        return (...args) => {
-            if (timer) return;
-            timer = setTimeout(() => { fn.apply(this, args); timer = null; }, delay);
-        };
+    // --- 高性能行号更新逻辑 ---
+    let lastInputLines = 0;
+    const updateLineNumbers = (ta, lineNumDiv) => {
+        const lines = ta.value.split('\n').length;
+        // 只有行数变化时才更新 DOM，极大地减少 CPU 消耗
+        if (ta === inputText && lines === lastInputLines) return;
+        if (ta === inputText) lastInputLines = lines;
+
+        const nums = [];
+        for (let i = 1; i <= lines; i++) {
+            nums.push(i);
+        }
+        lineNumDiv.innerText = nums.join('\n');
     };
 
+    // --- 使用 requestAnimationFrame 优化滚动同步 ---
+    const syncScroll = (ta, lineNumDiv) => {
+        window.requestAnimationFrame(() => {
+            lineNumDiv.scrollTop = ta.scrollTop;
+        });
+    };
+
+    inputText.addEventListener('input', () => {
+        updateLineNumbers(inputText, inputLineNums);
+        judgeInputTypeAndShowButtons();
+    });
+
+    // 滚动同步优化
+    inputText.addEventListener('scroll', () => syncScroll(inputText, inputLineNums));
+    outputText.addEventListener('scroll', () => syncScroll(outputText, outputLineNums));
+
+    // --- 业务逻辑 (保持不变但增加了界面同步) ---
     const trimStr = (str) => str.replace(/^\s+|\s+$/g, '');
 
-    const batchProcessText = {
-        multiToSingle: (text) => {
-            const lines = text.split(/\r?\n/);
-            const result = [];
-            for (let i = 0; i < lines.length; i++) {
-                const line = trimStr(lines[i]);
-                if (line) result.push(line);
-            }
-            return result.join(',');
-        },
-        multiToSingleWithQuote: (text, quote) => {
-            const lines = text.split(/\r?\n/);
-            const result = [];
-            for (let i = 0; i < lines.length; i++) {
-                const line = trimStr(lines[i]);
-                if (line) result.push(`${quote}${line}${quote}`);
-            }
-            return result.join(',');
-        },
-        singleToMulti: (text) => {
-            const items = text.split(',');
-            const result = [];
-            for (let i = 0; i < items.length; i++) {
-                const item = trimStr(items[i]);
-                if (item) result.push(item);
-            }
-            return result.join('\n');
-        },
-        singleQuotedToMultiUnquoted: (text) => {
-            const withoutQuotes = text.replace(/["']/g, '');
-            const items = withoutQuotes.split(',');
-            const result = [];
-            for (let i = 0; i < items.length; i++) {
-                const item = trimStr(items[i]);
-                if (item) result.push(item);
-            }
-            return result.join('\n');
-        }
+    const processAction = (actionFn) => {
+        const val = actionFn(inputText.value);
+        outputText.value = val;
+        updateLineNumbers(outputText, outputLineNums);
+        outputText.scrollTop = 0;
+        outputLineNums.scrollTop = 0;
     };
 
-    const showTip = (message, color) => {
-        tipInfo.textContent = message;
-        tipInfo.style.color = color || '#bdc3c7';
-        tipInfo.style.borderLeftColor = color || '#3498db';
+    const batchProcessText = {
+        multiToSingle: (text) => text.split(/\r?\n/).map(trimStr).filter(Boolean).join(','),
+        multiToSingleWithQuote: (text, quote) => text.split(/\r?\n/).map(trimStr).filter(Boolean).map(s => `${quote}${s}${quote}`).join(','),
+        singleToMulti: (text) => text.split(',').map(trimStr).filter(Boolean).join('\n'),
+        singleQuotedToMultiUnquoted: (text) => text.replace(/["']/g, '').split(',').map(trimStr).filter(Boolean).join('\n')
     };
 
     const judgeInputTypeAndShowButtons = () => {
-        btn1.classList.remove('active');
-        btn2.classList.remove('active');
-        btn3.classList.remove('active');
-        btn4.classList.remove('active');
-
         const inputVal = trimStr(inputText.value);
+        const btns = ['btn1', 'btn2', 'btn3', 'btn4'];
+        btns.forEach(id => document.getElementById(id).classList.remove('active'));
+
         if (!inputVal) {
-            showTip('温馨提示：输入文本后，自动显示功能按钮');
+            tipInfo.innerText = '温馨提示：输入文本后，自动显示功能按钮';
             return;
         }
 
-        const isMultiLine = inputVal.includes('\n');
-        const isComma = inputVal.includes(',');
-
-        if (isMultiLine) {
-            btn1.classList.add('active');
-            btn2.classList.add('active');
-        } else if (isComma) {
-            btn3.classList.add('active');
-            if (inputVal.includes('"') || inputVal.includes("'")) btn4.classList.add('active');
+        if (inputVal.includes('\n')) {
+            document.getElementById('btn1').classList.add('active');
+            document.getElementById('btn2').classList.add('active');
+        } else if (inputVal.includes(',')) {
+            document.getElementById('btn3').classList.add('active');
+            if (inputVal.includes('"') || inputVal.includes("'")) document.getElementById('btn4').classList.add('active');
         } else {
-            btn1.classList.add('active'); btn2.classList.add('active');
-            btn3.classList.add('active'); btn4.classList.add('active');
+            btns.forEach(id => document.getElementById(id).classList.add('active'));
         }
     };
 
-    inputText.addEventListener('input', throttle(judgeInputTypeAndShowButtons, 300));
+    // 按钮事件
+    document.getElementById('btn1').addEventListener('click', () => processAction(batchProcessText.multiToSingle));
+    document.getElementById('btn2').addEventListener('click', () => {
+        const quote = document.getElementById('quoteType').value === 'single' ? "'" : '"';
+        processAction((t) => batchProcessText.multiToSingleWithQuote(t, quote));
+    });
+    document.getElementById('btn3').addEventListener('click', () => processAction(batchProcessText.singleToMulti));
+    document.getElementById('btn4').addEventListener('click', () => processAction(batchProcessText.singleQuotedToMultiUnquoted));
 
     transferBtn.addEventListener('click', () => {
-        if (!trimStr(outputText.value)) return showTip('无内容可回传', '#e74c3c');
+        if (!outputText.value) return;
         inputText.value = outputText.value;
+        updateLineNumbers(inputText, inputLineNums);
         judgeInputTypeAndShowButtons();
-        showTip('结果已回传', '#1abc9c');
+        tipInfo.innerText = '结果已回传';
     });
 
-    btn1.addEventListener('click', () => { outputText.value = batchProcessText.multiToSingle(inputText.value); });
-    btn2.addEventListener('click', () => {
-        const quote = quoteType.value === 'single' ? "'" : '"';
-        outputText.value = batchProcessText.multiToSingleWithQuote(inputText.value, quote);
-    });
-    btn3.addEventListener('click', () => { outputText.value = batchProcessText.singleToMulti(inputText.value); });
-    btn4.addEventListener('click', () => { outputText.value = batchProcessText.singleQuotedToMultiUnquoted(inputText.value); });
-
-    copyBtn.addEventListener('click', async () => {
+    document.getElementById('copyBtn').addEventListener('click', async () => {
         try {
             await navigator.clipboard.writeText(outputText.value);
-            showTip('复制成功', '#9b59b6');
+            tipInfo.innerText = '复制成功！';
         } catch (e) {
             outputText.select();
             document.execCommand('copy');
-            showTip('复制成功', '#9b59b6');
+            tipInfo.innerText = '复制成功！';
         }
     });
 </script>
