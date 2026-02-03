@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文本批量加工处理 (性能增强版)</title>
+    <title>文本批量加工处理</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * {
@@ -37,7 +37,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             padding: 2.5rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
@@ -59,7 +59,7 @@
             display: flex;
             gap: 1.5rem;
             margin-bottom: 2rem;
-            align-items: center;
+            align-items: stretch; /* 让中间按钮高度自适应 */
         }
 
         .text-box {
@@ -67,18 +67,16 @@
             min-width: 0;
         }
 
-        /* 核心编辑器容器优化 */
         .editor-wrapper {
             display: flex;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
             overflow: hidden;
-            height: 350px; /* 固定高度防止超出屏幕 */
+            height: 350px;
             position: relative;
         }
 
-        /* 行号区优化：使用 pre 保持格式 */
         .line-numbers {
             width: 45px;
             padding: 1rem 0;
@@ -88,12 +86,11 @@
             text-align: right;
             padding-right: 8px;
             font-size: 14px;
-            line-height: 22.4px; /* 1.4 * 16px 精确行高 */
+            line-height: 22.4px;
             user-select: none;
             overflow: hidden;
             white-space: pre;
-            pointer-events: none; /* 防止干扰主文本框点击 */
-            will-change: transform;
+            pointer-events: none;
         }
 
         textarea {
@@ -103,37 +100,50 @@
             background: transparent;
             resize: none;
             font-size: 14px;
-            line-height: 22.4px; /* 必须与行号区完全一致 */
+            line-height: 22.4px;
             color: #ecf0f1;
             outline: none;
             overflow: auto;
-            white-space: pre; /* 大量数据下关闭自动换行以保证行号对应 */
-            word-wrap: normal;
+            white-space: pre;
         }
 
+        /* --- 优化后的回传按钮样式 --- */
         .transfer-btn-wrap {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-width: 80px;
+            padding: 0 5px;
         }
 
         .transfer-btn {
-            border: none;
-            background: linear-gradient(45deg, #1abc9c, #16a085);
-            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(26, 188, 156, 0.2);
+            color: #1abc9c;
             cursor: pointer;
-            transition: all 0.4s ease;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 100px; /* 电脑端长条形更显眼 */
+            border-radius: 20px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(26, 188, 156, 0.4);
+            gap: 5px;
         }
 
-        .transfer-btn:hover { transform: translateY(-5px); }
+        .transfer-btn:hover {
+            background: rgba(26, 188, 156, 0.4);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(26, 188, 156, 0.3);
+        }
+
+        /* 按钮内的文字提示，仅桌面端显示 */
+        .transfer-btn::after {
+            content: "回传";
+            font-size: 10px;
+            writing-mode: vertical-lr;
+            letter-spacing: 2px;
+        }
 
         .btn-group {
             display: flex;
@@ -151,7 +161,9 @@
             color: #fff;
             cursor: pointer;
             display: none;
+            transition: transform 0.2s;
         }
+        button:active { transform: scale(0.95); }
 
         button.active { display: block; }
         button#btn1.active { background: linear-gradient(45deg, #3498db, #2980b9); }
@@ -181,17 +193,45 @@
             text-align: center;
             color: #bdc3c7;
             padding: 0.8rem;
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
             border-left: 3px solid #3498db;
         }
 
+        /* --- 手机端适配优化 --- */
         @media (max-width: 768px) {
-            body { padding: 10px; }
+            body { padding: 15px; }
             .container { padding: 1.2rem; }
-            .text-area-group { flex-direction: column; }
-            .editor-wrapper { height: 250px; }
-            .transfer-btn { transform: rotate(90deg); }
+            h1 { font-size: 1.6rem; }
+
+            .text-area-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .editor-wrapper { height: 200px; }
+
+            .transfer-btn-wrap {
+                padding: 10px 0;
+            }
+
+            .transfer-btn {
+                width: 100%; /* 宽度撑满 */
+                height: 36px; /* 变成一个扁平的分割栏 */
+                flex-direction: row; /* 图标文字横向排布 */
+                border-radius: 8px;
+            }
+
+            .transfer-btn::after {
+                content: "点击将结果回传到输入框";
+                writing-mode: horizontal-tb;
+                font-size: 12px;
+            }
+
+            /* 手机端图标指向向上 */
+            .transfer-btn i {
+                transform: rotate(90deg);
+            }
         }
     </style>
 </head>
@@ -211,21 +251,22 @@
 
     <div class="text-area-group">
         <div class="text-box">
-            <label style="color:#eee; margin-bottom:5px; display:block;">输入文本：</label>
+            <label style="color:#eee; margin-bottom:5px; display:block; font-size:13px;">输入文本：</label>
             <div class="editor-wrapper">
                 <div class="line-numbers" id="inputLineNums">1</div>
                 <textarea id="inputText" placeholder="请粘贴需要处理的文本..." spellcheck="false"></textarea>
             </div>
         </div>
 
+        <!-- 优化后的回传区域 -->
         <div class="transfer-btn-wrap">
-            <button class="transfer-btn" id="transferBtn">
+            <button class="transfer-btn" id="transferBtn" title="将结果回传到输入框">
                 <i class="fa fa-chevron-left"></i>
             </button>
         </div>
 
         <div class="text-box">
-            <label style="color:#eee; margin-bottom:5px; display:block;">输出结果：</label>
+            <label style="color:#eee; margin-bottom:5px; display:block; font-size:13px;">输出结果：</label>
             <div class="editor-wrapper">
                 <div class="line-numbers" id="outputLineNums">1</div>
                 <textarea id="outputText" placeholder="结果显示区域..." readonly spellcheck="false"></textarea>
@@ -235,9 +276,9 @@
 
     <div class="btn-group">
         <button id="btn1">多行 → 逗号拼接</button>
-        <button id="btn2">多行 → 引号逗号拼接</button>
-        <button id="btn3">逗号拼接 → 多行</button>
-        <button id="btn4">引号拼接 → 无引号多行</button>
+        <button id="btn2">多行 → 引号逗号</button>
+        <button id="btn3">逗号 → 多行</button>
+        <button id="btn4">引号 → 无引多行</button>
         <button class="copy-btn" id="copyBtn">复制结果</button>
     </div>
 
@@ -246,7 +287,7 @@
 
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
-    // 基础粒子背景
+    // --- 业务逻辑完全保留 ---
     particlesJS('particles-js', {
         "particles": {
             "number": {"value": 30},
@@ -263,12 +304,11 @@
     const inputLineNums = document.getElementById('inputLineNums');
     const outputLineNums = document.getElementById('outputLineNums');
     const tipInfo = document.getElementById('tipInfo');
+    const transferBtn = document.getElementById('transferBtn');
 
-    // --- 高性能行号更新逻辑 ---
     let lastInputLines = 0;
     const updateLineNumbers = (ta, lineNumDiv) => {
         const lines = ta.value.split('\n').length;
-        // 只有行数变化时才更新 DOM，极大地减少 CPU 消耗
         if (ta === inputText && lines === lastInputLines) return;
         if (ta === inputText) lastInputLines = lines;
 
@@ -279,7 +319,6 @@
         lineNumDiv.innerText = nums.join('\n');
     };
 
-    // --- 使用 requestAnimationFrame 优化滚动同步 ---
     const syncScroll = (ta, lineNumDiv) => {
         window.requestAnimationFrame(() => {
             lineNumDiv.scrollTop = ta.scrollTop;
@@ -291,11 +330,9 @@
         judgeInputTypeAndShowButtons();
     });
 
-    // 滚动同步优化
     inputText.addEventListener('scroll', () => syncScroll(inputText, inputLineNums));
     outputText.addEventListener('scroll', () => syncScroll(outputText, outputLineNums));
 
-    // --- 业务逻辑 (保持不变但增加了界面同步) ---
     const trimStr = (str) => str.replace(/^\s+|\s+$/g, '');
 
     const processAction = (actionFn) => {
@@ -334,7 +371,6 @@
         }
     };
 
-    // 按钮事件
     document.getElementById('btn1').addEventListener('click', () => processAction(batchProcessText.multiToSingle));
     document.getElementById('btn2').addEventListener('click', () => {
         const quote = document.getElementById('quoteType').value === 'single' ? "'" : '"';
@@ -349,6 +385,8 @@
         updateLineNumbers(inputText, inputLineNums);
         judgeInputTypeAndShowButtons();
         tipInfo.innerText = '结果已回传';
+        // 手机端自动滚回顶部
+        window.scrollTo({top: 0, behavior: 'smooth'});
     });
 
     document.getElementById('copyBtn').addEventListener('click', async () => {
