@@ -294,6 +294,12 @@
                 </svg>
                 <span>执行对比</span>
             </button>
+            <button id="backToEditBtn" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>返回编辑</span>
+            </button>
         </div>
     </header>
 
@@ -323,6 +329,7 @@
     const rightTextEditor = document.getElementById('rightTextEditor');
     const compareBtn = document.getElementById('compareBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const backToEditBtn = document.getElementById('backToEditBtn');
 
     let isReplaced = { left: false, right: false };
 
@@ -375,6 +382,7 @@
         updatePanel('left', lHtml);
         updatePanel('right', rHtml);
         syncLineNumbers();
+        backToEditBtn.style.display = 'inline-flex';
     }
 
     function updatePanel(side, html) {
@@ -396,11 +404,22 @@
         rightText.value = '';
         isReplaced = { left: false, right: false };
         syncLineNumbers();
+        backToEditBtn.style.display = 'none';
     };
 
     compareBtn.onclick = compare;
     leftText.oninput = syncLineNumbers;
     rightText.oninput = syncLineNumbers;
+
+    backToEditBtn.onclick = () => {
+        leftTextEditor.innerHTML = '';
+        leftTextEditor.appendChild(leftText);
+        rightTextEditor.innerHTML = '';
+        rightTextEditor.appendChild(rightText);
+        isReplaced = { left: false, right: false };
+        syncLineNumbers();
+        backToEditBtn.style.display = 'none';
+    };
 
     window.onload = syncLineNumbers;
 </script>

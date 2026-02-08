@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>正则表达式可视化</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --card: #ffffff;
+            --bg: #f8fafc;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --green: #10b981;
+            --red: #ef4444;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+            padding: 18px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+        }
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+        }
+        .title i { color: var(--primary); }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding: 16px;
+        }
+        .section {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .section h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: box-shadow .15s, border-color .15s;
+            font-size: 14px;
+            background: #f9fafb;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+            background: #fff;
+        }
+        .flags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 8px 0 0;
+        }
+        .flag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+        button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s, transform .1s;
+        }
+        button.secondary { background: #e5e7eb; color: #111827; }
+        button:hover { background: var(--primary-hover); }
+        button:active { transform: scale(0.98); }
+        .output {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding: 0 16px 16px;
+        }
+        .panel {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 240px;
+            overflow: auto;
+        }
+        .panel h4 {
+            margin: 0 0 10px;
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .tree ul { list-style: none; padding-left: 16px; margin: 0; }
+        .tree li { margin: 4px 0; }
+        .node {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f9fafb;
+            font-size: 12px;
+        }
+        .node .type { font-weight: 700; color: var(--primary); }
+        .kv { color: var(--muted); }
+        .test-output {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        mark {
+            background: rgba(16,185,129,0.15);
+            color: #065f46;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+        .error {
+            color: var(--red);
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        .railroad {
+            width: 100%;
+            min-height: 400px;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        .railroad svg {
+            min-width: 100%;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .railroad path {
+            fill: none;
+            stroke: #4a6fa5;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .railroad rect {
+            fill: #f8fafc;
+            stroke: #4a6fa5;
+            stroke-width: 1.5;
+            rx: 6;
+            ry: 6;
+        }
+        .railroad text {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+            fill: #1e293b;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-weight: 500;
+        }
+        .railroad .label {
+            font-weight: 600;
+        }
+        .railroad .quantifier {
+            fill: #64748b;
+            font-size: 11px;
+            font-style: italic;
+        }
+        .railroad .char-class {
+            fill: #fef3c7;
+            stroke: #d97706;
+        }
+        .railroad .group {
+            fill: #dbeafe;
+            stroke: #3b82f6;
+        }
+        .railroad .quantifier-path {
+            stroke: #94a3b8;
+            stroke-dasharray: 4,2;
+        }
+        .railroad .assertion {
+            fill: #fce7f3;
+            stroke: #db2777;
+        }
+        @media (max-width: 992px) {
+            .content, .output { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title"><i class="fas fa-project-diagram"></i> <span>正则表达式可视化</span></div>
+        <div class="btns">
+            <button id="visualizeBtn"><i class="fas fa-eye"></i>&nbsp;解析并可视化</button>
+            <button id="matchBtn" class="secondary"><i class="fas fa-magnifying-glass"></i>&nbsp;匹配测试</button>
+            <button id="clearBtn" class="secondary"><i class="fas fa-trash"></i>&nbsp;清空</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <h3>表达式与标志</h3>
+            <div class="field-row">
+                <input id="patternInput" type="text" placeholder="输入正则表达式，例如：(\\w+)-(\\d{2,4}) 或 /(\w+)-(\d{2,4})/i">
+                <input id="flagsInput" type="text" placeholder="标志位，例如：i,g,m,s,u,y" style="max-width: 200px;">
+            </div>
+            <div class="flags">
+                <label class="flag"><input type="checkbox" id="flagG"> g 全局</label>
+                <label class="flag"><input type="checkbox" id="flagI"> i 忽略大小写</label>
+                <label class="flag"><input type="checkbox" id="flagM"> m 多行</label>
+                <label class="flag"><input type="checkbox" id="flagS"> s 点任意</label>
+                <label class="flag"><input type="checkbox" id="flagU"> u Unicode</label>
+                <label class="flag"><input type="checkbox" id="flagY"> y 粘连</label>
+            </div>
+        </div>
+        <div class="section">
+            <h3>测试文本</h3>
+            <textarea id="testInput" rows="6" placeholder="输入待测试文本，点击“匹配测试”查看高亮与分组"></textarea>
+            <div id="errorBox" style="margin-top:8px; display:none;" class="error"></div>
+        </div>
+    </div>
+
+    <div class="output">
+        <div class="panel">
+            <h4>AST 树</h4>
+            <div id="astTree" class="tree"></div>
+        </div>
+        <div class="panel">
+            <h4>匹配结果</h4>
+            <div id="matchOutput" class="test-output"></div>
+            <div id="groupOutput" class="test-output" style="margin-top:8px;"></div>
+        </div>
+    </div>
+    <div class="panel" style="margin: 0 16px 16px;">
+        <h4>铁路图</h4>
+        <div id="railroadDiagram" class="railroad"></div>
+    </div>
+</div>
+
+<!-- 内置正则解析器 -->
+<script>
+    // 内置的简单正则表达式解析器
+    window.regexpTree = {
+        parse: function(pattern) {
+            try {
+                // 提取模式和标志
+                let regexPattern = pattern;
+                let flags = '';
+                const match = pattern.match(/^\/(.*)\/([gimsuy]*)$/);
+                if (match) {
+                    regexPattern = match[1];
+                    flags = match[2];
+                }
+                
+                // 验证正则表达式
+                new RegExp(regexPattern, flags);
+                
+                // 简单解析器 - 构建基本AST结构
+                function simpleParse(pattern) {
+                    const expressions = [];
+                    let i = 0;
+                    
+                    while (i < pattern.length) {
+                        let char = pattern[i];
+                        
+                        if (char === '\\') {
+                            // 转义字符
+                            expressions.push({
+                                type: 'Character',
+                                value: pattern.slice(i, i+2),
+                                kind: 'control'
+                            });
+                            i += 2;
+                        } else if (char === '[') {
+                            // 字符类
+                            let j = i + 1;
+                            let negative = false;
+                            if (pattern[j] === '^') {
+                                negative = true;
+                                j++;
+                            }
+                            while (j < pattern.length && pattern[j] !== ']') {
+                                if (pattern[j] === '\\') {
+                                    j += 2;
+                                } else {
+                                    j++;
+                                }
+                            }
+                            expressions.push({
+                                type: 'CharacterClass',
+                                expressions: [],
+                                negative: negative
+                            });
+                            i = j + 1;
+                        } else if (char === '(') {
+                            // 分组
+                            let depth = 1;
+                            let j = i + 1;
+                            while (j < pattern.length && depth > 0) {
+                                if (pattern[j] === '(') depth++;
+                                if (pattern[j] === ')') depth--;
+                                j++;
+                            }
+                            expressions.push({
+                                type: 'Group',
+                                expression: {
+                                    type: 'Sequence',
+                                    expressions: simpleParse(pattern.slice(i+1, j-1))
+                                }
+                            });
+                            i = j;
+                        } else if (char === '.') {
+                            // 点号
+                            expressions.push({ type: 'Dot' });
+                            i++;
+                        } else if (char === '^' || char === '$') {
+                            // 断言
+                            expressions.push({
+                                type: 'Assertion',
+                                kind: char === '^' ? 'start' : 'end'
+                            });
+                            i++;
+                        } else if (char === '*' || char === '+' || char === '?') {
+                            // 量词
+                            if (expressions.length > 0) {
+                                const lastExpr = expressions.pop();
+                                expressions.push({
+                                    type: 'Quantifier',
+                                    expression: lastExpr,
+                                    kind: char,
+                                    greedy: true
+                                });
+                            }
+                            i++;
+                        } else if (char === '{') {
+                            // 范围量词
+                            let j = i + 1;
+                            while (j < pattern.length && pattern[j] !== '}') j++;
+                            const quant = pattern.slice(i+1, j);
+                            const parts = quant.split(',');
+                            if (expressions.length > 0) {
+                                const lastExpr = expressions.pop();
+                                expressions.push({
+                                    type: 'Quantifier',
+                                    expression: lastExpr,
+                                    from: parseInt(parts[0]),
+                                    to: parts.length > 1 && parts[1] ? parseInt(parts[1]) : (parts.length === 1 ? parseInt(parts[0]) : Infinity),
+                                    greedy: true
+                                });
+                            }
+                            i = j + 1;
+                        } else if (char === '|') {
+                            // 选择
+                            return [{
+                                type: 'Disjunction',
+                                left: {
+                                    type: 'Sequence',
+                                    expressions: expressions
+                                },
+                                right: {
+                                    type: 'Sequence',
+                                    expressions: simpleParse(pattern.slice(i+1))
+                                }
+                            }];
+                        } else {
+                            // 普通字符
+                            expressions.push({
+                                type: 'Character',
+                                value: char,
+                                kind: 'simple'
+                            });
+                            i++;
+                        }
+                    }
+                    
+                    return expressions;
+                }
+                
+                return {
+                    type: 'RegExp',
+                    body: {
+                        type: 'Sequence',
+                        expressions: simpleParse(regexPattern)
+                    },
+                    flags: flags
+                };
+            } catch (e) {
+                throw new Error('无效的正则表达式: ' + (e.message || e));
+            }
+        }
+    };
+</script>
+<script>
+    const el = {
+        pattern: document.getElementById('patternInput'),
+        flagsStr: document.getElementById('flagsInput'),
+        flagG: document.getElementById('flagG'),
+        flagI: document.getElementById('flagI'),
+        flagM: document.getElementById('flagM'),
+        flagS: document.getElementById('flagS'),
+        flagU: document.getElementById('flagU'),
+        flagY: document.getElementById('flagY'),
+        test: document.getElementById('testInput'),
+        visualizeBtn: document.getElementById('visualizeBtn'),
+        matchBtn: document.getElementById('matchBtn'),
+        clearBtn: document.getElementById('clearBtn'),
+        astTree: document.getElementById('astTree'),
+        matchOutput: document.getElementById('matchOutput'),
+        groupOutput: document.getElementById('groupOutput'),
+        errorBox: document.getElementById('errorBox'),
+        railroadDiagram: document.getElementById('railroadDiagram')
+    };
+
+    function buildFlags() {
+        const manual = (el.flagsStr.value || '').replace(/[^gimsuy]/g, '');
+        const toggles = [
+            el.flagG.checked ? 'g' : '',
+            el.flagI.checked ? 'i' : '',
+            el.flagM.checked ? 'm' : '',
+            el.flagS.checked ? 's' : '',
+            el.flagU.checked ? 'u' : '',
+            el.flagY.checked ? 'y' : ''
+        ].join('');
+        const merged = (manual + toggles).split('').filter(Boolean);
+        return Array.from(new Set(merged)).join('');
+    }
+
+    function normalizePattern() {
+        const raw = (el.pattern.value || '').trim();
+        if (!raw) return { pattern: '', flags: buildFlags(), asString: '' };
+        let p = raw;
+        let f = buildFlags();
+        const m = raw.match(/^\/(.*)\/([gimsuy]*)$/);
+        if (m) {
+            p = m[1];
+            f = (m[2] || f).replace(/[^gimsuy]/g, '');
+        }
+        return { pattern: p, flags: f, asString: `/${p}/${f}` };
+    }
+
+    function showError(msg) {
+        el.errorBox.style.display = 'block';
+        el.errorBox.textContent = msg;
+    }
+    function clearError() {
+        el.errorBox.style.display = 'none';
+        el.errorBox.textContent = '';
+    }
+
+    function renderAstTree(ast) {
+        const ul = document.createElement('ul');
+        // 中英文类型映射表
+        const typeMap = {
+            'RegExp': '正则表达式',
+            'Sequence': '序列',
+            'Character': '字符',
+            'CharacterClass': '字符类',
+            'CharacterClassRange': '字符范围',
+            'Group': '分组',
+            'Dot': '点号',
+            'Assertion': '断言',
+            'Quantifier': '量词',
+            'Disjunction': '选择',
+            'Alternative': '替代',
+            'CharacterSet': '字符集'
+        };
+        // 中英文属性映射表
+        const propMap = {
+            'value': '值',
+            'kind': '类型',
+            'negative': '否定',
+            'from': '从',
+            'to': '到',
+            'greedy': '贪婪',
+            'expressions': '表达式',
+            'expression': '表达式',
+            'body': '主体'
+        };
+        function isNode(obj) { return obj && typeof obj === 'object' && 'type' in obj; }
+        function renderNode(node) {
+            const li = document.createElement('li');
+            const header = document.createElement('div');
+            header.className = 'node';
+            const type = document.createElement('span');
+            type.className = 'type';
+            type.textContent = typeMap[node.type] || node.type;
+            header.appendChild(type);
+
+            Object.keys(node).forEach(k => {
+                const v = node[k];
+                if (k === 'type') return;
+                if (isNode(v) || Array.isArray(v)) return;
+                if (v === null || typeof v === 'undefined') return;
+                const kv = document.createElement('span');
+                kv.className = 'kv';
+                const val = typeof v === 'string' ? `"${v}"` : (typeof v === 'number' ? v : (typeof v === 'boolean' ? v : ''));
+                if (val !== '') kv.textContent = ` ${propMap[k] || k}: ${val}`;
+                header.appendChild(kv);
+            });
+
+            li.appendChild(header);
+
+            const children = document.createElement('ul');
+            Object.keys(node).forEach(k => {
+                const v = node[k];
+                if (k === 'type') return;
+                if (isNode(v)) {
+                    children.appendChild(renderNode(v));
+                } else if (Array.isArray(v)) {
+                    const sub = document.createElement('li');
+                    const arrHeader = document.createElement('div');
+                    arrHeader.className = 'node';
+                    arrHeader.innerHTML = `<span class="type">${propMap[k] || k}[]</span>`;
+                    sub.appendChild(arrHeader);
+                    const arrUl = document.createElement('ul');
+                    v.forEach(item => {
+                        if (isNode(item)) arrUl.appendChild(renderNode(item));
+                        else {
+                            const liItem = document.createElement('li');
+                            liItem.textContent = JSON.stringify(item);
+                            arrUl.appendChild(liItem);
+                        }
+                    });
+                    sub.appendChild(arrUl);
+                    children.appendChild(sub);
+                }
+            });
+            if (children.children.length > 0) li.appendChild(children);
+            return li;
+        }
+        ul.appendChild(renderNode(ast));
+        el.astTree.innerHTML = '';
+        el.astTree.appendChild(ul);
+    }
+
+    function visualize() {
+        clearError();
+        try {
+            const { pattern, flags, asString } = normalizePattern();
+            if (!pattern) {
+                el.astTree.innerHTML = '';
+                el.railroadDiagram.innerHTML = '';
+                showError('请输入正则表达式');
+                return;
+            }
+            const parsed = regexpTree.parse(asString);
+            renderAstTree(parsed);
+            renderRailroadDiagram(parsed);
+        } catch (e) {
+            showError(`解析失败：${e.message || e}`);
+            el.railroadDiagram.innerHTML = '';
+        }
+    }
+
+    function renderRailroadDiagram(ast) {
+        el.railroadDiagram.innerHTML = '';
+        
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '400');
+        svg.setAttribute('viewBox', '0 0 1200 400');
+        
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('transform', 'translate(50, 200)');
+        
+        let currentX = 0;
+        const y = 0;
+        const nodeHeight = 40;
+        const nodeWidth = 60;
+        const spacing = 20;
+        
+        function drawPath(d, className) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', d);
+            if (className) {
+                path.setAttribute('class', className);
+            }
+            g.appendChild(path);
+        }
+        
+        function drawRect(x, y, width, height, label, className) {
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', x);
+            rect.setAttribute('y', y - height/2);
+            rect.setAttribute('width', width);
+            rect.setAttribute('height', height);
+            if (className) {
+                rect.setAttribute('class', className);
+            }
+            g.appendChild(rect);
+            
+            if (label) {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + width/2);
+                text.setAttribute('y', y);
+                text.textContent = label;
+                g.appendChild(text);
+            }
+            
+            return width;
+        }
+        
+        function drawCircle(x, y, r, className) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', r);
+            if (className) {
+                circle.setAttribute('class', className);
+            }
+            g.appendChild(circle);
+        }
+        
+        function drawStartCircle(x, y) {
+            drawCircle(x, y, 10);
+            drawPath(`M ${x + 10} ${y} L ${x + 20} ${y}`);
+            return 20;
+        }
+        
+        function drawEndCircle(x, y) {
+            drawPath(`M ${x} ${y} L ${x + 10} ${y}`);
+            drawCircle(x + 10, y, 10);
+            return 20;
+        }
+        
+        function processNode(node, x) {
+            let width = 0;
+            
+            switch (node.type) {
+                case 'Alternative':
+                    if (node.expressions && node.expressions.length > 1) {
+                        // Draw alternation
+                        const startX = x;
+                        const altWidth = 80;
+                        const altHeight = 100;
+                        
+                        // Draw start fork
+                        drawPath(`M ${x} ${y} L ${x + altWidth/2} ${y - altHeight/2} L ${x + altWidth} ${y - altHeight/2}`);
+                        drawPath(`M ${x} ${y} L ${x + altWidth/2} ${y + altHeight/2} L ${x + altWidth} ${y + altHeight/2}`);
+                        
+                        let maxWidth = 0;
+                        node.expressions.forEach((expr, index) => {
+                            const exprY = y - altHeight/2 + index * (altHeight/(node.expressions.length-1));
+                            const exprWidth = processNode(expr, x + altWidth);
+                            maxWidth = Math.max(maxWidth, exprWidth);
+                            drawPath(`M ${x + altWidth + exprWidth} ${exprY} L ${x + altWidth + maxWidth + altWidth/2} ${exprY} L ${x + altWidth + maxWidth + altWidth} ${y}`);
+                        });
+                        
+                        width = altWidth + maxWidth + altWidth;
+                    } else if (node.expressions && node.expressions.length === 1) {
+                        width = processNode(node.expressions[0], x);
+                    }
+                    break;
+                    
+                case 'Disjunction':
+                    if (node.left && node.right) {
+                        const altWidth = 80;
+                        const altHeight = 80;
+                        
+                        // Draw start fork
+                        drawPath(`M ${x} ${y} L ${x + altWidth/2} ${y - altHeight/2} L ${x + altWidth} ${y - altHeight/2}`);
+                        drawPath(`M ${x} ${y} L ${x + altWidth/2} ${y + altHeight/2} L ${x + altWidth} ${y + altHeight/2}`);
+                        
+                        const leftWidth = processNode(node.left, x + altWidth);
+                        const rightWidth = processNode(node.right, x + altWidth);
+                        const maxWidth = Math.max(leftWidth, rightWidth);
+                        
+                        // Draw end merge
+                        drawPath(`M ${x + altWidth + maxWidth} ${y - altHeight/2} L ${x + altWidth + maxWidth + altWidth/2} ${y - altHeight/2} L ${x + altWidth + maxWidth + altWidth} ${y}`);
+                        drawPath(`M ${x + altWidth + maxWidth} ${y + altHeight/2} L ${x + altWidth + maxWidth + altWidth/2} ${y + altHeight/2} L ${x + altWidth + maxWidth + altWidth} ${y}`);
+                        
+                        width = altWidth + maxWidth + altWidth;
+                    }
+                    break;
+                    
+                case 'Quantifier':
+                    if (node.expression) {
+                        const exprWidth = processNode(node.expression, x);
+                        const quantWidth = 40;
+                        
+                        // Draw loop
+                        drawPath(`M ${x + exprWidth} ${y} L ${x + exprWidth + quantWidth/2} ${y - 30} L ${x} ${y - 30} L ${x} ${y}`, 'quantifier-path');
+                        
+                        // Draw quantifier label
+                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        text.setAttribute('x', x + exprWidth/2);
+                        text.setAttribute('y', y - 15);
+                        text.setAttribute('class', 'quantifier');
+                        text.textContent = getQuantifierLabel(node);
+                        g.appendChild(text);
+                        
+                        width = exprWidth + quantWidth;
+                    }
+                    break;
+                    
+                case 'Group':
+                    if (node.expression) {
+                        const groupWidth = 20;
+                        const exprWidth = processNode(node.expression, x + groupWidth);
+                        
+                        drawRect(x, y, groupWidth, nodeHeight, '(');
+                        drawRect(x + groupWidth + exprWidth, y, groupWidth, nodeHeight, ')');
+                        
+                        width = groupWidth + exprWidth + groupWidth;
+                    }
+                    break;
+                    
+                case 'CharacterClass':
+                    const charClassWidth = Math.max(80, (node.negative ? '^' : '') + getCharacterClassLabel(node).length * 8);
+                    drawRect(x, y, charClassWidth, nodeHeight, (node.negative ? '^' : '') + getCharacterClassLabel(node));
+                    width = charClassWidth;
+                    break;
+                    
+                case 'CharacterClassRange':
+                    const rangeWidth = 80;
+                    drawRect(x, y, rangeWidth, nodeHeight, `${getChar(node.from)}−${getChar(node.to)}`);
+                    width = rangeWidth;
+                    break;
+                    
+                case 'Character':
+                    const charWidth = Math.max(40, node.value.length * 8);
+                    drawRect(x, y, charWidth, nodeHeight, getChar(node));
+                    width = charWidth;
+                    break;
+                    
+                case 'Assertion':
+                    const assertWidth = 60;
+                    drawRect(x, y, assertWidth, nodeHeight, getAssertionLabel(node));
+                    width = assertWidth;
+                    break;
+                    
+                case 'Dot':
+                    const dotWidth = 40;
+                    drawRect(x, y, dotWidth, nodeHeight, '.');
+                    width = dotWidth;
+                    break;
+                    
+                case 'Sequence':
+                    if (node.expressions) {
+                        let seqWidth = 0;
+                        node.expressions.forEach(expr => {
+                            seqWidth += processNode(expr, x + seqWidth);
+                        });
+                        width = seqWidth;
+                    }
+                    break;
+                    
+                default:
+                    const defaultWidth = 60;
+                    drawRect(x, y, defaultWidth, nodeHeight, node.type);
+                    width = defaultWidth;
+                    break;
+            }
+            
+            return width;
+        }
+        
+        function getQuantifierLabel(quantifier) {
+            if (quantifier.greedy === false) {
+                if (quantifier.kind === '+' || quantifier.kind === '*' || quantifier.kind === '?') {
+                    return quantifier.kind + '?';
+                } else if (quantifier.from === quantifier.to) {
+                    return `{${quantifier.from}}?`;
+                } else if (quantifier.to === Infinity) {
+                    return `{${quantifier.from},}?`;
+                } else {
+                    return `{${quantifier.from},${quantifier.to}}?`;
+                }
+            } else {
+                if (quantifier.kind === '+' || quantifier.kind === '*' || quantifier.kind === '?') {
+                    return quantifier.kind;
+                } else if (quantifier.from === quantifier.to) {
+                    return `{${quantifier.from}}`;
+                } else if (quantifier.to === Infinity) {
+                    return `{${quantifier.from},}`;
+                } else {
+                    return `{${quantifier.from},${quantifier.to}}`;
+                }
+            }
+        }
+        
+        function getCharacterClassLabel(charClass) {
+            if (charClass.expressions) {
+                return charClass.expressions.map(expr => {
+                    if (expr.type === 'CharacterClassRange') {
+                        return `${getChar(expr.from)}-${getChar(expr.to)}`;
+                    } else if (expr.type === 'Character') {
+                        return getChar(expr);
+                    }
+                    return '';
+                }).join('');
+            }
+            return '';
+        }
+        
+        function getChar(charNode) {
+            if (charNode.kind === 'control') {
+                return charNode.value;
+            } else if (charNode.kind === 'hex' || charNode.kind === 'unicode' || charNode.kind === 'octal') {
+                return charNode.value;
+            } else {
+                return charNode.value;
+            }
+        }
+        
+        function getAssertionLabel(assertion) {
+            switch (assertion.kind) {
+                case 'start':
+                    return '^';
+                case 'end':
+                    return '$';
+                case 'word':
+                    return '\\b';
+                case 'non-word':
+                    return '\\B';
+                case 'lookahead':
+                    return '?=';
+                case 'negative-lookahead':
+                    return '?!';
+                case 'lookbehind':
+                    return '?<=';
+                case 'negative-lookbehind':
+                    return '?<!';
+                default:
+                    return assertion.kind;
+            }
+        }
+        
+        // Draw start and end
+        currentX = 0;
+        drawStartCircle(currentX, y);
+        currentX += 20;
+        
+        if (ast.body) {
+            currentX += processNode(ast.body, currentX);
+        }
+        
+        drawEndCircle(currentX, y);
+        currentX += 20;
+        
+        svg.appendChild(g);
+        el.railroadDiagram.appendChild(svg);
+    }
+
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function highlightMatches() {
+        clearError();
+        el.matchOutput.innerHTML = '';
+        el.groupOutput.innerHTML = '';
+        try {
+            const { pattern, flags } = normalizePattern();
+            if (!pattern) { showError('请输入正则表达式'); return; }
+            const r = new RegExp(pattern, flags);
+            const text = el.test.value || '';
+            if (!text) { showError('请输入测试文本'); return; }
+            let outputHtml = '';
+            let groupsHtml = '';
+            if (r.global) {
+                let m;
+                let lastIdx = 0;
+                while ((m = r.exec(text)) !== null) {
+                    const start = m.index;
+                    const end = m.index + m[0].length;
+                    outputHtml += escapeHtml(text.slice(lastIdx, start));
+                    outputHtml += `<mark>${escapeHtml(text.slice(start, end))}</mark>`;
+                    lastIdx = end;
+                    const g = m.groups || {};
+                    const named = Object.keys(g);
+                    if (named.length) {
+                        groupsHtml += `分组 @${start}-${end}: ` + named.map(k => `${k}="${escapeHtml(String(g[k]))}"`).join(', ') + '\n';
+                    }
+                    if (m[1] !== undefined) {
+                        const numbered = m.slice(1).map((v,i)=>`$${i+1}="${escapeHtml(String(v))}"`).join(', ');
+                        groupsHtml += numbered + '\n';
+                    }
+                    if (m[0].length === 0) r.lastIndex++; // 防止零宽陷入死循环
+                }
+                outputHtml += escapeHtml(text.slice(lastIdx));
+            } else {
+                const m = r.exec(text);
+                if (m) {
+                    const start = m.index;
+                    const end = m.index + m[0].length;
+                    outputHtml += escapeHtml(text.slice(0, start));
+                    outputHtml += `<mark>${escapeHtml(text.slice(start, end))}</mark>`;
+                    outputHtml += escapeHtml(text.slice(end));
+                    const g = m.groups || {};
+                    const named = Object.keys(g);
+                    if (named.length) {
+                        groupsHtml += named.map(k => `${k}="${escapeHtml(String(g[k]))}"`).join(', ') + '\n';
+                    }
+                    if (m[1] !== undefined) {
+                        groupsHtml += m.slice(1).map((v,i)=>`$${i+1}="${escapeHtml(String(v))}"`).join(', ') + '\n';
+                    }
+                } else {
+                    outputHtml = `<span style="color:#6b7280">未匹配到结果</span>`;
+                }
+            }
+            el.matchOutput.innerHTML = outputHtml;
+            el.groupOutput.textContent = groupsHtml.trim();
+        } catch (e) {
+            showError(`匹配失败：${e.message || e}`);
+        }
+    }
+
+    function clearAll() {
+        el.pattern.value = '';
+        el.flagsStr.value = '';
+        ['flagG','flagI','flagM','flagS','flagU','flagY'].forEach(id => document.getElementById(id).checked = false);
+        el.test.value = '';
+        el.astTree.innerHTML = '';
+        el.matchOutput.innerHTML = '';
+        el.groupOutput.innerHTML = '';
+        el.railroadDiagram.innerHTML = '';
+        clearError();
+    }
+
+    el.visualizeBtn.addEventListener('click', visualize);
+    el.matchBtn.addEventListener('click', highlightMatches);
+    el.clearBtn.addEventListener('click', clearAll);
+
+    // 示例填充
+    window.addEventListener('DOMContentLoaded', () => {
+        el.pattern.value = '(?<name>\\w+)-(\\d{2,4})';
+        el.flagsStr.value = 'i';
+        el.test.value = 'abc-123 xyz-7 AbC-2025';
+        visualize();
+        highlightMatches();
+    });
+</script>
+</body>
+</html>
