@@ -16,6 +16,9 @@
                             light: '#E8F3FF'
                         },
                         secondary: '#36CFC9',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#FF4D4F',
                         dark: '#1D2129',
                         gray: {
                             50: '#F7F8FA',
@@ -28,6 +31,12 @@
                     boxShadow: {
                         'soft': '0 2px 12px 0 rgba(0,0,0,0.05)',
                         'xl-soft': '0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02)',
+                        'button': '0 4px 12px rgba(22, 93, 255, 0.15)',
+                        'button-hover': '0 6px 16px rgba(22, 93, 255, 0.25)',
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
@@ -52,27 +61,49 @@
                 backdrop-filter: blur(10px);
                 background-color: rgba(255, 255, 255, 0.8);
             }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .btn-primary-hover {
+                @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm;
+            }
+            .btn-secondary-hover {
+                @apply transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0;
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+            }
+            .tab-active {
+                @apply bg-white shadow-md text-primary transform -translate-y-0.5;
+            }
+            .gradient-bg {
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            }
+            .opacity-0 {
+                opacity: 0;
+                transition: opacity 0.2s ease-in-out;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-50 text-dark font-sans min-h-screen flex flex-col antialiased">
 
 <!-- 导航栏 -->
-<header class="glass-header border-b border-gray-100 sticky top-0 z-50">
+<header class="glass-header border-b border-gray-100 sticky top-0 z-50 shadow-sm">
     <div class="container mx-auto px-4 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-md transition-all hover:shadow-lg hover:scale-105">
+                <svg class="w-5.5 h-5.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             </div>
-            <h1 class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+            <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
                 全能编解码
             </h1>
         </div>
-        <div class="flex gap-2">
-            <button id="clearBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-all active:scale-95">
+        <div class="flex gap-3">
+            <button id="clearBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg btn-secondary-hover">
                 清空内容
             </button>
-            <button id="copyResultBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium bg-primary text-white hover:bg-primary-hover rounded-lg shadow-sm transition-all active:scale-95">
+            <button id="copyResultBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium bg-primary text-white hover:bg-primary-hover rounded-lg shadow-md btn-primary-hover">
                 复制结果
             </button>
         </div>
@@ -84,14 +115,14 @@
 
         <!-- 输入区 (4/12) -->
         <div class="lg:col-span-4 flex flex-col">
-            <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden flex flex-col h-full">
-                <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
-                    <span class="font-semibold text-gray-700">源内容输入</span>
-                    <span class="text-xs text-gray-400 font-mono" id="inputCharCount">0 chars</span>
+            <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden flex flex-col h-full card-hover">
+                <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+                    <span class="font-semibold text-gray-700 text-base">源内容输入</span>
+                    <span class="text-xs text-gray-400 font-mono bg-gray-100 px-2.5 py-1 rounded-full" id="inputCharCount">0 chars</span>
                 </div>
                 <textarea
                         id="inputText"
-                        class="flex-grow w-full p-4 text-sm md:text-base border-none focus:ring-0 resize-none min-h-[200px] lg:min-h-[600px] custom-scrollbar"
+                        class="flex-grow w-full p-4 text-sm md:text-base border-none focus:ring-0 resize-none min-h-[200px] lg:min-h-[600px] custom-scrollbar input-focus"
                         placeholder="在此贴入需要处理的原始文本..."></textarea>
             </div>
         </div>
@@ -100,12 +131,12 @@
         <div class="lg:col-span-8 flex flex-col gap-6">
 
             <!-- 功能选择卡 -->
-            <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden card-hover">
                 <div class="flex p-1 bg-gray-50 m-3 rounded-xl">
-                    <button id="encryptTab" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all bg-white shadow-sm text-primary">
+                    <button id="encryptTab" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all bg-white shadow-md text-primary tab-active">
                         加密 / 编码
                     </button>
-                    <button id="decryptTab" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-gray-600">
+                    <button id="decryptTab" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-gray-600 hover:bg-white/50">
                         解密 / 解码
                     </button>
                 </div>
@@ -113,71 +144,71 @@
                 <div class="p-4 pt-2">
                     <!-- 加密列表 -->
                     <div id="encryptFunctions" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                        <button data-func="unicodeEncode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="unicodeEncode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">Unicode(\u)</span>
                         </button>
-                        <button data-func="urlEncode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="urlEncode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">URL编码(%)</span>
                         </button>
-                        <button data-func="utf16Encode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="utf16Encode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">UTF16(\x)</span>
                         </button>
-                        <button data-func="base64Encode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="base64Encode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors font-semibold">Base64编码</span>
                         </button>
-                        <button data-func="md5Compute" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="md5Compute" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors font-bold text-secondary">MD5</span>
                         </button>
-                        <button data-func="hexEncode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="hexEncode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">HEX 十六进制</span>
                         </button>
-                        <button data-func="sha1Encrypt" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="sha1Encrypt" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">Sha1</span>
                         </button>
-                        <button data-func="htmlNormalEncode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="htmlNormalEncode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">HTML实体</span>
                         </button>
-                        <button data-func="htmlDeepEncode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="htmlDeepEncode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">HTML深度</span>
                         </button>
-                        <button data-func="htmlToJs" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="htmlToJs" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors">HTML转JS</span>
                         </button>
-                        <button data-func="gzipCompress" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all">
+                        <button data-func="gzipCompress" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors font-bold italic text-blue-600">Gzip压缩</span>
                         </button>
                     </div>
 
                     <!-- 解密列表 -->
                     <div id="decryptFunctions" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                        <button data-func="unicodeDecode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="unicodeDecode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors">Unicode解码</span>
                         </button>
-                        <button data-func="urlDecode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="urlDecode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors font-semibold">URL解码</span>
                         </button>
-                        <button data-func="utf16Decode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="utf16Decode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors">UTF16解码</span>
                         </button>
-                        <button data-func="base64Decode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="base64Decode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors font-semibold">Base64解码</span>
                         </button>
-                        <button data-func="hexDecode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="hexDecode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors font-semibold">HEX解码</span>
                         </button>
-                        <button data-func="htmlEntityDecode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="htmlEntityDecode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors">HTML反转义</span>
                         </button>
-                        <button data-func="urlParamsParse" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="urlParamsParse" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors">URL参数解析</span>
                         </button>
-                        <button data-func="jwtDecode" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="jwtDecode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors font-bold text-orange-500">JWT解析</span>
                         </button>
-                        <button data-func="cookieFormat" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="cookieFormat" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors">Cookie格式化</span>
                         </button>
-                        <button data-func="gzipDecompress" class="func-btn group p-2 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all">
+                        <button data-func="gzipDecompress" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors font-bold italic">Gzip解压</span>
                         </button>
                     </div>
@@ -185,19 +216,19 @@
             </div>
 
             <!-- 结果区 -->
-            <div class="bg-white rounded-2xl shadow-xl-soft border border-gray-100 flex-grow flex flex-col min-h-[350px]">
-                <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+            <div class="bg-white rounded-2xl shadow-xl-soft border border-gray-100 flex-grow flex flex-col min-h-[350px] card-hover">
+                <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
                     <div class="flex items-center gap-2">
-                        <span class="font-semibold text-gray-700">处理结果</span>
-                        <span id="resultStatus" class="px-2 py-0.5 bg-white border border-gray-200 text-[10px] md:text-xs rounded text-gray-400">等待操作</span>
+                        <span class="font-semibold text-gray-700 text-base">处理结果</span>
+                        <span id="resultStatus" class="px-2.5 py-1 bg-white border border-gray-200 text-[10px] md:text-xs rounded-full shadow-sm text-gray-400">等待操作</span>
                     </div>
-                    <button id="copySingleBtn" class="p-2 text-gray-400 hover:text-primary transition-colors active:scale-90">
+                    <button id="copySingleBtn" class="p-2 text-gray-400 hover:text-primary transition-colors active:scale-90 transform hover:scale-105">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                     </button>
                 </div>
                 <textarea
                         id="resultText"
-                        class="flex-grow w-full p-4 text-sm md:text-base font-mono border-none focus:ring-0 resize-none bg-transparent custom-scrollbar"
+                        class="flex-grow w-full p-4 text-sm md:text-base font-mono border-none focus:ring-0 resize-none bg-transparent custom-scrollbar input-focus"
                         placeholder="此处显示处理后的结果..." readonly></textarea>
             </div>
         </div>
@@ -236,21 +267,43 @@
     });
 
     encryptTab.addEventListener('click', () => {
-        encryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all bg-white shadow-sm text-primary";
-        decryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-gray-600";
-        encryptFunctions.classList.remove('hidden');
-        decryptFunctions.classList.add('hidden');
+        encryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-300 bg-white shadow-md text-primary tab-active";
+        decryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-300 text-gray-400 hover:text-gray-600 hover:bg-white/50";
+        
+        // 添加淡入淡出效果
+        decryptFunctions.classList.add('opacity-0');
+        setTimeout(() => {
+            decryptFunctions.classList.add('hidden');
+            encryptFunctions.classList.remove('hidden');
+            setTimeout(() => {
+                encryptFunctions.classList.remove('opacity-0');
+            }, 50);
+        }, 200);
+        
         resultStatus.textContent = "模式: 编码";
         resultStatus.classList.replace('text-secondary', 'text-primary');
+        resultStatus.classList.add('animate-pulse');
+        setTimeout(() => resultStatus.classList.remove('animate-pulse'), 500);
     });
 
     decryptTab.addEventListener('click', () => {
-        decryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all bg-white shadow-sm text-secondary";
-        encryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-gray-600";
-        decryptFunctions.classList.remove('hidden');
-        encryptFunctions.classList.add('hidden');
+        decryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-300 bg-white shadow-md text-secondary tab-active";
+        encryptTab.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-300 text-gray-400 hover:text-gray-600 hover:bg-white/50";
+        
+        // 添加淡入淡出效果
+        encryptFunctions.classList.add('opacity-0');
+        setTimeout(() => {
+            encryptFunctions.classList.add('hidden');
+            decryptFunctions.classList.remove('hidden');
+            setTimeout(() => {
+                decryptFunctions.classList.remove('opacity-0');
+            }, 50);
+        }, 200);
+        
         resultStatus.textContent = "模式: 解码";
         resultStatus.classList.add('text-secondary');
+        resultStatus.classList.add('animate-pulse');
+        setTimeout(() => resultStatus.classList.remove('animate-pulse'), 500);
     });
 
     clearBtn.addEventListener('click', () => {
@@ -370,23 +423,48 @@
             const inputValue = inputText.value.trim();
             const func = codecFunctions[funcName];
 
-            // UI 状态
-            funcBtns.forEach(b => b.classList.remove('bg-primary-light', 'border-primary/20'));
-            btn.classList.add('bg-primary-light', 'border-primary/20');
+            // UI 状态 - 添加点击动画
+            funcBtns.forEach(b => b.classList.remove('bg-primary-light', 'border-primary/20', 'scale-95'));
+            btn.classList.add('bg-primary-light', 'border-primary/20', 'scale-95');
+            setTimeout(() => btn.classList.remove('scale-95'), 200);
 
             if (!inputValue) {
                 resultStatus.textContent = "⚠ 请输入内容";
+                resultStatus.classList.add('text-warning', 'animate-pulse');
+                setTimeout(() => resultStatus.classList.remove('text-warning', 'animate-pulse'), 1000);
                 resultText.value = '';
                 return;
             }
 
-            try {
-                const result = func(inputValue);
-                resultText.value = result;
-                resultStatus.textContent = `成功: ${btn.textContent.trim()}`;
-            } catch (e) {
-                resultText.value = `执行出错: ${e.message}`;
-            }
+            // 添加加载状态
+            resultStatus.textContent = "处理中...";
+            resultStatus.classList.add('animate-pulse', 'text-primary');
+            resultText.value = "正在处理，请稍候...";
+
+            // 模拟处理延迟，使动画更明显
+            setTimeout(() => {
+                try {
+                    const result = func(inputValue);
+                    
+                    // 结果淡入效果
+                    resultText.classList.add('opacity-0');
+                    setTimeout(() => {
+                        resultText.value = result;
+                        resultText.classList.remove('opacity-0');
+                    }, 100);
+                    
+                    resultStatus.textContent = `成功: ${btn.textContent.trim()}`;
+                    resultStatus.classList.remove('animate-pulse');
+                    resultStatus.classList.add('text-success');
+                    setTimeout(() => resultStatus.classList.remove('text-success'), 1500);
+                } catch (e) {
+                    resultText.value = `执行出错: ${e.message}`;
+                    resultStatus.textContent = "执行出错";
+                    resultStatus.classList.remove('animate-pulse');
+                    resultStatus.classList.add('text-danger');
+                    setTimeout(() => resultStatus.classList.remove('text-danger'), 1500);
+                }
+            }, 300);
         });
     });
 </script>
