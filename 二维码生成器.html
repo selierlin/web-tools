@@ -5,74 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>二维码工具</title>
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --success-color: #2ec4b6;
+            --warning-color: #f77f00;
+            --danger-color: #d62828;
+            --secondary-color: #64748b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
+            font-family: "Inter", "system-ui", "-apple-system", "Microsoft YaHei", sans-serif;
         }
 
         body {
-            background-color: #f5f7fa;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
         }
 
         .container {
-            background-color: #ffffff;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            max-width: 1200px;
             width: 100%;
+            max-width: 1200px;
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
         }
 
-        h1 {
-            color: #2d3748;
-            text-align: center;
-            margin-bottom: 1.2rem; /* 减少标题下方间距，更紧凑 */
-            font-size: 1.6rem; /* 缩小标题字体，节省空间 */
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 0.8rem; /* 减少标题下边框内边距 */
+        /* 顶部导航 */
+        .tool-header {
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 18px 24px;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
         }
 
-        /* 优化：Tab 标签栏紧凑样式（大幅减少空间占用） */
+        .tool-header::before {
+            content: "📱";
+            margin-right: 12px;
+            color: var(--success-color);
+            font-family: monospace;
+        }
+
+        /* 优化：Tab 标签栏样式 */
         .tab-nav {
             display: flex;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 1rem; /* 减少Tab栏下方间距 */
-            justify-content: center; /* 居中对齐，视觉更紧凑 */
+            border-bottom: 1px solid var(--border-color);
+            margin: 0 24px;
+            justify-content: center;
         }
 
         .tab-btn {
-            padding: 0.5rem 1.2rem; /* 减少按钮内边距，缩小尺寸 */
+            padding: 10px 20px;
             border: none;
             background: none;
-            font-size: 0.9rem; /* 缩小按钮字体 */
-            color: #718096;
+            font-size: 14px;
+            color: var(--text-muted);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border-bottom: 2px solid transparent;
-            margin: 0 0.3rem; /* 减少按钮间距 */
+            margin: 0 4px;
+            font-weight: 600;
         }
 
         .tab-btn.active {
-            color: #38b2ac;
-            border-bottom-color: #38b2ac;
-            font-weight: 500;
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
         }
 
         .tab-btn:hover:not(.active) {
-            color: #4a5568;
-            border-bottom-color: #e2e8f0;
+            color: var(--text-main);
+            border-bottom-color: var(--border-color);
+            background-color: rgba(67, 97, 238, 0.05);
         }
 
-        /* 新增：Tab 内容区域样式 */
+        /* Tab 内容区域样式 */
         .tab-content {
             display: none;
+            padding: 20px 24px;
         }
 
         .tab-content.active {
@@ -81,65 +112,74 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .form-group {
-            margin-bottom: 1.2rem; /* 减少表单间距，更紧凑 */
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-bottom: 0.6rem; /* 减少标签下方间距 */
-            color: #4a5568;
-            font-weight: 500;
-            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         textarea, input[type="text"] {
             width: 100%;
-            padding: 0.9rem;
-            border: 1px solid #e2e8f0;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            font-size: 0.9rem;
-            color: #2d3748;
+            font-size: 14px;
+            color: var(--text-main);
             resize: none;
-            transition: border-color 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: "Cascadia Code", "Consolas", monospace;
         }
 
         textarea:focus, input[type="text"]:focus {
             outline: none;
-            border-color: #38b2ac;
-            box-shadow: 0 0 0 3px rgba(56, 178, 172, 0.1);
+            border-color: var(--primary-color);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
         }
 
         textarea {
-            min-height: 100px;
+            min-height: 120px;
             max-height: 200px;
         }
 
         .search-group {
-            margin-bottom: 1.2rem; /* 减少搜索框间距 */
-            padding: 0 0.2rem;
+            margin-bottom: 20px;
         }
 
-        /* 优化：解码功能样式（增加拖拽上传相关样式） */
+        /* 解码功能样式 */
         .decode-group {
-            margin: 1.5rem 0; /* 减少解码区域上下间距 */
-            padding: 1.5rem;
-            border: 1px dashed #38b2ac;
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed var(--primary-color);
             border-radius: 8px;
-            /* 拖拽上传核心样式 */
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            background-color: rgba(67, 97, 238, 0.02);
         }
 
         /* 拖拽悬浮态：高亮边框，提示用户可释放 */
         .decode-group.drag-over {
-            border-color: #4299e1;
-            background-color: rgba(66, 153, 225, 0.05);
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.1);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
         }
 
         /* 拖拽上传提示（默认隐藏，拖拽悬浮时显示） */
@@ -149,17 +189,16 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.95);
             display: none;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             z-index: 10;
             border-radius: 8px;
-            font-size: 1rem;
-            color: #4299e1;
-            gap: 0.5rem;
-            /* 新增：禁止重复渲染导致闪烁，优化层级稳定性 */
+            font-size: 14px;
+            color: var(--primary-color);
+            gap: 8px;
             pointer-events: none;
         }
 
@@ -168,158 +207,235 @@
         }
 
         .drag-tip i {
-            font-size: 2rem;
+            font-size: 24px;
         }
 
         .decode-group h3 {
-            color: #38b2ac;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
+            color: var(--text-main);
+            font-size: 16px;
+            margin-bottom: 12px;
             text-align: center;
+            font-weight: 600;
         }
 
         .decode-btn-group {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background-color: #25a99f;
+            box-shadow: 0 4px 12px rgba(46, 196, 182, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+            box-shadow: 0 4px 12px rgba(214, 40, 40, 0.3);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        #generateBtn {
+            flex: 2;
+            background-color: var(--primary-color);
+            color: #ffffff;
+        }
+
+        #generateBtn:hover {
+            background-color: var(--primary-hover);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        #resetBtn {
+            flex: 1;
+            background-color: var(--secondary-color);
+            color: #ffffff;
+        }
+
+        #resetBtn:hover {
+            background-color: #475569;
+        }
+
+        #clearAllBtn {
+            flex: 1;
+            background-color: var(--danger-color);
+            color: #ffffff;
+        }
+
+        #clearAllBtn:hover {
+            background-color: #b91c1c;
+            box-shadow: 0 4px 12px rgba(214, 40, 40, 0.3);
         }
 
         #uploadBtn {
             flex: 1;
-            background-color: #4299e1;
+            background-color: var(--primary-color);
             color: #ffffff;
         }
 
         #uploadBtn:hover {
-            background-color: #3182ce;
+            background-color: var(--primary-hover);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
         }
 
         #pasteBtn {
             flex: 1;
-            background-color: #9f7aea;
+            background-color: var(--success-color);
             color: #ffffff;
         }
 
         #pasteBtn:hover {
-            background-color: #805ad5;
-        }
-
-        #decodeResult {
-            width: 100%;
-            min-height: 80px;
-            padding: 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-top: 1rem;
-            background-color: #fafbfc;
-            color: #2d3748;
-            font-size: 0.9rem;
-            white-space: pre-line;
-            word-break: break-all;
+            background-color: #25a99f;
+            box-shadow: 0 4px 12px rgba(46, 196, 182, 0.3);
         }
 
         #copyDecodeResult {
-            margin-top: 0.8rem;
-            background-color: #38b2ac;
+            margin-top: 12px;
+            background-color: var(--secondary-color);
             color: #ffffff;
             width: 100%;
         }
 
         #copyDecodeResult:hover {
-            background-color: #319795;
+            background-color: #475569;
+        }
+
+        #decodeResult {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 12px;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            font-size: 14px;
+            white-space: pre-line;
+            word-break: break-all;
+            font-family: "Cascadia Code", "Consolas", monospace;
         }
 
         .decode-tip {
             text-align: center;
-            color: #718096;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 8px;
             display: none;
         }
 
-        .btn-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem; /* 减少按钮组下方间距 */
-        }
-
-        button {
-            padding: 0.9rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #generateBtn {
-            flex: 2;
-            background-color: #38b2ac;
-            color: #ffffff;
-        }
-
-        #generateBtn:hover {
-            background-color: #319795;
-        }
-
-        #resetBtn {
-            flex: 1;
-            background-color: #e2e8f0;
-            color: #4a5568;
-        }
-
-        #resetBtn:hover {
-            background-color: #cbd5e0;
-        }
-
-        #clearAllBtn {
-            flex: 1;
-            background-color: #e53e3e;
-            color: #ffffff;
-        }
-
-        #clearAllBtn:hover {
-            background-color: #c53030;
-        }
-
-        /* 紧凑网格布局 */
+        /* 二维码网格布局 */
         .qrcodes-wrap {
             width: 100%;
-            margin-top: 1rem;
+            margin-top: 20px;
         }
 
         .qrcodes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 0.8rem;
-            margin-top: 1rem;
-            padding: 0.8rem;
-            border: 1px dashed #e2e8f0;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+            padding: 16px;
+            border: 1px dashed var(--border-color);
             border-radius: 8px;
+            background-color: rgba(67, 97, 238, 0.02);
         }
 
-        /* 紧凑二维码卡片样式 */
+        /* 二维码卡片样式 */
         .qrcode-card {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0.7rem;
-            background-color: #fafbfc;
+            padding: 12px;
+            background-color: #ffffff;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             position: relative;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .qrcode-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
         }
 
         .qrcode-card .close-btn {
             position: absolute;
-            top: 0.3rem;
-            right: 0.3rem;
-            width: 22px;
-            height: 22px;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            background-color: #e2e8f0;
-            color: #718096;
+            background-color: var(--border-color);
+            color: var(--text-muted);
             border: none;
             padding: 0;
             font-size: 12px;
@@ -327,53 +443,60 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .qrcode-card .close-btn:hover {
-            background-color: #e53e3e;
+            background-color: var(--danger-color);
             color: #ffffff;
+            transform: scale(1.1);
         }
 
         .qrcode-card .qrcode-img {
             max-width: 100%;
             height: auto;
             border-radius: 4px;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
             max-height: 160px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        /* 紧凑布局下的内容描述 */
+        /* 内容描述 */
         .qrcode-card .qrcode-desc {
-            font-size: 0.8rem;
-            color: #4a5568;
+            font-size: 12px;
+            color: var(--text-main);
             text-align: center;
             word-break: break-all;
             white-space: pre-line;
             max-width: 100%;
-            padding: 0 0.3rem;
+            padding: 0 4px;
             line-height: 1.3;
-            margin-bottom: 0.3rem;
+            margin-bottom: 4px;
+            font-weight: 500;
         }
 
-        /* 紧凑布局下的时间样式 */
+        /* 时间样式 */
         .qrcode-card .qrcode-time {
-            font-size: 0.7rem;
-            color: #718096;
+            font-size: 10px;
+            color: var(--text-muted);
             text-align: center;
-            margin-bottom: 0.3rem;
+            margin-bottom: 6px;
         }
 
         .qrcode-card .qrcode-full-desc {
-            font-size: 0.7rem;
-            color: #38b2ac;
+            font-size: 11px;
+            color: var(--primary-color);
             cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .qrcode-card .qrcode-full-desc:hover {
             text-decoration: underline;
+            color: var(--primary-hover);
         }
 
-        /* 完整内容弹窗样式（新增复制按钮样式） */
+        /* 完整内容弹窗样式 */
         .modal {
             display: none;
             position: fixed;
@@ -381,87 +504,108 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             justify-content: center;
             align-items: center;
             z-index: 999;
+            backdrop-filter: blur(4px);
         }
 
         .modal-content {
             background-color: #ffffff;
-            padding: 2rem;
+            padding: 20px;
             border-radius: 8px;
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .modal h3 {
-            color: #2d3748;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            font-size: 16px;
             text-align: center;
+            font-weight: 600;
         }
 
         .modal .full-content {
-            font-size: 0.95rem;
-            color: #4a5568;
+            font-size: 14px;
+            color: var(--text-main);
             line-height: 1.6;
-            padding: 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             white-space: pre-line;
             word-break: break-all;
-            margin-bottom: 1rem;
+            margin-bottom: 16px;
+            background-color: #f8fafc;
+            font-family: "Cascadia Code", "Consolas", monospace;
         }
 
-        /* 新增：复制按钮样式 */
+        /* 复制按钮样式 */
         .modal .copy-btn {
-            background-color: #4299e1;
+            background-color: var(--primary-color);
             color: #ffffff;
             width: 100%;
-            margin-bottom: 0.8rem;
+            margin-bottom: 12px;
         }
 
         .modal .copy-btn:hover {
-            background-color: #3182ce;
+            background-color: var(--primary-hover);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
         }
 
-        /* 新增：复制成功提示样式 */
+        /* 复制成功提示样式 */
         .modal .copy-tip {
             text-align: center;
-            color: #38b2ac;
-            font-size: 0.85rem;
-            margin-bottom: 0.8rem;
+            color: var(--success-color);
+            font-size: 12px;
+            margin-bottom: 12px;
             display: none;
+            font-weight: 600;
         }
 
         .modal .close-modal {
-            background-color: #38b2ac;
+            background-color: var(--secondary-color);
             color: #ffffff;
             width: 100%;
         }
 
         .modal .close-modal:hover {
-            background-color: #319795;
+            background-color: #475569;
         }
 
         .empty-tip, .search-empty-tip {
             text-align: center;
-            padding: 2rem 0;
-            color: #718096;
-            font-size: 0.9rem;
+            padding: 40px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
         }
     </style>
     <!-- 引入图标库（用于拖拽提示图标，增强视觉体验） -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://jsd.onmicrosoft.cn/npm/font-awesome@4.7.0/css/font-awesome.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>二维码工具</h1>
+        <div class="tool-header">二维码工具</div>
 
-        <!-- 优化：紧凑版 Tab 标签栏 -->
+        <!-- Tab 标签栏 -->
         <div class="tab-nav">
             <button class="tab-btn active" data-tab="tab-generate">二维码生成</button>
             <button class="tab-btn" data-tab="tab-decode">二维码解码</button>
@@ -480,9 +624,15 @@
             </div>
 
             <div class="btn-group">
-                <button id="generateBtn">生成并添加二维码</button>
-                <button id="resetBtn">重置表单</button>
-                <button id="clearAllBtn">清空所有二维码</button>
+                <button id="generateBtn" class="btn-primary">
+                    <i class="fa fa-qrcode"></i>生成并添加二维码
+                </button>
+                <button id="resetBtn" class="btn-secondary">
+                    <i class="fa fa-refresh"></i>重置表单
+                </button>
+                <button id="clearAllBtn" class="btn-danger">
+                    <i class="fa fa-trash"></i>清空所有
+                </button>
             </div>
 
             <div class="qrcodes-wrap">
@@ -503,13 +653,19 @@
 
                 <h3>二维码解码功能（支持上传/粘贴/拖拽）</h3>
                 <div class="decode-btn-group">
-                    <button id="uploadBtn">上传二维码图片解析</button>
-                    <button id="pasteBtn">粘贴二维码图片解析</button>
+                    <button id="uploadBtn" class="btn-primary">
+                        <i class="fa fa-upload"></i>上传解析
+                    </button>
+                    <button id="pasteBtn" class="btn-success">
+                        <i class="fa fa-paste"></i>粘贴解析
+                    </button>
                 </div>
                 <input type="file" id="fileInput" accept="image/*" style="display: none;">
                 <label for="decodeResult">解码结果：</label>
                 <div id="decodeResult"></div>
-                <button id="copyDecodeResult">复制解码结果</button>
+                <button id="copyDecodeResult" class="btn-secondary">
+                    <i class="fa fa-copy"></i>复制解码结果
+                </button>
                 <div class="decode-tip" id="decodeTip">复制成功！内容已存入剪贴板</div>
             </div>
         </div>
@@ -527,8 +683,8 @@
     </div>
 
     <!-- 引入依赖库 -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://jsd.onmicrosoft.cn/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://jsd.onmicrosoft.cn/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script>
         // 获取DOM元素
         const contentInput = document.getElementById('content');

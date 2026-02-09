@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cron 表达式工具</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --success-color: #2ec4b6;
+            --warning-color: #f77f00;
+            --danger-color: #d62828;
+            --secondary-color: #64748b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 10px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "system-ui", "-apple-system", "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        /* 顶部导航 */
+        .tool-header {
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 18px 24px;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .tool-header::before {
+            content: "⏰";
+            margin-right: 12px;
+            color: var(--success-color);
+            font-family: monospace;
+        }
+
+        /* 控制栏优化 */
+        .tool-controls {
+            padding: 16px 24px;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn:active { transform: scale(0.96); }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { opacity: 0.9; }
+
+        .btn-warning { background-color: var(--warning-color); color: white; }
+        .btn-warning:hover { opacity: 0.9; }
+
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { opacity: 0.9; }
+
+        .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background-color: #e2e8f0; }
+
+        /* 内容区响应式布局 */
+        .tool-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 600px;
+        }
+
+        .cron-input-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cron-input-panel {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .cron-examples-panel {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .label {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            background-color: #f8fafc;
+            color: #334155;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            line-height: 1.6;
+            background-color: #f8fafc;
+            color: #334155;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+        }
+
+        /* 输出区美化 */
+        .cron-output-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .cron-schedule-list {
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: #ffffff;
+            padding: 16px;
+        }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .schedule-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .schedule-item:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-index {
+            width: 30px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 16px;
+        }
+
+        .schedule-time {
+            flex: 1;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: 14px;
+        }
+
+        /* 滚动条美化 */
+        .cron-schedule-list::-webkit-scrollbar { width: 8px; height: 8px; }
+        .cron-schedule-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .cron-schedule-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .result-tip {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            padding-left: 4px;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .example-item {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background-color: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-item:hover {
+            border-color: var(--primary-color);
+            background-color: #f0f7ff;
+            transform: translateY(-2px);
+        }
+
+        .example-expression {
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: var(--primary-color);
+        }
+
+        .example-description {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 992px) {
+            body { padding: 8px; }
+
+            .tool-header { padding: 14px 18px; font-size: 18px; }
+
+            .tool-content {
+                padding: 16px;
+                gap: 16px;
+            }
+
+            .cron-input-section {
+                flex-direction: column;
+            }
+
+            .cron-input-panel,
+            .cron-examples-panel {
+                min-width: unset;
+            }
+
+            .tool-controls {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .btn {
+                flex: 1 1 calc(50% - 10px); /* 按钮两列排布 */
+                justify-content: center;
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                flex: 1 1 100%; /* 极小屏幕单列排布 */
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="tool-header">Cron 表达式工具</div>
+
+    <div class="tool-controls">
+        <button class="btn btn-primary" id="calculateBtn"><span>🔍</span> 计算运行时间</button>
+        <button class="btn btn-secondary" id="clearBtn"><span>🗑</span> 清空</button>
+        <button class="btn btn-secondary" id="copyBtn"><span>📋</span> 复制表达式</button>
+    </div>
+
+    <div class="tool-content">
+        <div class="cron-input-section">
+            <div class="cron-input-panel">
+                <div class="label">
+                    <span>📥 Cron 表达式</span>
+                </div>
+                <input type="text" id="cronInput" placeholder="输入 Cron 表达式，例如：0 0 * * *" spellcheck="false">
+                <div class="result-tip" id="resultTip">就绪</div>
+            </div>
+
+            <div class="cron-examples-panel">
+                <div class="label">
+                    <span>📚 常用示例</span>
+                </div>
+                <div class="examples-grid">
+                    <div class="example-item" data-cron="0 0 * * *">
+                        <div class="example-expression">0 0 * * *</div>
+                        <div class="example-description">每天 midnight</div>
+                    </div>
+                    <div class="example-item" data-cron="0 * * * *">
+                        <div class="example-expression">0 * * * *</div>
+                        <div class="example-description">每小时</div>
+                    </div>
+                    <div class="example-item" data-cron="*/15 * * * *">
+                        <div class="example-expression">*/15 * * * *</div>
+                        <div class="example-description">每 15 分钟</div>
+                    </div>
+                    <div class="example-item" data-cron="0 0 * * 0">
+                        <div class="example-expression">0 0 * * 0</div>
+                        <div class="example-description">每周日 midnight</div>
+                    </div>
+                    <div class="example-item" data-cron="0 0 1 * *">
+                        <div class="example-expression">0 0 1 * *</div>
+                        <div class="example-description">每月 1 日</div>
+                    </div>
+                    <div class="example-item" data-cron="0 0 1 1 *">
+                        <div class="example-expression">0 0 1 1 *</div>
+                        <div class="example-description">每年 1 月 1 日</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cron-output-panel">
+            <div class="label">
+                <span>📤 最近 10 次运行时间</span>
+            </div>
+            <div id="cronScheduleList" class="cron-schedule-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Cron 表达式解析和计算工具
+     */
+    const cronInput = document.getElementById('cronInput');
+    const cronScheduleList = document.getElementById('cronScheduleList');
+    const resultTip = document.getElementById('resultTip');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // 常用 Cron 示例
+    const exampleItems = document.querySelectorAll('.example-item');
+    exampleItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const cronExpr = item.getAttribute('data-cron');
+            cronInput.value = cronExpr;
+            calculateSchedule(cronExpr);
+        });
+    });
+
+    function showTip(message, isError = false) {
+        resultTip.textContent = message;
+        resultTip.style.color = isError ? 'var(--danger-color)' : 'var(--text-muted)';
+        setTimeout(() => {
+            if (!isError) resultTip.style.color = 'var(--text-muted)';
+        }, 3000);
+    }
+
+    async function copyToClipboard(text, successMsg) {
+        if (!text.trim()) {
+            showTip('暂无内容可复制', true);
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(text);
+            showTip(successMsg);
+        } catch (error) {
+            showTip(`复制失败：${error.message}`, true);
+        }
+    }
+
+    // 解析 Cron 表达式并计算最近 10 次运行时间
+    function calculateSchedule(cronExpr) {
+        if (!cronExpr || !cronExpr.trim()) {
+            showTip('请输入 Cron 表达式', true);
+            return;
+        }
+
+        try {
+            const schedule = parseCronExpression(cronExpr);
+            const nextRuns = getNextRuns(schedule, 10);
+            renderScheduleList(nextRuns);
+            showTip('计算完成');
+        } catch (error) {
+            showTip(`解析失败：${error.message}`, true);
+        }
+    }
+
+    // 简单的 Cron 表达式解析器
+    function parseCronExpression(expr) {
+        const parts = expr.trim().split(/\s+/);
+        if (parts.length !== 5) {
+            throw new Error('Cron 表达式应为 5 个字段');
+        }
+
+        return {
+            minute: parts[0],
+            hour: parts[1],
+            dayOfMonth: parts[2],
+            month: parts[3],
+            dayOfWeek: parts[4]
+        };
+    }
+
+    // 计算下一次运行时间（简化版）
+    function getNextRuns(schedule, count) {
+        const runs = [];
+        let current = new Date();
+        
+        for (let i = 0; i < count; i++) {
+            current = getNextRunTime(schedule, current);
+            runs.push(new Date(current));
+        }
+        
+        return runs;
+    }
+
+    // 计算下一次运行时间
+    function getNextRunTime(schedule, current) {
+        const next = new Date(current);
+        next.setMinutes(next.getMinutes() + 1);
+        next.setSeconds(0);
+        next.setMilliseconds(0);
+
+        while (true) {
+            if (matchesCron(schedule, next)) {
+                return next;
+            }
+            next.setMinutes(next.getMinutes() + 1);
+            if (next.getTime() - current.getTime() > 365 * 24 * 60 * 60 * 1000) {
+                throw new Error('无法在一年内找到匹配的运行时间');
+            }
+        }
+    }
+
+    // 检查日期是否匹配 Cron 表达式
+    function matchesCron(schedule, date) {
+        return (
+            matchesField(schedule.minute, date.getMinutes()) &&
+            matchesField(schedule.hour, date.getHours()) &&
+            matchesField(schedule.dayOfMonth, date.getDate()) &&
+            matchesField(schedule.month, date.getMonth() + 1) &&
+            matchesField(schedule.dayOfWeek, date.getDay())
+        );
+    }
+
+    // 检查单个字段是否匹配
+    function matchesField(field, value) {
+        if (field === '*') return true;
+        if (field.includes('/')) {
+            const [start, step] = field.split('/');
+            const startVal = start === '*' ? 0 : parseInt(start);
+            return (value - startVal) % parseInt(step) === 0;
+        }
+        if (field.includes(',')) {
+            return field.split(',').some(f => parseInt(f) === value);
+        }
+        if (field.includes('-')) {
+            const [min, max] = field.split('-');
+            return value >= parseInt(min) && value <= parseInt(max);
+        }
+        return parseInt(field) === value;
+    }
+
+    // 渲染运行时间列表
+    function renderScheduleList(runs) {
+        if (!runs || runs.length === 0) {
+            cronScheduleList.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        runs.forEach((run, index) => {
+            const formattedTime = run.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            html += `
+                <div class="schedule-item">
+                    <div class="schedule-index">${index + 1}</div>
+                    <div class="schedule-time">${formattedTime}</div>
+                </div>
+            `;
+        });
+
+        cronScheduleList.innerHTML = html;
+    }
+
+    // 事件监听器
+    calculateBtn.addEventListener('click', () => {
+        const cronExpr = cronInput.value.trim();
+        calculateSchedule(cronExpr);
+    });
+
+    clearBtn.addEventListener('click', () => {
+        cronInput.value = '';
+        cronScheduleList.innerHTML = '';
+        showTip('已清空');
+    });
+
+    copyBtn.addEventListener('click', () => {
+        const cronExpr = cronInput.value.trim();
+        copyToClipboard(cronExpr, '表达式已复制');
+    });
+
+    // 输入时自动计算
+    let calculateTimer = null;
+    cronInput.addEventListener('input', function() {
+        clearTimeout(calculateTimer);
+        calculateTimer = setTimeout(() => {
+            const cronExpr = this.value.trim();
+            if (cronExpr) {
+                calculateSchedule(cronExpr);
+            }
+        }, 400);
+    });
+</script>
+</body>
+</html>
