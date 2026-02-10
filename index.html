@@ -42,12 +42,123 @@
         body { background-color: var(--bg-dark); height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--text-light); }
         header { background-color: var(--nav-bg); display: flex; align-items: center; padding: 0 24px; height: 64px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 700; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-right: 40px; white-space: nowrap; }
-        .menu-wrapper { flex: 1; overflow-x: auto; scrollbar-width: none; }
+        
+        /* 搜索框样式 */
+        .search-container {
+            position: relative;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box {
+            width: 200px;
+            padding: 8px 35px 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-color);
+            width: 250px;
+        }
+        
+        .search-box::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+        
+        /* 菜单样式 */
+        .menu-wrapper { 
+            flex: 1; 
+            overflow-x: auto; 
+            scrollbar-width: none; 
+        }
         .menu-wrapper::-webkit-scrollbar { display: none; }
-        .menu-list { display: flex; list-style: none; gap: 8px; }
-        .menu-item a { display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.95rem; transition: all 0.3s ease; white-space: nowrap; }
-        .menu-item a:hover { color: var(--text-light); background-color: rgba(255, 255, 255, 0.05); }
-        .menu-item a.active { color: white; background-color: var(--primary-color); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
+        .menu-list { 
+            display: flex; 
+            list-style: none; 
+            gap: 8px; 
+        }
+        .menu-item { 
+            position: relative; 
+        }
+        .menu-item a { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            color: var(--text-muted); 
+            text-decoration: none; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            font-size: 0.95rem; 
+            transition: all 0.3s ease; 
+            white-space: nowrap; 
+        }
+        .menu-item a:hover { 
+            color: var(--text-light); 
+            background-color: rgba(255, 255, 255, 0.05); 
+        }
+        .menu-item a.active { 
+            color: white; 
+            background-color: var(--primary-color); 
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); 
+        }
+        .menu-item.hidden { 
+            display: none; 
+        }
+        
+        /* 收藏按钮样式 */
+        .favorite-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: var(--bg-dark);
+            border: 1px solid var(--text-muted);
+            border-radius: 50%;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .menu-item:hover .favorite-btn {
+            opacity: 1;
+        }
+        
+        .favorite-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .favorite-btn.active {
+            opacity: 1;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            border-color: transparent;
+            color: white;
+        }
+        
         #content-main { flex: 1; position: relative; background: #fff; }
         .tool-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; }
         .tool-iframe.active { display: block; }
@@ -73,6 +184,19 @@
             .logo {
                 order: 2;
                 margin-right: auto;
+            }
+            
+            .search-container {
+                order: 3;
+                margin-right: 0;
+            }
+            
+            .search-box {
+                width: 120px;
+            }
+            
+            .search-box:focus {
+                width: 150px;
             }
             
             .menu-wrapper {
@@ -132,19 +256,75 @@
         <span>极简工具箱</span>
     </a>
 
+    <!-- 搜索框 -->
+    <div class="search-container">
+        <input type="text" class="search-box" id="searchBox" placeholder="搜索工具...">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+
     <nav class="menu-wrapper" id="menuWrapper">
-        <ul class="menu-list">
-            <li class="menu-item"><a href="#text-process" data-id="text-process" data-src="文本加工.html"><i class="fas fa-file-alt"></i>文本加工</a></li>
-            <li class="menu-item"><a href="#codec" data-id="codec" data-src="编码解码.html"><i class="fas fa-terminal"></i>编码解码</a></li>
-            <li class="menu-item"><a href="#qrcode" data-id="qrcode" data-src="二维码生成器.html"><i class="fas fa-qrcode"></i>二维码</a></li>
-            <li class="menu-item"><a href="#crypto" data-id="crypto" data-src="加密解密.html"><i class="fas fa-shield-alt"></i>加密解密</a></li>
-            <li class="menu-item"><a href="#diff" data-id="diff" data-src="文本对比.html"><i class="fas fa-columns"></i>文本对比</a></li>
-            <li class="menu-item"><a href="#json" data-id="json" data-src="JSON 格式化.html"><i class="fas fa-code"></i>JSON格式</a></li>
-            <li class="menu-item"><a href="#time" data-id="time" data-src="时间计算器.html"><i class="fas fa-clock"></i>时间计算</a></li>
-            <li class="menu-item"><a href="#date" data-id="date" data-src="日期计算器.html"><i class="fas fa-calendar-alt"></i>日期计算</a></li>
-            <li class="menu-item"><a href="#regex" data-id="regex" data-src="正则可视化.html"><i class="fas fa-project-diagram"></i>正则可视化</a></li>
-            <li class="menu-item"><a href="#cron" data-id="cron" data-src="Cron 表达式工具.html"><i class="fas fa-clock"></i>Cron表达式</a></li>
-            <li class="menu-item"><a href="#nacos" data-id="nacos" data-src="Nacos 服务管理.html"><i class="fas fa-server"></i>Nacos管理</a></li>
+        <ul class="menu-list" id="menuList">
+            <!-- 常用工具会自动插入到这里 -->
+            <li class="menu-item" data-keywords="文本 加工 大小写 转换 去重">
+                <a href="#text-process" data-id="text-process" data-src="文本加工.html">
+                    <i class="fas fa-file-alt"></i>文本加工
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="编码 解码 base64 url">
+                <a href="#codec" data-id="codec" data-src="编码解码.html">
+                    <i class="fas fa-terminal"></i>编码解码
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="二维码 qrcode 生成">
+                <a href="#qrcode" data-id="qrcode" data-src="二维码生成器.html">
+                    <i class="fas fa-qrcode"></i>二维码
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="加密 解密 md5 aes sha">
+                <a href="#crypto" data-id="crypto" data-src="加密解密.html">
+                    <i class="fas fa-shield-alt"></i>加密解密
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="文本 对比 diff 差异">
+                <a href="#diff" data-id="diff" data-src="文本对比.html">
+                    <i class="fas fa-columns"></i>文本对比
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="json 格式化 美化">
+                <a href="#json" data-id="json" data-src="JSON 格式化.html">
+                    <i class="fas fa-code"></i>JSON格式
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="时间 计算 时间戳">
+                <a href="#time" data-id="time" data-src="时间计算器.html">
+                    <i class="fas fa-clock"></i>时间计算
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="日期 计算 间隔">
+                <a href="#date" data-id="date" data-src="日期计算器.html">
+                    <i class="fas fa-calendar-alt"></i>日期计算
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="正则 正则表达式 可视化 regex">
+                <a href="#regex" data-id="regex" data-src="正则可视化.html">
+                    <i class="fas fa-project-diagram"></i>正则可视化
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="cron 表达式 定时任务">
+                <a href="#cron" data-id="cron" data-src="Cron 表达式工具.html">
+                    <i class="fas fa-clock"></i>Cron表达式
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="nacos 服务 管理">
+                <a href="#nacos" data-id="nacos" data-src="Nacos 服务管理.html">
+                    <i class="fas fa-server"></i>Nacos管理
+                </a>
+            </li>
+            <li class="menu-item" data-keywords="uuid 随机数 生成 guid">
+                <a href="#uuid" data-id="uuid" data-src="UUID生成器.html">
+                    <i class="fas fa-fingerprint"></i>UUID生成
+                </a>
+            </li>
         </ul>
     </nav>
 </header>
@@ -161,7 +341,119 @@
     const contentMain = document.getElementById('content-main');
     const menuToggle = document.getElementById('menuToggle');
     const menuWrapper = document.getElementById('menuWrapper');
+    const searchBox = document.getElementById('searchBox');
+    const menuList = document.getElementById('menuList');
     const DEFAULT_TOOL_ID = 'text-process';
+    
+    // 收藏工具数据（使用 localStorage 记录）
+    const FAVORITES_KEY = 'tool-favorites';
+    
+    // 获取收藏列表
+    function getFavorites() {
+        const favorites = localStorage.getItem(FAVORITES_KEY);
+        return favorites ? JSON.parse(favorites) : [];
+    }
+    
+    // 保存收藏列表
+    function saveFavorites(favorites) {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    }
+    
+    // 切换收藏状态
+    function toggleFavorite(toolId) {
+        let favorites = getFavorites();
+        const index = favorites.indexOf(toolId);
+        
+        if (index > -1) {
+            favorites.splice(index, 1); // 取消收藏
+        } else {
+            favorites.push(toolId); // 添加收藏
+        }
+        
+        saveFavorites(favorites);
+        updateMenuOrder();
+    }
+    
+    // 初始化收藏按钮
+    function initFavoriteButtons() {
+        const favorites = getFavorites();
+        
+        document.querySelectorAll('.menu-item').forEach(item => {
+            const link = item.querySelector('a');
+            const toolId = link.getAttribute('data-id');
+            
+            // 创建收藏按钮
+            const btn = document.createElement('button');
+            btn.className = 'favorite-btn';
+            btn.innerHTML = '<i class="fas fa-star"></i>';
+            btn.title = '收藏/取消收藏';
+            
+            // 设置初始状态
+            if (favorites.includes(toolId)) {
+                btn.classList.add('active');
+            }
+            
+            // 点击事件
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.toggle('active');
+                toggleFavorite(toolId);
+            });
+            
+            item.appendChild(btn);
+        });
+    }
+    
+    // 更新菜单排序
+    function updateMenuOrder() {
+        const favorites = getFavorites();
+        const allItems = Array.from(document.querySelectorAll('.menu-item'));
+        
+        // 按收藏状态排序：收藏的在前，未收藏的在后
+        allItems.sort((a, b) => {
+            const aId = a.querySelector('a').getAttribute('data-id');
+            const bId = b.querySelector('a').getAttribute('data-id');
+            const aFav = favorites.includes(aId);
+            const bFav = favorites.includes(bId);
+            
+            if (aFav && !bFav) return -1;
+            if (!aFav && bFav) return 1;
+            return 0; // 保持原有顺序
+        });
+        
+        // 重新排列
+        allItems.forEach(item => {
+            menuList.appendChild(item);
+        });
+    }
+    
+    // 搜索功能
+    searchBox.addEventListener('input', function() {
+        const keyword = this.value.toLowerCase().trim();
+        
+        // 移动端搜索时自动展开菜单
+        if (keyword && window.innerWidth <= 768) {
+            menuWrapper.classList.add('active');
+        }
+        
+        document.querySelectorAll('.menu-item').forEach(item => {
+            if (!keyword) {
+                item.classList.remove('hidden');
+                return;
+            }
+            
+            const text = item.textContent.toLowerCase();
+            const keywords = item.getAttribute('data-keywords') || '';
+            const searchText = text + ' ' + keywords.toLowerCase();
+            
+            if (searchText.includes(keyword)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    });
 
     function switchTool(toolId) {
         const targetLink = document.querySelector(`[data-id="${toolId}"]`);
@@ -181,14 +473,13 @@
             targetIframe = document.createElement('iframe');
             targetIframe.className = 'tool-iframe';
             targetIframe.setAttribute('data-id', toolId);
-            targetIframe.setAttribute('title', targetLink.textContent.trim()); // SEO: 为 iframe 添加 title
+            targetIframe.setAttribute('title', targetLink.textContent.trim());
             targetIframe.src = src;
             contentMain.appendChild(targetIframe);
         }
 
         targetIframe.classList.add('active');
 
-        // 核心优化：修改 URL Hash，让爬虫知道有不同页面
         if (window.location.hash !== '#' + toolId) {
             history.pushState(null, null, '#' + toolId);
         }
@@ -206,7 +497,7 @@
         });
     });
 
-    // 监听 URL 变化 (支持前进/后退和爬虫抓取)
+    // 监听 URL 变化
     window.addEventListener('hashchange', () => {
         const toolId = window.location.hash.replace('#', '');
         if (toolId) switchTool(toolId);
@@ -224,7 +515,10 @@
         }
     });
 
+    // 页面加载
     document.addEventListener('DOMContentLoaded', () => {
+        initFavoriteButtons();
+        updateMenuOrder();
         const hashId = window.location.hash.replace('#', '');
         switchTool(hashId || DEFAULT_TOOL_ID);
     });
