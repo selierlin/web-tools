@@ -420,6 +420,7 @@
             position: relative;
             border: 1px solid var(--border-color);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
 
         .qrcode-card:hover {
@@ -886,6 +887,13 @@
                     <div class="qrcode-time">生成时间：${record.createTime}</div>
                     <div class="qrcode-full-desc" onclick="openModal('${escape(record.content)}')">查看完整内容</div>
                 `;
+
+                // 点击卡片空白区域（非按钮、非「查看完整内容」）时，将内容填回输入框
+                qrCard.addEventListener('click', function(e) {
+                    if (e.target.closest('.close-btn') || e.target.closest('.qrcode-full-desc')) return;
+                    contentInput.value = record.content;
+                    contentInput.focus();
+                });
 
                 qrcodesGrid.appendChild(qrCard);
             });

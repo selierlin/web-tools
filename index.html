@@ -22,10 +22,11 @@
     <!-- 网站图标 -->
     <link rel="icon" href="http://cdn.linliang.top/tool/tool.ico" type="image/x-icon">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 国内 CDN：Font Awesome（BootCDN） -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* 保持你原有的 CSS，增加以下利于 SEO 的隐藏元素样式 */
+        /* SEO 隐藏内容 */
         .seo-hidden {
             position: absolute;
             width: 1px;
@@ -36,169 +37,278 @@
             clip: rect(0, 0, 0, 0);
             border: 0;
         }
-        /* ... 你原有的其他样式 ... */
-        :root { --primary-color: #4f46e5; --primary-hover: #4338ca; --bg-dark: #0f172a; --nav-bg: #1e293b; --text-light: #f8fafc; --text-muted: #94a3b8; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "Segoe UI", "Microsoft YaHei", sans-serif; }
-        body { background-color: var(--bg-dark); height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--text-light); }
-        header { background-color: var(--nav-bg); display: flex; align-items: center; padding: 0 24px; height: 64px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 700; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-right: 40px; white-space: nowrap; }
-        
-        /* 搜索框样式 */
+
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --bg-dark: #0c0f1a;
+            --bg-card: #131825;
+            --nav-bg: rgba(19, 24, 37, 0.85);
+            --nav-border: rgba(255, 255, 255, 0.06);
+            --text-light: #f1f5f9;
+            --text-muted: #64748b;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            background: var(--bg-dark);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.08), transparent);
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: var(--text-light);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--nav-border);
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-right: 32px;
+            white-space: nowrap;
+            letter-spacing: -0.02em;
+        }
+
+        .logo i {
+            -webkit-text-fill-color: #a78bfa;
+        }
+
         .search-container {
             position: relative;
-            margin-right: 20px;
+            margin-right: 24px;
             display: flex;
             align-items: center;
         }
-        
+
         .search-box {
             width: 200px;
-            padding: 8px 35px 8px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
+            padding: 10px 40px 10px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius);
             color: var(--text-light);
             font-size: 0.9rem;
-            transition: all 0.3s ease;
+            transition: width 0.25s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        
+
         .search-box:focus {
             outline: none;
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary-color);
-            width: 250px;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            width: 260px;
         }
-        
+
         .search-box::placeholder {
             color: var(--text-muted);
         }
-        
+
         .search-icon {
             position: absolute;
-            right: 12px;
+            right: 14px;
             color: var(--text-muted);
             pointer-events: none;
+            font-size: 0.85rem;
         }
-        
-        /* 菜单样式 */
-        .menu-wrapper { 
-            flex: 1; 
-            overflow-x: auto; 
-            scrollbar-width: none; 
+
+        .menu-wrapper {
+            flex: 1;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
         }
-        .menu-wrapper::-webkit-scrollbar { display: none; }
-        .menu-list { 
-            display: flex; 
-            list-style: none; 
-            gap: 8px; 
+
+        .menu-wrapper::-webkit-scrollbar {
+            height: 6px;
         }
-        .menu-item { 
-            position: relative; 
+
+        .menu-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
         }
-        .menu-item a { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            color: var(--text-muted); 
-            text-decoration: none; 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            font-size: 0.95rem; 
-            transition: all 0.3s ease; 
-            white-space: nowrap; 
+
+        .menu-list {
+            display: flex;
+            list-style: none;
+            gap: 6px;
         }
-        .menu-item a:hover { 
-            color: var(--text-light); 
-            background-color: rgba(255, 255, 255, 0.05); 
+
+        .menu-item {
+            position: relative;
         }
-        .menu-item a.active { 
-            color: white; 
-            background-color: var(--primary-color); 
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); 
+
+        .menu-item a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+            white-space: nowrap;
         }
-        .menu-item.hidden { 
-            display: none; 
+
+        .menu-item a i {
+            opacity: 0.85;
+            font-size: 0.95em;
         }
-        
-        /* 收藏按钮样式 */
+
+        .menu-item a:hover {
+            color: var(--text-light);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .menu-item a.active {
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .menu-item a.active i {
+            opacity: 1;
+        }
+
+        .menu-item.hidden {
+            display: none;
+        }
+
         .favorite-btn {
             position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 20px;
-            height: 20px;
-            background: var(--bg-dark);
-            border: 1px solid var(--text-muted);
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 50%;
             color: var(--text-muted);
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease, background 0.2s ease;
             z-index: 10;
         }
-        
+
         .menu-item:hover .favorite-btn {
             opacity: 1;
         }
-        
+
         .favorite-btn:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
             transform: scale(1.1);
         }
-        
+
         .favorite-btn.active {
             opacity: 1;
             background: linear-gradient(135deg, #f59e0b, #ef4444);
             border-color: transparent;
-            color: white;
+            color: #fff;
         }
-        
-        #content-main { flex: 1; position: relative; background: #fff; }
-        .tool-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; }
-        .tool-iframe.active { display: block; }
-        
-        /* 汉堡菜单样式 */
+
+        #content-main {
+            flex: 1;
+            position: relative;
+            background: #fafafa;
+            border-radius: var(--radius) var(--radius) 0 0;
+            overflow: hidden;
+            box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .tool-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .tool-iframe.active {
+            display: block;
+        }
+
         .menu-toggle {
             display: none;
             background: none;
             border: none;
             color: var(--text-light);
-            font-size: 1.5rem;
+            font-size: 1.35rem;
             cursor: pointer;
             padding: 8px;
+            margin-right: 8px;
+            border-radius: var(--radius-sm);
+            transition: background 0.2s ease;
         }
-        
-        /* 移动端适配 */
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
         @media (max-width: 768px) {
             .menu-toggle {
-                display: block;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 order: 1;
             }
-            
+
             .logo {
                 order: 2;
                 margin-right: auto;
             }
-            
+
             .search-container {
                 order: 3;
                 margin-right: 0;
             }
-            
+
             .search-box {
                 width: 120px;
             }
-            
+
             .search-box:focus {
-                width: 150px;
+                width: 160px;
             }
-            
+
             .menu-wrapper {
                 position: absolute;
                 top: 64px;
@@ -206,24 +316,25 @@
                 width: 100%;
                 height: 0;
                 overflow: hidden;
-                background-color: var(--nav-bg);
+                background: var(--nav-bg);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid var(--nav-border);
                 transition: height 0.3s ease;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                 z-index: 9;
             }
-            
+
             .menu-wrapper.active {
                 height: auto;
                 max-height: calc(100vh - 64px);
                 overflow-y: auto;
             }
-            
+
             .menu-list {
                 flex-direction: column;
                 padding: 16px;
-                gap: 8px;
+                gap: 6px;
             }
-            
+
             .menu-item a {
                 white-space: normal;
             }
