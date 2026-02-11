@@ -5,22 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- TDK 优化 (Title, Description, Keywords) -->
-    <title>极简工具箱 - 程序员在线工具合集 (JSON, 加密, 文本加工, 时间计算)</title>
-    <meta name="description" content="极简工具箱提供一系列高效、免费、无广告的在线工具，包括文本加工、Base64编码解码、二维码生成、AES加密解密、JSON格式化、时间戳转换及Nacos管理工具。">
-    <meta name="keywords" content="在线工具,极简工具箱,文本处理,JSON格式化,编码解码,二维码生成,程序员工具,时间计算器">
-    <meta name="author" content="YourName/Brand">
+    <title>极简工具箱 - 程序员在线工具合集 (JSON/编码/加解密/时间戳/正则/Cron)</title>
+    <meta name="description"
+          content="极简工具箱提供免费、无广告的在线开发工具：文本加工、Base64/URL 编码解码、二维码生成、MD5/SHA/AES 加解密、文本对比、JSON 格式化、时间戳与日期计算、正则可视化、Cron 表达式、UUID 生成、Nacos 服务管理等。">
+    <meta name="keywords" content="在线工具,极简工具箱,JSON格式化,编码解码,Base64,加解密,二维码,时间戳,正则表达式,Cron,UUID,Nacos,程序员工具">
+    <meta name="author" content="极简工具箱">
 
-    <!-- Open Graph (社交媒体优化) -->
-    <meta property="og:title" content="极简工具箱 | 开发者的高效助手">
-    <meta property="og:description" content="多功能在线工具集合，轻量便捷。">
+    <!-- Open Graph (社交媒体/即时通讯分享) -->
+    <meta property="og:title" content="极简工具箱 | 开发者的在线工具合集">
+    <meta property="og:description" content="免费无广告：JSON 格式化、编码解码、加解密、时间戳、正则、Cron、UUID、二维码等在线工具。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://qr.linliang.top">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:image" content="https://cdn.linliang.top/tool/tool.ico">
 
     <!-- 规范链接 (避免重复内容) -->
     <link rel="canonical" href="https://qr.linliang.top">
 
-    <!-- 网站图标 -->
-    <link rel="icon" href="http://cdn.linliang.top/tool/tool.ico" type="image/x-icon">
+    <!-- 网站图标 (HTTPS 避免混合内容) -->
+    <link rel="icon" href="https://cdn.linliang.top/tool/tool.ico" type="image/x-icon">
 
     <!-- 国内 CDN：Font Awesome（BootCDN） -->
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -61,9 +64,8 @@
 
         body {
             background: var(--bg-dark);
-            background-image:
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
-                radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.08), transparent);
+            background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
+            radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.08), transparent);
             min-height: 100vh;
             height: 100vh;
             display: flex;
@@ -82,6 +84,13 @@
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--nav-border);
             z-index: 10;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: inherit;
+            font-weight: inherit;
+            line-height: 1;
         }
 
         .logo {
@@ -141,30 +150,76 @@
             font-size: 0.85rem;
         }
 
+        /* 分类筛选：工具多时缩小范围 */
+        .category-filter {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            margin-right: 12px;
+        }
+
+        .category-btn {
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .category-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
         .menu-wrapper {
             flex: 1;
+            min-width: 0;
             overflow-x: auto;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.15) transparent;
+            overflow-y: hidden;
+            position: relative;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
         .menu-wrapper::-webkit-scrollbar {
-            height: 6px;
+            display: none;
         }
 
-        .menu-wrapper::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.15);
-            border-radius: 3px;
+        /* 右侧渐变遮罩：提示还有更多，可滑动；不挡点击 */
+        .menu-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 28px;
+            pointer-events: none;
+            background: linear-gradient(to right, transparent, var(--nav-bg));
+            z-index: 1;
         }
 
         .menu-list {
             display: flex;
+            flex-wrap: nowrap;
             list-style: none;
             gap: 6px;
+            padding: 6px 32px 6px 0;
         }
 
         .menu-item {
             position: relative;
+            overflow: visible;
         }
 
         .menu-item a {
@@ -209,13 +264,15 @@
             position: absolute;
             top: -6px;
             right: -6px;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            min-height: 24px;
             background: var(--bg-card);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 50%;
             color: var(--text-muted);
-            font-size: 0.65rem;
+            font-size: 11px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -223,6 +280,14 @@
             opacity: 0;
             transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease, background 0.2s ease;
             z-index: 10;
+            overflow: visible;
+            padding: 0;
+        }
+
+        .favorite-btn i {
+            font-size: 11px;
+            display: block;
+            line-height: 1;
         }
 
         .menu-item:hover .favorite-btn {
@@ -284,6 +349,10 @@
         }
 
         @media (max-width: 768px) {
+            .category-filter {
+                display: none;
+            }
+
             .menu-toggle {
                 display: flex;
                 align-items: center;
@@ -291,8 +360,12 @@
                 order: 1;
             }
 
+            .header-title,
             .logo {
                 order: 2;
+            }
+
+            .header-title {
                 margin-right: auto;
             }
 
@@ -343,29 +416,31 @@
 </head>
 <body>
 
-<!-- 对搜索引擎友好的隐藏内容 (SEO Booster) -->
-<div class="seo-hidden">
-    <h1>极简工具箱</h1>
-    <p>提供一系列在线工具：</p>
+<!-- 对搜索引擎友好的补充说明（与首屏内容一致，便于抓取） -->
+<nav class="seo-hidden" aria-label="本站工具列表">
+    <h2>提供以下在线工具</h2>
     <ul>
-        <li>文本加工：支持大小写转换、去重、排序。</li>
+        <li>文本加工：大小写转换、去重、排序。</li>
         <li>编码解码：Base64、URL、HTML 实体转义。</li>
-        <li>二维码生成器：支持自定义颜色和 LOGO。</li>
-        <li>加密解密：MD5、SHA、AES 算法。</li>
-        <li>文本对比：Diff 算法高亮显示差异。</li>
-        <li>JSON 格式化：在线解析、格式化及美化 JSON 数据。</li>
+        <li>二维码生成：支持自定义样式。</li>
+        <li>加密解密：MD5、SHA、AES。</li>
+        <li>文本对比：Diff 高亮差异。</li>
+        <li>JSON 格式化：解析、格式化、美化。</li>
+        <li>时间戳与日期计算、正则可视化、Cron 表达式、UUID 生成、Nacos 服务管理。</li>
     </ul>
-</div>
+</nav>
 
 <header>
-    <button class="menu-toggle" id="menuToggle">
+    <button class="menu-toggle" id="menuToggle" aria-label="打开菜单">
         <i class="fas fa-bars"></i>
     </button>
-    
-    <a href="/" class="logo" style="text-decoration: none;">
-        <i class="fas fa-toolbox"></i>
-        <span>极简工具箱</span>
-    </a>
+
+    <h1 class="header-title">
+        <a href="/" class="logo" style="text-decoration: none;">
+            <i class="fas fa-toolbox" aria-hidden="true"></i>
+            <span>极简工具箱</span>
+        </a>
+    </h1>
 
     <!-- 搜索框 -->
     <div class="search-container">
@@ -373,206 +448,297 @@
         <i class="fas fa-search search-icon"></i>
     </div>
 
-    <nav class="menu-wrapper" id="menuWrapper">
+    <!-- 分类筛选：工具多时可按类查看 -->
+    <div class="category-filter" id="categoryFilter">
+        <button type="button" class="category-btn active" data-category="">全部</button>
+        <button type="button" class="category-btn" data-category="文本">文本</button>
+        <button type="button" class="category-btn" data-category="编码">编码</button>
+        <button type="button" class="category-btn" data-category="开发">开发</button>
+        <button type="button" class="category-btn" data-category="时间">时间</button>
+        <button type="button" class="category-btn" data-category="其他">其他</button>
+    </div>
+
+    <nav class="menu-wrapper" id="menuWrapper" aria-label="工具导航">
         <ul class="menu-list" id="menuList">
-            <!-- 常用工具会自动插入到这里 -->
-            <li class="menu-item" data-keywords="文本 加工 大小写 转换 去重">
-                <a href="#text-process" data-id="text-process" data-src="文本加工.html">
-                    <i class="fas fa-file-alt"></i>文本加工
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="编码 解码 base64 url">
-                <a href="#codec" data-id="codec" data-src="编码解码.html">
-                    <i class="fas fa-terminal"></i>编码解码
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="二维码 qrcode 生成">
-                <a href="#qrcode" data-id="qrcode" data-src="二维码生成器.html">
-                    <i class="fas fa-qrcode"></i>二维码
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="加密 解密 md5 aes sha">
-                <a href="#crypto" data-id="crypto" data-src="加密解密.html">
-                    <i class="fas fa-shield-alt"></i>加密解密
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="文本 对比 diff 差异">
-                <a href="#diff" data-id="diff" data-src="文本对比.html">
-                    <i class="fas fa-columns"></i>文本对比
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="json 格式化 美化">
-                <a href="#json" data-id="json" data-src="JSON 格式化.html">
-                    <i class="fas fa-code"></i>JSON格式
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="时间 计算 时间戳">
-                <a href="#time" data-id="time" data-src="时间计算器.html">
-                    <i class="fas fa-clock"></i>时间计算
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="日期 计算 间隔">
-                <a href="#date" data-id="date" data-src="日期计算器.html">
-                    <i class="fas fa-calendar-alt"></i>日期计算
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="正则 正则表达式 可视化 regex">
-                <a href="#regex" data-id="regex" data-src="正则可视化.html">
-                    <i class="fas fa-project-diagram"></i>正则可视化
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="cron 表达式 定时任务">
-                <a href="#cron" data-id="cron" data-src="Cron 表达式工具.html">
-                    <i class="fas fa-clock"></i>Cron表达式
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="nacos 服务 管理">
-                <a href="#nacos" data-id="nacos" data-src="Nacos 服务管理.html">
-                    <i class="fas fa-server"></i>Nacos管理
-                </a>
-            </li>
-            <li class="menu-item" data-keywords="uuid 随机数 生成 guid">
-                <a href="#uuid" data-id="uuid" data-src="UUID生成器.html">
-                    <i class="fas fa-fingerprint"></i>UUID生成
-                </a>
-            </li>
+            <!-- 由脚本根据 MENU_ITEMS 配置生成 -->
         </ul>
     </nav>
 </header>
 
 <main id="content-main">
-    <!-- 默认展示提示信息或占位，利于初次抓取 -->
     <noscript>
-        <p>您的浏览器不支持 JavaScript，请启用后使用极简工具箱。本站提供 JSON 格式化、文本对比、编码解码等多种在线工具。</p>
+        <p>请启用 JavaScript 以使用极简工具箱。本站提供：文本加工、编码解码、二维码、加解密、文本对比、JSON 格式化、时间戳与日期计算、正则可视化、Cron 表达式、UUID 生成、Nacos 管理等在线工具。</p>
     </noscript>
 </main>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "极简工具箱",
+  "description": "免费无广告的在线开发工具合集：JSON 格式化、编码解码、加解密、时间戳、正则、Cron、UUID、二维码等。",
+  "url": "https://qr.linliang.top",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any"
+}
+</script>
+
 <script>
-    const menuLinks = document.querySelectorAll('.menu-item a');
+    // 工具菜单配置：新增工具只需在此添加一项即可，category 用于分类筛选
+    const MENU_ITEMS = [
+        {
+            id: 'text-process',
+            name: '文本加工',
+            src: '文本加工.html',
+            keywords: '文本 加工 大小写 转换 去重 txt text',
+            category: '文本',
+            icon: 'fa-file-alt'
+        },
+        {
+            id: 'codec',
+            name: '编码解码',
+            src: '编码解码.html',
+            keywords: '编码 解码 base64 url',
+            category: '编码',
+            icon: 'fa-terminal'
+        },
+        {
+            id: 'qrcode',
+            name: '二维码',
+            src: '二维码生成器.html',
+            keywords: '二维码 qrcode 生成',
+            category: '其他',
+            icon: 'fa-qrcode'
+        },
+        {
+            id: 'crypto',
+            name: '加密解密',
+            src: '加密解密.html',
+            keywords: '加密 解密 md5 aes sha',
+            category: '编码',
+            icon: 'fa-shield-alt'
+        },
+        {
+            id: 'diff',
+            name: '文本对比',
+            src: '文本对比.html',
+            keywords: '文本 对比 diff 差异 txt text',
+            category: '文本',
+            icon: 'fa-columns'
+        },
+        {
+            id: 'json',
+            name: 'JSON格式',
+            src: 'JSON 格式化.html',
+            keywords: 'json 格式化 美化',
+            category: '开发',
+            icon: 'fa-code'
+        },
+        {
+            id: 'time',
+            name: '时间计算',
+            src: '时间计算器.html',
+            keywords: '时间 计算 时间戳',
+            category: '时间',
+            icon: 'fa-clock'
+        },
+        {
+            id: 'date',
+            name: '日期计算',
+            src: '日期计算器.html',
+            keywords: '日期 计算 间隔',
+            category: '时间',
+            icon: 'fa-calendar-alt'
+        },
+        {
+            id: 'regex',
+            name: '正则可视化',
+            src: '正则可视化.html',
+            keywords: '正则 正则表达式 可视化 regex',
+            category: '开发',
+            icon: 'fa-project-diagram'
+        },
+        {
+            id: 'cron',
+            name: 'Cron表达式',
+            src: 'Cron 表达式工具.html',
+            keywords: 'cron 表达式 定时任务',
+            category: '时间',
+            icon: 'fa-clock'
+        },
+        {
+            id: 'nacos',
+            name: 'Nacos管理',
+            src: 'Nacos 服务管理.html',
+            keywords: 'nacos 服务 管理',
+            category: '开发',
+            icon: 'fa-server'
+        },
+        {
+            id: 'uuid',
+            name: 'UUID生成',
+            src: 'UUID生成器.html',
+            keywords: 'uuid 随机数 生成 guid',
+            category: '开发',
+            icon: 'fa-fingerprint'
+        }
+    ];
+
     const contentMain = document.getElementById('content-main');
     const menuToggle = document.getElementById('menuToggle');
     const menuWrapper = document.getElementById('menuWrapper');
     const searchBox = document.getElementById('searchBox');
     const menuList = document.getElementById('menuList');
+    const categoryFilter = document.getElementById('categoryFilter');
     const DEFAULT_TOOL_ID = 'text-process';
-    
+
     // 收藏工具数据（使用 localStorage 记录）
     const FAVORITES_KEY = 'tool-favorites';
-    
+
+    // 根据配置渲染菜单（便于后续扩展：加工具只改 MENU_ITEMS）
+    function renderMenu() {
+        menuList.innerHTML = '';
+        MENU_ITEMS.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'menu-item';
+            li.dataset.keywords = item.keywords;
+            li.dataset.category = item.category;
+            li.innerHTML = `<a href="#${item.id}" data-id="${item.id}" data-src="${item.src}"><i class="fas ${item.icon}"></i>${item.name}</a>`;
+            menuList.appendChild(li);
+        });
+    }
+
     // 获取收藏列表
     function getFavorites() {
         const favorites = localStorage.getItem(FAVORITES_KEY);
         return favorites ? JSON.parse(favorites) : [];
     }
-    
+
     // 保存收藏列表
     function saveFavorites(favorites) {
         localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
     }
-    
+
     // 切换收藏状态
     function toggleFavorite(toolId) {
         let favorites = getFavorites();
         const index = favorites.indexOf(toolId);
-        
+
         if (index > -1) {
             favorites.splice(index, 1); // 取消收藏
         } else {
             favorites.push(toolId); // 添加收藏
         }
-        
+
         saveFavorites(favorites);
         updateMenuOrder();
     }
-    
+
     // 初始化收藏按钮
     function initFavoriteButtons() {
         const favorites = getFavorites();
-        
+
         document.querySelectorAll('.menu-item').forEach(item => {
             const link = item.querySelector('a');
             const toolId = link.getAttribute('data-id');
-            
+
             // 创建收藏按钮
             const btn = document.createElement('button');
             btn.className = 'favorite-btn';
             btn.innerHTML = '<i class="fas fa-star"></i>';
             btn.title = '收藏/取消收藏';
-            
+
             // 设置初始状态
             if (favorites.includes(toolId)) {
                 btn.classList.add('active');
             }
-            
+
             // 点击事件
-            btn.addEventListener('click', function(e) {
+            btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 this.classList.toggle('active');
                 toggleFavorite(toolId);
             });
-            
+
             item.appendChild(btn);
         });
     }
-    
+
     // 更新菜单排序
     function updateMenuOrder() {
         const favorites = getFavorites();
         const allItems = Array.from(document.querySelectorAll('.menu-item'));
-        
+
         // 按收藏状态排序：收藏的在前，未收藏的在后
         allItems.sort((a, b) => {
             const aId = a.querySelector('a').getAttribute('data-id');
             const bId = b.querySelector('a').getAttribute('data-id');
             const aFav = favorites.includes(aId);
             const bFav = favorites.includes(bId);
-            
+
             if (aFav && !bFav) return -1;
             if (!aFav && bFav) return 1;
             return 0; // 保持原有顺序
         });
-        
+
         // 重新排列
         allItems.forEach(item => {
             menuList.appendChild(item);
         });
     }
-    
-    // 搜索功能
-    searchBox.addEventListener('input', function() {
-        const keyword = this.value.toLowerCase().trim();
-        
-        // 移动端搜索时自动展开菜单
-        if (keyword && window.innerWidth <= 768) {
-            menuWrapper.classList.add('active');
-        }
-        
+
+    let currentCategory = '';
+
+    function updateVisibility() {
+        const keyword = searchBox.value.toLowerCase().trim();
         document.querySelectorAll('.menu-item').forEach(item => {
-            if (!keyword) {
-                item.classList.remove('hidden');
-                return;
-            }
-            
-            const text = item.textContent.toLowerCase();
-            const keywords = item.getAttribute('data-keywords') || '';
-            const searchText = text + ' ' + keywords.toLowerCase();
-            
-            if (searchText.includes(keyword)) {
+            const categoryMatch = !currentCategory || item.dataset.category === currentCategory;
+            const text = (item.textContent || '').toLowerCase();
+            const keywords = (item.getAttribute('data-keywords') || '').toLowerCase();
+            const searchMatch = !keyword || text.includes(keyword) || keywords.includes(keyword);
+            if (categoryMatch && searchMatch) {
                 item.classList.remove('hidden');
             } else {
                 item.classList.add('hidden');
             }
         });
+    }
+
+    if (categoryFilter) {
+        categoryFilter.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                categoryFilter.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentCategory = this.dataset.category || '';
+                updateVisibility();
+            });
+        });
+    }
+
+    searchBox.addEventListener('input', function () {
+        if (this.value.trim() && window.innerWidth <= 768) {
+            menuWrapper.classList.add('active');
+        }
+        updateVisibility();
+    });
+
+    // 快捷键：Windows Ctrl+K / macOS ⌘+K 聚焦搜索框
+    document.addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            searchBox.focus();
+            searchBox.select();
+        }
     });
 
     function switchTool(toolId) {
-        const targetLink = document.querySelector(`[data-id="${toolId}"]`);
+        const targetLink = document.querySelector(`.menu-item a[data-id="${toolId}"]`);
         if (!targetLink) return;
 
         const src = targetLink.getAttribute('data-src');
 
-        menuLinks.forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.menu-item a').forEach(link => link.classList.remove('active'));
         targetLink.classList.add('active');
 
         const allIframes = document.querySelectorAll('.tool-iframe');
@@ -594,19 +760,34 @@
         if (window.location.hash !== '#' + toolId) {
             history.pushState(null, null, '#' + toolId);
         }
-        
+
         // 移动端点击菜单后自动收起
         if (window.innerWidth <= 768) {
             menuWrapper.classList.remove('active');
         }
     }
 
-    menuLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            const toolId = this.getAttribute('data-id');
-            switchTool(toolId);
-        });
+    menuList.addEventListener('click', function (e) {
+        const link = e.target.closest('.menu-item a');
+        if (!link) return;
+        e.preventDefault();
+        switchTool(link.getAttribute('data-id'));
     });
+
+    // macOS/Chrome：触控板/滚轮在菜单区域时，用垂直滚动驱动横向滚动（因已隐藏滚动条）
+    menuWrapper.addEventListener('wheel', function (e) {
+        if (this.scrollWidth <= this.clientWidth) return;
+        const canScrollLeft = this.scrollLeft > 0;
+        const canScrollRight = this.scrollLeft < this.scrollWidth - this.clientWidth - 1;
+        const dy = e.deltaY;
+        if (dy > 0 && canScrollRight) {
+            e.preventDefault();
+            this.scrollLeft += Math.min(80, dy);
+        } else if (dy < 0 && canScrollLeft) {
+            e.preventDefault();
+            this.scrollLeft += Math.max(-80, dy);
+        }
+    }, {passive: false});
 
     // 监听 URL 变化
     window.addEventListener('hashchange', () => {
@@ -615,12 +796,12 @@
     });
 
     // 汉堡菜单点击事件
-    menuToggle.addEventListener('click', function() {
+    menuToggle.addEventListener('click', function () {
         menuWrapper.classList.toggle('active');
     });
 
     // 点击菜单外部关闭菜单
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (window.innerWidth <= 768 && !menuToggle.contains(e.target) && !menuWrapper.contains(e.target)) {
             menuWrapper.classList.remove('active');
         }
@@ -628,12 +809,15 @@
 
     // 页面加载
     document.addEventListener('DOMContentLoaded', () => {
+        renderMenu();
         initFavoriteButtons();
         updateMenuOrder();
+        updateVisibility();
         const hashId = window.location.hash.replace('#', '');
         switchTool(hashId || DEFAULT_TOOL_ID);
     });
 </script>
-<script async src="https://tongji.linliang.top/script.js" data-website-id="b6c7616f-93fa-424e-82b4-358d4bb6fc41"></script>
+<script async src="https://tongji.linliang.top/script.js"
+        data-website-id="b6c7616f-93fa-424e-82b4-358d4bb6fc41"></script>
 </body>
 </html>
