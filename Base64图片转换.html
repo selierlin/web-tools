@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Base64 图片互转工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#165DFF',
+                            hover: '#0E42D2',
+                            light: '#E8F3FF'
+                        },
+                        secondary: '#36CFC9',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#FF4D4F',
+                        dark: '#1D2129',
+                        gray: {
+                            50: '#F7F8FA',
+                            100: '#F2F3F5',
+                            200: '#E5E6EB',
+                            400: '#86909C',
+                            600: '#4E5969'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 12px 0 rgba(0,0,0,0.05)',
+                        'xl-soft': '0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02)',
+                        'button': '0 4px 12px rgba(22, 93, 255, 0.15)',
+                        'button-hover': '0 6px 16px rgba(22, 93, 255, 0.25)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #E5E6EB;
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #C9CDD4;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .btn-primary-hover {
+                @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm;
+            }
+            .btn-secondary-hover {
+                @apply transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0;
+            }
+            .input-focus {
+                @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+            }
+            .tab-active {
+                @apply bg-white shadow-md text-primary transform -translate-y-0.5;
+            }
+            .glass-header {
+                backdrop-filter: blur(10px);
+                background-color: rgba(255, 255, 255, 0.8);
+            }
+            .drop-zone {
+                @apply border-2 border-dashed border-gray-300 rounded-2xl transition-all duration-300;
+            }
+            .drop-zone.dragover {
+                @apply border-primary bg-primary-light;
+            }
+            .image-preview {
+                @apply max-w-full max-h-[400px] object-contain rounded-xl shadow-lg;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-dark font-sans min-h-screen flex flex-col antialiased">
+
+<!-- 导航栏 -->
+<header class="glass-header border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+    <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="w-10 h-10 bg-gradient-to-br from-primary to-blue-400 rounded-lg flex items-center justify-center shadow-md transition-all hover:shadow-lg hover:scale-105">
+                <svg class="w-5.5 h-5.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+                Base64 图片互转
+            </h1>
+        </div>
+        <div class="flex gap-3">
+            <button id="clearBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg btn-secondary-hover">
+                清空
+            </button>
+            <button id="copyBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium bg-primary text-white hover:bg-primary-hover rounded-lg shadow-md btn-primary-hover">
+                复制结果
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow container mx-auto px-4 py-6 max-w-7xl">
+    <!-- 功能切换标签 -->
+    <div class="bg-white rounded-2xl shadow-soft border border-gray-100 p-2 mb-6">
+        <div class="flex p-1 bg-gray-50 rounded-xl">
+            <button id="imgToBase64Tab" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all bg-white shadow-md text-primary tab-active">
+                <span class="flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    图片转 Base64
+                </span>
+            </button>
+            <button id="base64ToImgTab" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-gray-600 hover:bg-white/50">
+                <span class="flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Base64 转图片
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 左侧：输入区 -->
+        <div class="flex flex-col gap-6">
+            <!-- 图片转 Base64 输入区 -->
+            <div id="imgToBase64Panel" class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden card-hover animate-fade-in">
+                <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+                    <span class="font-semibold text-gray-700 text-base flex items-center gap-2">
+                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        上传图片
+                    </span>
+                    <span class="text-xs text-gray-400">支持 JPG、PNG、GIF、WebP</span>
+                </div>
+                <div class="p-5">
+                    <div id="dropZone" class="drop-zone p-8 text-center cursor-pointer">
+                        <input type="file" id="fileInput" class="hidden" accept="image/*">
+                        <div class="space-y-3">
+                            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                            </div>
+                            <p class="text-gray-600 font-medium">点击或拖拽图片到此处</p>
+                            <p class="text-gray-400 text-sm">支持批量上传，自动转换</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 图片预览区 -->
+                    <div id="imagePreviewContainer" class="hidden mt-4">
+                        <p class="text-sm text-gray-500 mb-2">图片预览：</p>
+                        <div id="imagePreviewWrapper" class="relative bg-gray-50 rounded-xl p-4 flex items-center justify-center">
+                            <img id="imagePreview" class="image-preview" src="" alt="预览">
+                        </div>
+                        <div id="imageInfo" class="mt-3 text-sm text-gray-500 space-y-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Base64 转图片输入区 -->
+            <div id="base64ToImgPanel" class="hidden bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden card-hover animate-fade-in">
+                <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+                    <span class="font-semibold text-gray-700 text-base flex items-center gap-2">
+                        <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        Base64 输入
+                    </span>
+                    <span id="base64InputStatus" class="text-xs text-gray-400">等待输入</span>
+                </div>
+                <div class="p-5">
+                    <textarea
+                        id="base64Input"
+                        class="w-full h-[300px] p-4 text-xs font-mono border border-gray-200 rounded-xl resize-none custom-scrollbar input-focus bg-gray-50"
+                        placeholder="在此粘贴 Base64 编码...
+支持格式：
+- data:image/png;base64,iVBORw0KGgo...
+- iVBORw0KGgo...（纯编码）"></textarea>
+                    <div class="mt-3 flex gap-2">
+                        <button id="pasteBase64Btn" class="flex-1 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                            粘贴
+                        </button>
+                        <button id="decodeBtn" class="flex-1 py-2 text-sm text-white bg-secondary hover:bg-secondary/90 rounded-lg transition-colors shadow-md">
+                            解码为图片
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 格式选项 -->
+            <div id="formatOptions" class="bg-white rounded-2xl shadow-soft border border-gray-100 p-5 card-hover">
+                <h3 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                    输出格式
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-2 p-3 border border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary-light transition-all">
+                        <input type="radio" name="outputFormat" value="dataurl" checked class="w-4 h-4 text-primary">
+                        <span class="text-sm">Data URL (含前缀)</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary-light transition-all">
+                        <input type="radio" name="outputFormat" value="raw" class="w-4 h-4 text-primary">
+                        <span class="text-sm">纯 Base64 编码</span>
+                    </label>
+                </div>
+                <div class="mt-4 flex items-center gap-2">
+                    <input type="checkbox" id="includeNewline" class="w-4 h-4 text-primary rounded">
+                    <label for="includeNewline" class="text-sm text-gray-600">每 76 字符换行（符合 RFC）</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：结果区 -->
+        <div class="flex flex-col gap-6">
+            <!-- 结果展示 -->
+            <div class="bg-white rounded-2xl shadow-xl-soft border border-gray-100 flex-grow flex flex-col min-h-[400px] card-hover">
+                <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-gray-700 text-base">转换结果</span>
+                        <span id="resultStatus" class="px-2.5 py-1 bg-white border border-gray-200 text-[10px] md:text-xs rounded-full shadow-sm text-gray-400">等待操作</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="downloadBtn" class="hidden p-2 text-gray-400 hover:text-primary transition-colors" title="下载图片">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </button>
+                        <button id="copyResultBtn" class="p-2 text-gray-400 hover:text-primary transition-colors" title="复制结果">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Base64 结果文本 -->
+                <div id="base64ResultContainer" class="flex-grow p-4">
+                    <textarea
+                        id="resultText"
+                        class="w-full h-full min-h-[300px] p-4 text-xs font-mono border border-gray-200 rounded-xl resize-none custom-scrollbar input-focus bg-gray-50"
+                        placeholder="转换后的 Base64 编码将显示在这里..."
+                        readonly></textarea>
+                </div>
+
+                <!-- 图片结果展示 -->
+                <div id="imageResultContainer" class="hidden flex-grow p-4">
+                    <div class="h-full min-h-[300px] bg-gray-50 rounded-xl flex items-center justify-center">
+                        <img id="resultImage" class="max-w-full max-h-[400px] object-contain rounded-lg shadow-md" src="" alt="转换结果">
+                    </div>
+                </div>
+
+                <!-- 空状态 -->
+                <div id="emptyState" class="flex-grow flex flex-col items-center justify-center text-gray-400 p-8">
+                    <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                    <p class="text-sm">请选择图片或输入 Base64 编码</p>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div id="statsPanel" class="hidden bg-gradient-to-r from-primary-light to-blue-50 rounded-2xl p-5 border border-primary/10">
+                <h3 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    转换统计
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">原始大小</p>
+                        <p id="originalSize" class="text-lg font-semibold text-gray-700">-</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Base64 大小</p>
+                        <p id="base64Size" class="text-lg font-semibold text-primary">-</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">膨胀率</p>
+                        <p id="inflationRate" class="text-lg font-semibold text-warning">-</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">图片尺寸</p>
+                        <p id="imageDimensions" class="text-lg font-semibold text-secondary">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="py-6 border-t border-gray-100 bg-white mt-auto">
+    <div class="container mx-auto px-4 text-center">
+        <p class="text-gray-400 text-sm italic">Base64 图片互转工具 | 本地处理 · 安全隐私 · 极速转换</p>
+    </div>
+</footer>
+
+<script>
+    // DOM 元素
+    const imgToBase64Tab = document.getElementById('imgToBase64Tab');
+    const base64ToImgTab = document.getElementById('base64ToImgTab');
+    const imgToBase64Panel = document.getElementById('imgToBase64Panel');
+    const base64ToImgPanel = document.getElementById('base64ToImgPanel');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const imageInfo = document.getElementById('imageInfo');
+    const base64Input = document.getElementById('base64Input');
+    const base64InputStatus = document.getElementById('base64InputStatus');
+    const pasteBase64Btn = document.getElementById('pasteBase64Btn');
+    const decodeBtn = document.getElementById('decodeBtn');
+    const resultText = document.getElementById('resultText');
+    const resultStatus = document.getElementById('resultStatus');
+    const base64ResultContainer = document.getElementById('base64ResultContainer');
+    const imageResultContainer = document.getElementById('imageResultContainer');
+    const resultImage = document.getElementById('resultImage');
+    const emptyState = document.getElementById('emptyState');
+    const statsPanel = document.getElementById('statsPanel');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const copyResultBtn = document.getElementById('copyResultBtn');
+    const formatOptions = document.getElementById('formatOptions');
+
+    let currentMode = 'imgToBase64';
+    let currentFile = null;
+
+    // 标签切换
+    imgToBase64Tab.addEventListener('click', () => {
+        switchMode('imgToBase64');
+    });
+
+    base64ToImgTab.addEventListener('click', () => {
+        switchMode('base64ToImg');
+    });
+
+    function switchMode(mode) {
+        currentMode = mode;
+        
+        if (mode === 'imgToBase64') {
+            imgToBase64Tab.className = 'flex-1 py-2.5 text-sm font-medium rounded-lg transition-all bg-white shadow-md text-primary tab-active';
+            base64ToImgTab.className = 'flex-1 py-2.5 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-gray-600 hover:bg-white/50';
+            imgToBase64Panel.classList.remove('hidden');
+            base64ToImgPanel.classList.add('hidden');
+            base64ResultContainer.classList.remove('hidden');
+            imageResultContainer.classList.add('hidden');
+            formatOptions.classList.remove('hidden');
+        } else {
+            base64ToImgTab.className = 'flex-1 py-2.5 text-sm font-medium rounded-lg transition-all bg-white shadow-md text-secondary tab-active';
+            imgToBase64Tab.className = 'flex-1 py-2.5 text-sm font-medium rounded-lg transition-all text-gray-400 hover:text-gray-600 hover:bg-white/50';
+            base64ToImgPanel.classList.remove('hidden');
+            imgToBase64Panel.classList.add('hidden');
+            base64ResultContainer.classList.add('hidden');
+            imageResultContainer.classList.remove('hidden');
+            formatOptions.classList.add('hidden');
+        }
+        
+        clearResult();
+    }
+
+    // 拖拽上传
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            showStatus('请选择图片文件', 'error');
+            return;
+        }
+
+        currentFile = file;
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            imagePreview.src = dataUrl;
+            imagePreviewContainer.classList.remove('hidden');
+            
+            // 显示图片信息
+            const img = new Image();
+            img.onload = () => {
+                imageInfo.innerHTML = `
+                    <p>文件名：${file.name}</p>
+                    <p>格式：${file.type}</p>
+                    <p>尺寸：${img.width} × ${img.height} px</p>
+                    <p>大小：${formatFileSize(file.size)}</p>
+                `;
+                
+                // 更新统计
+                updateStats(file.size, dataUrl.length, img.width, img.height);
+            };
+            img.src = dataUrl;
+            
+            // 转换 Base64
+            convertToBase64(dataUrl);
+        };
+        
+        reader.readAsDataURL(file);
+    }
+
+    function convertToBase64(dataUrl) {
+        const outputFormat = document.querySelector('input[name="outputFormat"]:checked').value;
+        const includeNewline = document.getElementById('includeNewline').checked;
+        
+        let base64 = outputFormat === 'dataurl' ? dataUrl : dataUrl.split(',')[1];
+        
+        if (includeNewline && outputFormat === 'raw') {
+            base64 = base64.replace(/(.{76})/g, '$1\n');
+        }
+        
+        resultText.value = base64;
+        emptyState.classList.add('hidden');
+        base64ResultContainer.classList.remove('hidden');
+        showStatus('转换成功', 'success');
+        statsPanel.classList.remove('hidden');
+    }
+
+    // Base64 转图片
+    pasteBase64Btn.addEventListener('click', async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            base64Input.value = text;
+            base64InputStatus.textContent = '已粘贴';
+            base64InputStatus.classList.add('text-success');
+        } catch (err) {
+            showStatus('无法访问剪贴板，请手动粘贴', 'error');
+        }
+    });
+
+    decodeBtn.addEventListener('click', () => {
+        const input = base64Input.value.trim();
+        if (!input) {
+            showStatus('请输入 Base64 编码', 'error');
+            return;
+        }
+
+        let dataUrl = input;
+        
+        // 如果不是 data URL 格式，尝试添加前缀
+        if (!input.startsWith('data:')) {
+            // 尝试检测图片类型
+            const mimeType = detectImageType(input);
+            dataUrl = `data:${mimeType};base64,${input}`;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+            resultImage.src = dataUrl;
+            emptyState.classList.add('hidden');
+            imageResultContainer.classList.remove('hidden');
+            downloadBtn.classList.remove('hidden');
+            showStatus('解码成功', 'success');
+            
+            // 更新统计
+            const base64Length = input.startsWith('data:') ? input.split(',')[1].length : input.length;
+            const approximateSize = Math.ceil(base64Length * 0.75);
+            updateStats(approximateSize, base64Length, img.width, img.height);
+            statsPanel.classList.remove('hidden');
+        };
+        img.onerror = () => {
+            showStatus('无效的 Base64 编码或图片格式', 'error');
+        };
+        img.src = dataUrl;
+    });
+
+    function detectImageType(base64) {
+        // 根据 base64 前缀检测图片类型
+        const signatures = {
+            '/9j/': 'image/jpeg',
+            'iVBORw0KGgo': 'image/png',
+            'R0lGOD': 'image/gif',
+            'UklGR': 'image/webp',
+            'Qk02U': 'image/bmp',
+        };
+        
+        for (const [sig, mime] of Object.entries(signatures)) {
+            if (base64.startsWith(sig)) {
+                return mime;
+            }
+        }
+        
+        return 'image/png'; // 默认
+    }
+
+    // 下载图片
+    downloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = `decoded-image-${Date.now()}.png`;
+        link.href = resultImage.src;
+        link.click();
+    });
+
+    // 复制功能
+    function copyToClipboard() {
+        if (currentMode === 'imgToBase64') {
+            if (!resultText.value) {
+                showStatus('无内容可复制', 'error');
+                return;
+            }
+            resultText.select();
+            document.execCommand('copy');
+            showStatus('已复制到剪贴板', 'success');
+        } else {
+            // Base64 转图片模式下，复制图片
+            if (!resultImage.src) {
+                showStatus('无图片可复制', 'error');
+                return;
+            }
+            
+            fetch(resultImage.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    const item = new ClipboardItem({ 'image/png': blob });
+                    navigator.clipboard.write([item]);
+                    showStatus('图片已复制到剪贴板', 'success');
+                })
+                .catch(() => {
+                    showStatus('复制失败，请尝试下载', 'error');
+                });
+        }
+    }
+
+    copyBtn.addEventListener('click', copyToClipboard);
+    copyResultBtn.addEventListener('click', copyToClipboard);
+
+    // 清空
+    clearBtn.addEventListener('click', () => {
+        fileInput.value = '';
+        base64Input.value = '';
+        currentFile = null;
+        clearResult();
+        imagePreviewContainer.classList.add('hidden');
+        base64InputStatus.textContent = '等待输入';
+        base64InputStatus.classList.remove('text-success');
+    });
+
+    function clearResult() {
+        resultText.value = '';
+        resultImage.src = '';
+        emptyState.classList.remove('hidden');
+        base64ResultContainer.classList.add('hidden');
+        imageResultContainer.classList.add('hidden');
+        downloadBtn.classList.add('hidden');
+        statsPanel.classList.add('hidden');
+        showStatus('等待操作', 'normal');
+    }
+
+    // 更新统计
+    function updateStats(originalSize, base64Length, width, height) {
+        document.getElementById('originalSize').textContent = formatFileSize(originalSize);
+        document.getElementById('base64Size').textContent = formatFileSize(base64Length);
+        document.getElementById('inflationRate').textContent = ((base64Length / originalSize - 1) * 100).toFixed(1) + '%';
+        document.getElementById('imageDimensions').textContent = `${width} × ${height}`;
+    }
+
+    // 格式化文件大小
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    // 状态显示
+    function showStatus(message, type) {
+        resultStatus.textContent = message;
+        resultStatus.className = 'px-2.5 py-1 bg-white border border-gray-200 text-[10px] md:text-xs rounded-full shadow-sm';
+        
+        switch (type) {
+            case 'success':
+                resultStatus.classList.add('text-success');
+                break;
+            case 'error':
+                resultStatus.classList.add('text-danger');
+                break;
+            default:
+                resultStatus.classList.add('text-gray-400');
+        }
+    }
+
+    // 格式选项变更时重新转换
+    document.querySelectorAll('input[name="outputFormat"], #includeNewline').forEach(el => {
+        el.addEventListener('change', () => {
+            if (currentMode === 'imgToBase64' && imagePreview.src) {
+                convertToBase64(imagePreview.src);
+            }
+        });
+    });
+</script>
+</body>
+</html>
