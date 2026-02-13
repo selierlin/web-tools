@@ -136,7 +136,7 @@
             letter-spacing: 0.5px;
         }
 
-        textarea, input[type="text"] {
+        textarea, input[type="text"], select {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid var(--border-color);
@@ -148,7 +148,7 @@
             font-family: "Cascadia Code", "Consolas", monospace;
         }
 
-        textarea:focus, input[type="text"]:focus {
+        textarea:focus, input[type="text"]:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
             background-color: #ffffff;
@@ -162,6 +162,123 @@
 
         .search-group {
             margin-bottom: 20px;
+        }
+
+        .prefix-compact-bar {
+            margin-top: 10px;
+            margin-bottom: 12px;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            background-color: #fafcff;
+        }
+
+        .prefix-compact-left {
+            min-width: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .prefix-compact-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        #togglePrefixPanelBtn {
+            padding: 6px 10px;
+            font-size: 12px;
+            transform: none;
+        }
+
+        .prefix-manage-panel {
+            margin-bottom: 20px;
+            padding: 12px;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+
+        .prefix-manage-panel.hidden {
+            display: none;
+        }
+
+        .prefix-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .prefix-input-row input {
+            flex: 1;
+        }
+
+        #addPrefixBtn {
+            white-space: nowrap;
+        }
+
+        .prefix-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .prefix-item {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        .prefix-item .prefix-select-btn {
+            border: none;
+            background-color: transparent;
+            color: var(--text-main);
+            padding: 6px 12px;
+            max-width: 360px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+            font-size: 12px;
+            transform: none;
+        }
+
+        .prefix-item .prefix-select-btn.active {
+            background-color: rgba(67, 97, 238, 0.12);
+            color: var(--primary-color);
+        }
+
+        .prefix-item .prefix-remove-btn {
+            border: none;
+            border-left: 1px solid var(--border-color);
+            background-color: transparent;
+            color: var(--text-muted);
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 13px;
+            transform: none;
+        }
+
+        .prefix-item .prefix-remove-btn:hover {
+            background-color: #fee2e2;
+            color: var(--danger-color);
+        }
+
+        .prefix-item button:hover,
+        .prefix-item button:active {
+            transform: none;
         }
 
         /* 解码功能样式 */
@@ -616,7 +733,26 @@
         <div class="tab-content active" id="tab-generate">
             <div class="form-group">
                 <label for="content">二维码内容（支持文本、网址、手机号、邮箱等）</label>
-                <textarea id="content" placeholder="请输入要生成二维码的内容，例如：https://www.example.com 或 13812345678"></textarea>
+                <textarea id="content" placeholder="请输入内容，例如：0123456789（若选中前缀会自动拼接）"></textarea>
+            </div>
+
+            <div class="prefix-compact-bar">
+                <div id="activePrefixTip" class="prefix-compact-left"></div>
+                <div class="prefix-compact-actions">
+                    <button id="togglePrefixPanelBtn" class="btn-outline" type="button">
+                        <i class="fa fa-sliders"></i>前缀管理
+                    </button>
+                </div>
+            </div>
+
+            <div id="prefixManagePanel" class="prefix-manage-panel hidden">
+                <div class="prefix-input-row">
+                    <input type="text" id="prefixInput" placeholder="新增前缀，例如：https://baidu.com?id=">
+                    <button id="addPrefixBtn" class="btn-outline" type="button">
+                        <i class="fa fa-plus"></i>添加
+                    </button>
+                </div>
+                <div id="prefixList" class="prefix-list"></div>
             </div>
 
             <div class="search-group">
@@ -697,6 +833,12 @@
         const fullContent = document.getElementById('fullContent');
         const searchInput = document.getElementById('searchInput');
         const copyTip = document.getElementById('copyTip');
+        const togglePrefixPanelBtn = document.getElementById('togglePrefixPanelBtn');
+        const prefixManagePanel = document.getElementById('prefixManagePanel');
+        const prefixInput = document.getElementById('prefixInput');
+        const addPrefixBtn = document.getElementById('addPrefixBtn');
+        const prefixList = document.getElementById('prefixList');
+        const activePrefixTip = document.getElementById('activePrefixTip');
         // 解码功能DOM元素
         const uploadBtn = document.getElementById('uploadBtn');
         const pasteBtn = document.getElementById('pasteBtn');
@@ -712,12 +854,17 @@
 
         // 定义localStorage存储key，统一管理
         const QR_STORAGE_KEY = 'qrcode_history_records';
+        const QR_PREFIX_STORAGE_KEY = 'qrcode_prefix_records';
+        const QR_PREFIX_SELECTED_STORAGE_KEY = 'qrcode_prefix_selected';
+        const DEFAULT_PREFIXES = [];
         // 初始化二维码序号（从本地存储读取，保证序号连续）
         let qrCodeIndex = 1;
         // 固定二维码尺寸
         const DEFAULT_QR_SIZE = 250;
         // 新增：拖拽状态锁，防止重复触发导致闪烁
         let isDragging = false;
+        let selectedPrefix = '';
+        let isPrefixPanelOpen = false;
 
         // ********** 优化：Tab 切换核心逻辑（保留，适配紧凑样式） **********
         tabBtns.forEach(btn => {
@@ -772,6 +919,136 @@
         function formatDisplayContent(content) {
             const formattedContent = formatUrlContent(content);
             return formattedContent.length > 35 ? formattedContent.substring(0, 35) + '...' : formattedContent;
+        }
+
+        function savePrefixesToStorage(prefixes) {
+            localStorage.setItem(QR_PREFIX_STORAGE_KEY, JSON.stringify(prefixes));
+        }
+
+        function getPrefixesFromStorage() {
+            const stored = localStorage.getItem(QR_PREFIX_STORAGE_KEY);
+            if (!stored) return [...DEFAULT_PREFIXES];
+
+            try {
+                const parsed = JSON.parse(stored);
+                return Array.isArray(parsed)
+                    ? parsed.map(item => typeof item === 'string' ? item.trim() : '').filter(Boolean)
+                    : [...DEFAULT_PREFIXES];
+            } catch (err) {
+                console.error('前缀配置解析失败：', err);
+                return [...DEFAULT_PREFIXES];
+            }
+        }
+
+        function saveSelectedPrefixToStorage(prefix) {
+            localStorage.setItem(QR_PREFIX_SELECTED_STORAGE_KEY, prefix);
+        }
+
+        function getSelectedPrefixFromStorage() {
+            return localStorage.getItem(QR_PREFIX_SELECTED_STORAGE_KEY) || '';
+        }
+
+        function updateActivePrefixTip() {
+            activePrefixTip.textContent = selectedPrefix ? `当前前缀：${selectedPrefix}` : '当前前缀：不使用前缀';
+            activePrefixTip.title = selectedPrefix || '不使用前缀';
+        }
+
+        function setPrefixPanelOpen(open) {
+            isPrefixPanelOpen = open;
+            prefixManagePanel.classList.toggle('hidden', !open);
+            togglePrefixPanelBtn.innerHTML = open
+                ? '<i class="fa fa-chevron-up"></i>收起'
+                : '<i class="fa fa-sliders"></i>前缀管理';
+        }
+
+        function selectPrefix(prefix) {
+            selectedPrefix = prefix;
+            saveSelectedPrefixToStorage(prefix);
+            renderPrefixList();
+        }
+
+        function renderPrefixList() {
+            const prefixes = getPrefixesFromStorage();
+            prefixList.innerHTML = '';
+
+            const noneItem = document.createElement('div');
+            noneItem.className = 'prefix-item';
+            const noneSelectBtn = document.createElement('button');
+            noneSelectBtn.className = `prefix-select-btn ${selectedPrefix === '' ? 'active' : ''}`;
+            noneSelectBtn.textContent = '不使用前缀';
+            noneSelectBtn.type = 'button';
+            noneSelectBtn.addEventListener('click', () => selectPrefix(''));
+            noneItem.appendChild(noneSelectBtn);
+            prefixList.appendChild(noneItem);
+
+            prefixes.forEach(prefix => {
+                const item = document.createElement('div');
+                item.className = 'prefix-item';
+
+                const selectBtn = document.createElement('button');
+                selectBtn.className = `prefix-select-btn ${selectedPrefix === prefix ? 'active' : ''}`;
+                selectBtn.type = 'button';
+                selectBtn.textContent = prefix;
+                selectBtn.title = prefix;
+                selectBtn.addEventListener('click', () => selectPrefix(prefix));
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'prefix-remove-btn';
+                removeBtn.type = 'button';
+                removeBtn.textContent = '×';
+                removeBtn.title = '删除该前缀';
+                removeBtn.addEventListener('click', () => {
+                    const nextPrefixes = prefixes.filter(item => item !== prefix);
+                    savePrefixesToStorage(nextPrefixes);
+                    if (selectedPrefix === prefix) {
+                        selectedPrefix = '';
+                        saveSelectedPrefixToStorage('');
+                    }
+                    renderPrefixList();
+                });
+
+                item.appendChild(selectBtn);
+                item.appendChild(removeBtn);
+                prefixList.appendChild(item);
+            });
+
+            updateActivePrefixTip();
+        }
+
+        function loadPrefixConfig() {
+            const prefixes = getPrefixesFromStorage();
+            const storedSelected = getSelectedPrefixFromStorage();
+            selectedPrefix = prefixes.includes(storedSelected) ? storedSelected : '';
+            renderPrefixList();
+        }
+
+        function addPrefix() {
+            const newPrefix = prefixInput.value.trim();
+            if (!newPrefix) {
+                prefixInput.focus();
+                return;
+            }
+
+            const prefixes = getPrefixesFromStorage();
+            if (prefixes.includes(newPrefix)) {
+                selectedPrefix = newPrefix;
+                saveSelectedPrefixToStorage(newPrefix);
+                renderPrefixList();
+                prefixInput.value = '';
+                return;
+            }
+
+            const nextPrefixes = [...prefixes, newPrefix];
+            savePrefixesToStorage(nextPrefixes);
+            selectedPrefix = newPrefix;
+            saveSelectedPrefixToStorage(newPrefix);
+            renderPrefixList();
+            prefixInput.value = '';
+            prefixInput.focus();
+        }
+
+        function buildFinalContent(rawContent) {
+            return selectedPrefix ? `${selectedPrefix}${rawContent}` : rawContent;
         }
 
         // ********** localStorage 核心方法 **********
@@ -917,13 +1194,15 @@
 
         // ********** 二维码生成相关方法 **********
         function generateAndAddQRCode() {
-            const content = contentInput.value.trim();
+            const rawContent = contentInput.value.trim();
 
-            if (!content) {
+            if (!rawContent) {
                 alert('请先输入要生成二维码的内容，不能为空！');
                 contentInput.focus();
                 return;
             }
+
+            const content = buildFinalContent(rawContent);
 
             QRCode.toDataURL(content, {
                 width: DEFAULT_QR_SIZE,
@@ -1138,6 +1417,8 @@
 
         // ********** 页面初始化 **********
         window.onload = function() {
+            setPrefixPanelOpen(false);
+            loadPrefixConfig();
             renderQRHistory();
         };
 
@@ -1145,6 +1426,16 @@
         generateBtn.addEventListener('click', generateAndAddQRCode);
         resetBtn.addEventListener('click', resetForm);
         clearAllBtn.addEventListener('click', clearAllQRCode);
+        addPrefixBtn.addEventListener('click', addPrefix);
+        togglePrefixPanelBtn.addEventListener('click', () => {
+            setPrefixPanelOpen(!isPrefixPanelOpen);
+        });
+        prefixInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addPrefix();
+            }
+        });
         contentInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

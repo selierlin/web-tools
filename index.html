@@ -154,32 +154,59 @@
         .category-filter {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             flex-shrink: 0;
             margin-right: 12px;
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .category-btn {
-            padding: 4px 10px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.06);
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
             color: var(--text-muted);
             font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            border-radius: inherit;
         }
 
         .category-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
             color: var(--text-light);
+            transform: translateY(-1px);
+        }
+
+        .category-btn:hover::before {
+            opacity: 1;
         }
 
         .category-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
             color: #fff;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            font-weight: 600;
+        }
+
+        .category-btn.active:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
         }
 
         .menu-wrapper {

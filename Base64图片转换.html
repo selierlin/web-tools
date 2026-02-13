@@ -173,6 +173,24 @@
                         </div>
                     </div>
                     
+                    <!-- 剪贴板获取按钮 -->
+                    <div class="mt-4 flex gap-3">
+                        <button id="pasteFromClipboardBtn" class="flex-1 py-2.5 text-sm bg-gradient-to-r from-primary to-blue-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            从剪贴板获取
+                        </button>
+                    </div>
+                    
+                    <!-- 剪贴板状态提示 -->
+                    <div id="clipboardStatus" class="hidden mt-3 text-center">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-light text-primary border border-primary/20">
+                            <span class="flex w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
+                            正在处理剪贴板内容...
+                        </span>
+                    </div>
+                    
                     <!-- 图片预览区 -->
                     <div id="imagePreviewContainer" class="hidden mt-4">
                         <p class="text-sm text-gray-500 mb-2">图片预览：</p>
@@ -351,6 +369,8 @@
     const copyBtn = document.getElementById('copyBtn');
     const copyResultBtn = document.getElementById('copyResultBtn');
     const formatOptions = document.getElementById('formatOptions');
+    const pasteFromClipboardBtn = document.getElementById('pasteFromClipboardBtn');
+    const clipboardStatus = document.getElementById('clipboardStatus');
 
     let currentMode = 'imgToBase64';
     let currentFile = null;
@@ -638,6 +658,117 @@
             }
         });
     });
+
+    // 从剪贴板获取功能
+    pasteFromClipboardBtn.addEventListener('click', async () => {
+        try {
+            showClipboardStatus(true);
+            
+            // 尝试读取剪贴板内容
+            const clipboardItems = await navigator.clipboard.read();
+            
+            for (const clipboardItem of clipboardItems) {
+                // 检查是否包含图片类型
+                for (const type of clipboardItem.types) {
+                    if (type.startsWith('image/')) {
+                        // 是图片，处理为图片转 Base64
+                        const blob = await clipboardItem.getType(type);
+                        const file = new File([blob], `clipboard-image.${type.split('/')[1]}`, { type });
+                        handleFile(file);
+                        showStatus('已从剪贴板获取图片', 'success');
+                        showClipboardStatus(false);
+                        return;
+                    }
+                }
+            }
+            
+            // 如果没有图片，尝试读取文本
+            const text = await navigator.clipboard.readText();
+            if (text) {
+                // 检查是否为 Base64 编码
+                if (isValidBase64(text)) {
+                    // 是 Base64，自动切换到 Base64 转图片模式
+                    switchMode('base64ToImg');
+                    base64Input.value = text;
+                    base64InputStatus.textContent = '已从剪贴板粘贴';
+                    base64InputStatus.classList.add('text-success');
+                    showStatus('已从剪贴板获取 Base64 编码', 'success');
+                    
+                    // 自动解码
+                    setTimeout(() => {
+                        decodeBtn.click();
+                    }, 300);
+                } else {
+                    showStatus('剪贴板内容不是有效的图片或 Base64 编码', 'error');
+                }
+            } else {
+                showStatus('剪贴板为空', 'error');
+            }
+            
+            showClipboardStatus(false);
+        } catch (err) {
+            console.error('读取剪贴板失败:', err);
+            showStatus('无法访问剪贴板，请确保已授予权限', 'error');
+            showClipboardStatus(false);
+            
+            // 降级方案：提示用户手动粘贴
+            if (err.name === 'NotAllowedError') {
+                setTimeout(() => {
+                    if (confirm('无法自动访问剪贴板，是否切换到手动粘贴模式？')) {
+                        // 切换到 Base64 转图片模式并聚焦输入框
+                        switchMode('base64ToImg');
+                        base64Input.focus();
+                        showStatus('请手动粘贴 Base64 编码到输入框', 'normal');
+                    }
+                }, 1000);
+            }
+        }
+    });
+
+    // 检查是否为有效的 Base64 编码
+    function isValidBase64(str) {
+        // 移除可能的 data URL 前缀
+        let base64 = str.trim();
+        if (base64.startsWith('data:')) {
+            const parts = base64.split(',');
+            if (parts.length > 1) {
+                base64 = parts[1];
+            } else {
+                return false;
+            }
+        }
+        
+        // 检查是否只包含 Base64 字符
+        const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+        if (!base64Regex.test(base64)) {
+            return false;
+        }
+        
+        // 检查长度是否为 4 的倍数
+        if (base64.length % 4 !== 0) {
+            return false;
+        }
+        
+        // 检查是否有合理的最小长度
+        if (base64.length < 4) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    // 显示/隐藏剪贴板状态
+    function showClipboardStatus(show) {
+        if (show) {
+            clipboardStatus.classList.remove('hidden');
+            pasteFromClipboardBtn.disabled = true;
+            pasteFromClipboardBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            clipboardStatus.classList.add('hidden');
+            pasteFromClipboardBtn.disabled = false;
+            pasteFromClipboardBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
 </script>
 </body>
 </html>
