@@ -221,6 +221,11 @@
             flex: 1;
         }
 
+        .prefix-alias-input {
+            flex: 1;
+            max-width: 120px;
+        }
+
         #addPrefixBtn {
             white-space: nowrap;
         }
@@ -748,6 +753,7 @@
             <div id="prefixManagePanel" class="prefix-manage-panel hidden">
                 <div class="prefix-input-row">
                     <input type="text" id="prefixInput" placeholder="新增前缀，例如：https://baidu.com?id=">
+                    <input type="text" id="prefixAliasInput" class="prefix-alias-input" placeholder="别名（可选）">
                     <button id="addPrefixBtn" class="btn-outline" type="button">
                         <i class="fa fa-plus"></i>添加
                     </button>
@@ -836,6 +842,7 @@
         const togglePrefixPanelBtn = document.getElementById('togglePrefixPanelBtn');
         const prefixManagePanel = document.getElementById('prefixManagePanel');
         const prefixInput = document.getElementById('prefixInput');
+        const prefixAliasInput = document.getElementById('prefixAliasInput');
         const addPrefixBtn = document.getElementById('addPrefixBtn');
         const prefixList = document.getElementById('prefixList');
         const activePrefixTip = document.getElementById('activePrefixTip');
@@ -856,6 +863,7 @@
         const QR_STORAGE_KEY = 'qrcode_history_records';
         const QR_PREFIX_STORAGE_KEY = 'qrcode_prefix_records';
         const QR_PREFIX_SELECTED_STORAGE_KEY = 'qrcode_prefix_selected';
+        const QR_PREFIX_ALIAS_STORAGE_KEY = 'qrcode_prefix_alias_records';
         const DEFAULT_PREFIXES = [];
         // 初始化二维码序号（从本地存储读取，保证序号连续）
         let qrCodeIndex = 1;
@@ -940,6 +948,23 @@
             }
         }
 
+        function savePrefixAliasesToStorage(aliases) {
+            localStorage.setItem(QR_PREFIX_ALIAS_STORAGE_KEY, JSON.stringify(aliases));
+        }
+
+        function getPrefixAliasesFromStorage() {
+            const stored = localStorage.getItem(QR_PREFIX_ALIAS_STORAGE_KEY);
+            if (!stored) return {};
+
+            try {
+                const parsed = JSON.parse(stored);
+                return typeof parsed === 'object' ? parsed : {};
+            } catch (err) {
+                console.error('前缀别名配置解析失败：', err);
+                return {};
+            }
+        }
+
         function saveSelectedPrefixToStorage(prefix) {
             localStorage.setItem(QR_PREFIX_SELECTED_STORAGE_KEY, prefix);
         }
@@ -949,7 +974,11 @@
         }
 
         function updateActivePrefixTip() {
-            activePrefixTip.textContent = selectedPrefix ? `当前前缀：${selectedPrefix}` : '当前前缀：不使用前缀';
+            const aliases = getPrefixAliasesFromStorage();
+            const displayText = selectedPrefix 
+                ? `当前前缀：${aliases[selectedPrefix] || selectedPrefix}` 
+                : '当前前缀：不使用前缀';
+            activePrefixTip.textContent = displayText;
             activePrefixTip.title = selectedPrefix || '不使用前缀';
         }
 
@@ -969,6 +998,7 @@
 
         function renderPrefixList() {
             const prefixes = getPrefixesFromStorage();
+            const aliases = getPrefixAliasesFromStorage();
             prefixList.innerHTML = '';
 
             const noneItem = document.createElement('div');
@@ -988,8 +1018,10 @@
                 const selectBtn = document.createElement('button');
                 selectBtn.className = `prefix-select-btn ${selectedPrefix === prefix ? 'active' : ''}`;
                 selectBtn.type = 'button';
-                selectBtn.textContent = prefix;
-                selectBtn.title = prefix;
+                // 优先显示别名，没有别名则显示前缀
+                const displayText = aliases[prefix] || prefix;
+                selectBtn.textContent = displayText;
+                selectBtn.title = `${prefix}${aliases[prefix] ? ` (${aliases[prefix]})` : ''}`;
                 selectBtn.addEventListener('click', () => selectPrefix(prefix));
 
                 const removeBtn = document.createElement('button');
@@ -999,7 +1031,10 @@
                 removeBtn.title = '删除该前缀';
                 removeBtn.addEventListener('click', () => {
                     const nextPrefixes = prefixes.filter(item => item !== prefix);
+                    const nextAliases = { ...aliases };
+                    delete nextAliases[prefix];
                     savePrefixesToStorage(nextPrefixes);
+                    savePrefixAliasesToStorage(nextAliases);
                     if (selectedPrefix === prefix) {
                         selectedPrefix = '';
                         saveSelectedPrefixToStorage('');
@@ -1024,26 +1059,43 @@
 
         function addPrefix() {
             const newPrefix = prefixInput.value.trim();
+            const newAlias = prefixAliasInput.value.trim();
             if (!newPrefix) {
                 prefixInput.focus();
                 return;
             }
 
             const prefixes = getPrefixesFromStorage();
+            const aliases = getPrefixAliasesFromStorage();
+            
             if (prefixes.includes(newPrefix)) {
+                // 如果前缀已存在，更新别名（如果提供了）
+                if (newAlias) {
+                    aliases[newPrefix] = newAlias;
+                    savePrefixAliasesToStorage(aliases);
+                }
                 selectedPrefix = newPrefix;
                 saveSelectedPrefixToStorage(newPrefix);
                 renderPrefixList();
                 prefixInput.value = '';
+                prefixAliasInput.value = '';
                 return;
             }
 
             const nextPrefixes = [...prefixes, newPrefix];
             savePrefixesToStorage(nextPrefixes);
+            
+            // 保存别名（如果提供了）
+            if (newAlias) {
+                aliases[newPrefix] = newAlias;
+                savePrefixAliasesToStorage(aliases);
+            }
+            
             selectedPrefix = newPrefix;
             saveSelectedPrefixToStorage(newPrefix);
             renderPrefixList();
             prefixInput.value = '';
+            prefixAliasInput.value = '';
             prefixInput.focus();
         }
 
@@ -1431,6 +1483,13 @@
             setPrefixPanelOpen(!isPrefixPanelOpen);
         });
         prefixInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addPrefix();
+            }
+        });
+        
+        prefixAliasInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 addPrefix();
