@@ -226,6 +226,27 @@
             max-width: 120px;
         }
 
+        /* 前缀别名和内容区分样式 */
+        .prefix-alias {
+            color: var(--primary-color);
+            font-weight: 600;
+            background-color: rgba(67, 97, 238, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+
+        .content-rest {
+            color: var(--text-main);
+            font-weight: 400;
+        }
+
+        .prefix-original {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 400;
+        }
+
         #addPrefixBtn {
             white-space: nowrap;
         }
@@ -923,8 +944,56 @@
             return endChars ? `${host}...${endChars}` : host;
         }
 
+        // 新增：根据前缀获取别名显示文本（带样式区分）
+        function getPrefixAliasDisplay(content) {
+            const prefixes = getPrefixesFromStorage();
+            const aliases = getPrefixAliasesFromStorage();
+            
+            for (const prefix of prefixes) {
+                if (content.startsWith(prefix) && aliases[prefix]) {
+                    const restContent = content.substring(prefix.length);
+                    // 如果剩余内容为空，只显示别名
+                    if (!restContent) {
+                        return `<span class="prefix-alias">${aliases[prefix]}</span>`;
+                    }
+                    // 否则显示"别名 + 剩余内容"的美化格式，用不同样式区分
+                    return `<span class="prefix-alias">${aliases[prefix]}</span><span class="content-rest">${restContent}</span>`;
+                }
+            }
+            return null;
+        }
+
         // 工具函数：处理内容展示
         function formatDisplayContent(content) {
+            // 优先检查是否有前缀别名
+            const aliasDisplay = getPrefixAliasDisplay(content);
+            if (aliasDisplay) {
+                // 创建临时DOM元素来计算长度
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = aliasDisplay;
+                const textLength = tempDiv.textContent.length;
+                
+                if (textLength > 35) {
+                    // 超长时的处理逻辑
+                    const aliasSpan = tempDiv.querySelector('.prefix-alias');
+                    const restSpan = tempDiv.querySelector('.content-rest');
+                    
+                    if (aliasSpan && restSpan) {
+                        // 优先截断剩余内容
+                        const availableLength = 35 - aliasSpan.textContent.length - 3; // 3个字符留给省略号
+                        if (availableLength > 0) {
+                            const truncatedRest = restSpan.textContent.substring(0, availableLength) + '...';
+                            return `<span class="prefix-alias">${aliasSpan.textContent}</span><span class="content-rest">${truncatedRest}</span>`;
+                        } else {
+                            // 别名就很长了，直接截断别名
+                            return `<span class="prefix-alias">${aliasSpan.textContent.substring(0, 32)}...</span>`;
+                        }
+                    }
+                }
+                return aliasDisplay;
+            }
+            
+            // 没有别名时使用原始URL格式化
             const formattedContent = formatUrlContent(content);
             return formattedContent.length > 35 ? formattedContent.substring(0, 35) + '...' : formattedContent;
         }
@@ -975,10 +1044,17 @@
 
         function updateActivePrefixTip() {
             const aliases = getPrefixAliasesFromStorage();
-            const displayText = selectedPrefix 
-                ? `当前前缀：${aliases[selectedPrefix] || selectedPrefix}` 
-                : '当前前缀：不使用前缀';
-            activePrefixTip.textContent = displayText;
+            if (selectedPrefix) {
+                const alias = aliases[selectedPrefix];
+                if (alias) {
+                    // 显示格式：别名 (原始前缀)
+                    activePrefixTip.innerHTML = `当前前缀：<span class="prefix-alias">${alias}</span> <span class="prefix-original">(${selectedPrefix})</span>`;
+                } else {
+                    activePrefixTip.textContent = `当前前缀：${selectedPrefix}`;
+                }
+            } else {
+                activePrefixTip.textContent = '当前前缀：不使用前缀';
+            }
             activePrefixTip.title = selectedPrefix || '不使用前缀';
         }
 
@@ -994,6 +1070,7 @@
             selectedPrefix = prefix;
             saveSelectedPrefixToStorage(prefix);
             renderPrefixList();
+            updateActivePrefixTip();
         }
 
         function renderPrefixList() {
@@ -1209,13 +1286,22 @@
                 qrCard.dataset.index = record.index;
 
                 const displayContent = formatDisplayContent(record.content);
+                // 检查是否包含HTML标签
+                const isHtmlContent = /<[^>]+>/.test(displayContent);
+                
                 qrCard.innerHTML = `
                     <button class="close-btn" onclick="deleteSingleQRCode(this, ${record.index})">×</button>
                     <img class="qrcode-img" src="${record.base64Url}" alt="第${record.index}个二维码">
-                    <div class="qrcode-desc">${displayContent}</div>
+                    <div class="qrcode-desc">${isHtmlContent ? displayContent : displayContent}</div>
                     <div class="qrcode-time">生成时间：${record.createTime}</div>
                     <div class="qrcode-full-desc" onclick="openModal('${escape(record.content)}')">查看完整内容</div>
                 `;
+                
+                // 如果是HTML内容，需要设置innerHTML
+                if (isHtmlContent) {
+                    const descDiv = qrCard.querySelector('.qrcode-desc');
+                    descDiv.innerHTML = displayContent;
+                }
 
                 // 点击卡片空白区域（非按钮、非「查看完整内容」）时，将内容填回输入框
                 qrCard.addEventListener('click', function(e) {
