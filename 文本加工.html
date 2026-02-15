@@ -6,60 +6,106 @@
     <title>文本批量加工处理</title>
     <link rel="stylesheet" href="https://jsd.onmicrosoft.cn/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
+        :root {
+            --bg-1: #0f1724;
+            --bg-2: #1f273b;
+            --bg-3: #112634;
+            --card: rgba(255, 255, 255, 0.09);
+            --card-border: rgba(255, 255, 255, 0.18);
+            --text-main: #f3f6fc;
+            --text-soft: #b8c3d4;
+            --accent-a: #ff8a3d;
+            --accent-b: #2ec4b6;
+            --accent-c: #4ba3ff;
+            --editor-bg: rgba(7, 16, 30, 0.58);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Consolas", "Monaco", "Microsoft YaHei", monospace;
             -webkit-tap-highlight-color: transparent;
         }
 
         #particles-js {
             position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
+            inset: 0;
             z-index: 0;
-            background: linear-gradient(135deg, #1a2a6c, #2c3e50, #202020);
+            background:
+                radial-gradient(circle at 10% 10%, rgba(255, 138, 61, 0.22), transparent 32%),
+                radial-gradient(circle at 85% 15%, rgba(75, 163, 255, 0.22), transparent 36%),
+                linear-gradient(140deg, var(--bg-1), var(--bg-2) 48%, var(--bg-3));
         }
 
         body {
-            padding: 2rem;
+            padding: 2.2rem;
             position: relative;
             min-height: 100vh;
+            color: var(--text-main);
+            font-family: "JetBrains Mono", "SFMono-Regular", "Consolas", "Source Han Sans SC", "Microsoft YaHei", monospace;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1240px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            padding: 2.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.4rem;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            box-shadow: 0 28px 56px rgba(3, 8, 20, 0.45);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             position: relative;
             z-index: 1;
+            animation: reveal 520ms ease;
+        }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(8px) scale(0.985); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         h1 {
             text-align: center;
-            background: linear-gradient(90deg, #3498db, #1abc9c, #9b59b6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 2.5rem;
-            font-weight: 700;
-            font-size: 2.2rem;
+            margin-bottom: 2rem;
+            font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+            letter-spacing: 0.6px;
+            font-weight: 750;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+            color: #f8fbff;
+            text-shadow: 0 6px 20px rgba(75, 163, 255, 0.22);
+        }
+
+        .quote-select {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-bottom: 1.4rem;
+            color: var(--text-soft);
+            font-size: 0.95rem;
+        }
+
+        .quote-select select {
+            padding: 0.55rem 0.95rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            background: rgba(16, 35, 56, 0.7);
+            color: #f7fbff;
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        .quote-select select:focus {
+            border-color: var(--accent-c);
+            box-shadow: 0 0 0 3px rgba(75, 163, 255, 0.18);
         }
 
         .text-area-group {
             display: flex;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            align-items: stretch; /* 让中间按钮高度自适应 */
+            gap: 1.25rem;
+            margin-bottom: 1.7rem;
+            align-items: stretch;
         }
 
         .text-box {
@@ -67,171 +113,239 @@
             min-width: 0;
         }
 
+        .panel-label {
+            display: block;
+            margin-bottom: 0.55rem;
+            color: #d5e4f7;
+            font-size: 0.8rem;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
         .editor-wrapper {
             display: flex;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
+            height: 360px;
             overflow: hidden;
-            height: 350px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 24px rgba(2, 8, 22, 0.22);
             position: relative;
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .editor-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
+            pointer-events: none;
+        }
+
+        .editor-wrapper::after {
+            content: "";
+            position: absolute;
+            right: -28px;
+            top: -28px;
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 70%);
+            pointer-events: none;
+        }
+
+        .editor-wrapper:focus-within {
+            border-color: rgba(75, 163, 255, 0.45);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 14px 24px rgba(2, 8, 22, 0.22),
+                0 0 0 3px rgba(75, 163, 255, 0.16);
+            transform: translateY(-1px);
         }
 
         .line-numbers {
-            width: 45px;
-            padding: 1rem 0;
-            background: rgba(255, 255, 255, 0.05);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            color: #7f8c8d;
+            width: 54px;
+            padding: 1rem 0.6rem 1rem 0;
             text-align: right;
-            padding-right: 8px;
-            font-size: 14px;
-            line-height: 22.4px;
+            white-space: pre;
             user-select: none;
             overflow: hidden;
-            white-space: pre;
             pointer-events: none;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #6f8196;
+            background: rgba(10, 24, 44, 0.62);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         textarea {
             flex: 1;
-            padding: 1rem;
+            padding: 1rem 1.05rem;
             border: none;
-            background: transparent;
             resize: none;
-            font-size: 14px;
-            line-height: 22.4px;
-            color: #ecf0f1;
             outline: none;
             overflow: auto;
             white-space: pre;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #f1f5fc;
+            background: var(--editor-bg);
         }
 
-        /* --- 优化后的回传按钮样式 --- */
+        textarea::placeholder {
+            color: #7d8da4;
+        }
+
+        textarea::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        textarea::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(148, 170, 201, 0.45);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        textarea::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .editor-meta {
+            margin-top: 0.5rem;
+            color: #9fb1c8;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .editor-meta strong {
+            color: #d7e7fb;
+            font-weight: 600;
+        }
+
         .transfer-btn-wrap {
             display: flex;
-            justify-content: center;
             align-items: center;
-            padding: 0 5px;
+            justify-content: center;
+            padding: 0 2px;
         }
 
         .transfer-btn {
+            width: 42px;
+            height: 106px;
+            border-radius: 22px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(26, 188, 156, 0.2);
-            color: #1abc9c;
+            background: linear-gradient(180deg, rgba(46, 196, 182, 0.35), rgba(75, 163, 255, 0.3));
+            color: #dffeff;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 40px;
-            height: 100px; /* 电脑端长条形更显眼 */
-            border-radius: 20px;
             display: flex;
             flex-direction: column;
+            gap: 4px;
             justify-content: center;
             align-items: center;
-            gap: 5px;
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+            box-shadow: 0 10px 20px rgba(12, 79, 91, 0.35);
         }
 
         .transfer-btn:hover {
-            background: rgba(26, 188, 156, 0.4);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(26, 188, 156, 0.3);
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+            box-shadow: 0 16px 26px rgba(20, 109, 123, 0.48);
         }
 
-        /* 按钮内的文字提示，仅桌面端显示 */
         .transfer-btn::after {
             content: "回传";
             font-size: 10px;
-            writing-mode: vertical-lr;
             letter-spacing: 2px;
+            writing-mode: vertical-lr;
         }
 
         .btn-group {
             display: flex;
             justify-content: center;
-            gap: 1.2rem;
+            gap: 0.9rem;
             flex-wrap: wrap;
-            margin-bottom: 2rem;
+            margin-bottom: 1.35rem;
         }
 
         button {
-            padding: 0.8rem 1.8rem;
-            border: none;
-            border-radius: 50px;
-            background-color: rgba(52, 73, 94, 0.5);
+            display: none;
+            padding: 0.68rem 1.2rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
             color: #fff;
             cursor: pointer;
-            display: none;
-            transition: transform 0.2s;
-        }
-        button:active { transform: scale(0.95); }
-
-        button.active { display: block; }
-        button#btn1.active { background: linear-gradient(45deg, #3498db, #2980b9); }
-        button#btn2.active { background: linear-gradient(45deg, #2ecc71, #27ae60); }
-        button#btn3.active { background: linear-gradient(45deg, #e67e22, #d35400); }
-        button#btn4.active { background: linear-gradient(45deg, #e74c3c, #c0392b); }
-        .copy-btn { display: block !important; background: linear-gradient(45deg, #9b59b6, #8e44ad); }
-
-        .quote-select {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            color: #fff;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            transition: transform .15s ease, filter .15s ease;
+            background: rgba(70, 86, 112, 0.4);
         }
 
-        .quote-select select {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            background: #2c3e50;
-            color: #fff;
-            border: 1px solid #444;
+        button:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        button.active {
+            display: block;
+        }
+
+        button#btn1.active { background: linear-gradient(120deg, #3d8dff, #2768c8); }
+        button#btn2.active { background: linear-gradient(120deg, #2ec4b6, #1f9b8f); }
+        button#btn3.active { background: linear-gradient(120deg, #f59e3f, #d97706); }
+        button#btn4.active { background: linear-gradient(120deg, #ff6f61, #d1493f); }
+
+        .copy-btn {
+            display: block !important;
+            background: linear-gradient(120deg, #5f7cf8, #3e5ad7);
         }
 
         .tip {
             text-align: center;
-            color: #bdc3c7;
-            padding: 0.8rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            border-left: 3px solid #3498db;
+            color: var(--text-soft);
+            padding: 0.9rem 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(7, 16, 30, 0.45);
         }
 
-        /* --- 手机端适配优化 --- */
         @media (max-width: 768px) {
-            body { padding: 15px; }
-            .container { padding: 1.2rem; }
-            h1 { font-size: 1.6rem; }
+            body { padding: 14px; }
+            .container { padding: 1rem; border-radius: 16px; }
+            h1 { margin-bottom: 1.2rem; }
+            .quote-select { justify-content: space-between; font-size: 0.85rem; }
+            .text-area-group { flex-direction: column; gap: 0.55rem; }
+            .editor-wrapper { height: 220px; border-radius: 12px; }
+            .line-numbers { width: 48px; font-size: 13px; }
+            .editor-meta { font-size: 11px; margin-top: 0.35rem; }
 
-            .text-area-group {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .editor-wrapper { height: 200px; }
-
-            .transfer-btn-wrap {
-                padding: 10px 0;
-            }
-
+            .transfer-btn-wrap { padding: 8px 0; }
             .transfer-btn {
-                width: 100%; /* 宽度撑满 */
-                height: 36px; /* 变成一个扁平的分割栏 */
-                flex-direction: row; /* 图标文字横向排布 */
-                border-radius: 8px;
+                width: 100%;
+                height: 38px;
+                border-radius: 10px;
+                flex-direction: row;
             }
 
             .transfer-btn::after {
                 content: "点击将结果回传到输入框";
-                writing-mode: horizontal-tb;
                 font-size: 12px;
+                letter-spacing: 0;
+                writing-mode: horizontal-tb;
             }
 
-            /* 手机端图标指向向上 */
-            .transfer-btn i {
-                transform: rotate(90deg);
-            }
+            .transfer-btn i { transform: rotate(90deg); }
+            .btn-group { gap: 0.55rem; margin-bottom: 1rem; }
+            button { font-size: 13px; padding: 0.56rem 0.9rem; }
+            .tip { font-size: 13px; }
         }
     </style>
 </head>
@@ -251,11 +365,12 @@
 
     <div class="text-area-group">
         <div class="text-box">
-            <label style="color:#eee; margin-bottom:5px; display:block; font-size:13px;">输入文本：</label>
+            <label class="panel-label">输入文本</label>
             <div class="editor-wrapper">
                 <div class="line-numbers" id="inputLineNums">1</div>
                 <textarea id="inputText" placeholder="请粘贴需要处理的文本..." spellcheck="false"></textarea>
             </div>
+            <div class="editor-meta"><strong>输入统计</strong>：<span id="inputStats">1 行 · 0 字</span></div>
         </div>
 
         <!-- 优化后的回传区域 -->
@@ -266,11 +381,12 @@
         </div>
 
         <div class="text-box">
-            <label style="color:#eee; margin-bottom:5px; display:block; font-size:13px;">输出结果：</label>
+            <label class="panel-label">输出结果</label>
             <div class="editor-wrapper">
                 <div class="line-numbers" id="outputLineNums">1</div>
                 <textarea id="outputText" placeholder="结果显示区域..." readonly spellcheck="false"></textarea>
             </div>
+            <div class="editor-meta"><strong>输出统计</strong>：<span id="outputStats">1 行 · 0 字</span></div>
         </div>
     </div>
 
@@ -303,10 +419,23 @@
     const outputText = document.getElementById('outputText');
     const inputLineNums = document.getElementById('inputLineNums');
     const outputLineNums = document.getElementById('outputLineNums');
+    const inputStats = document.getElementById('inputStats');
+    const outputStats = document.getElementById('outputStats');
     const tipInfo = document.getElementById('tipInfo');
     const transferBtn = document.getElementById('transferBtn');
 
     let lastInputLines = 0;
+    const getStatsText = (text) => {
+        const lines = text ? text.split(/\r?\n/).length : 1;
+        const chars = text.length;
+        return `${lines} 行 · ${chars} 字`;
+    };
+
+    const updateStats = () => {
+        inputStats.innerText = getStatsText(inputText.value);
+        outputStats.innerText = getStatsText(outputText.value);
+    };
+
     const updateLineNumbers = (ta, lineNumDiv) => {
         const lines = ta.value.split('\n').length;
         if (ta === inputText && lines === lastInputLines) return;
@@ -327,6 +456,7 @@
 
     inputText.addEventListener('input', () => {
         updateLineNumbers(inputText, inputLineNums);
+        updateStats();
         judgeInputTypeAndShowButtons();
     });
 
@@ -339,6 +469,7 @@
         const val = actionFn(inputText.value);
         outputText.value = val;
         updateLineNumbers(outputText, outputLineNums);
+        updateStats();
         outputText.scrollTop = 0;
         outputLineNums.scrollTop = 0;
     };
@@ -383,6 +514,7 @@
         if (!outputText.value) return;
         inputText.value = outputText.value;
         updateLineNumbers(inputText, inputLineNums);
+        updateStats();
         judgeInputTypeAndShowButtons();
         tipInfo.innerText = '结果已回传';
         // 手机端自动滚回顶部
@@ -399,6 +531,8 @@
             tipInfo.innerText = '复制成功！';
         }
     });
+
+    updateStats();
 </script>
 </body>
 </html>

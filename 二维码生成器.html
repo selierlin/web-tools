@@ -6,32 +6,36 @@
     <title>二维码工具</title>
     <style>
         :root {
-            --primary-color: #4361ee;
-            --primary-hover: #3a56d4;
-            --success-color: #2ec4b6;
-            --warning-color: #f77f00;
-            --danger-color: #d62828;
-            --secondary-color: #64748b;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --radius: 10px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --primary-color: #0f766e;
+            --primary-hover: #0d5f5a;
+            --success-color: #0284c7;
+            --warning-color: #f59e0b;
+            --danger-color: #dc2626;
+            --secondary-color: #334155;
+            --bg-color: #edf3f7;
+            --card-bg: #ffffffcc;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #dbe4ec;
+            --radius: 16px;
+            --shadow: 0 28px 64px -34px rgba(15, 23, 42, 0.45);
+            --shadow-soft: 0 12px 28px -20px rgba(15, 23, 42, 0.35);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Inter", "system-ui", "-apple-system", "Microsoft YaHei", sans-serif;
+            font-family: "Avenir Next", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
+            background:
+                radial-gradient(circle at 15% 15%, #d9f3ef 0%, rgba(217, 243, 239, 0) 50%),
+                radial-gradient(circle at 80% 5%, #d9eefe 0%, rgba(217, 238, 254, 0) 48%),
+                linear-gradient(180deg, #f6fbff 0%, var(--bg-color) 65%);
             color: var(--text-main);
-            padding: 16px;
+            padding: 24px 16px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -46,38 +50,53 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(8px);
         }
 
         /* 顶部导航 */
         .tool-header {
-            background-color: #1e293b;
-            color: #ffffff;
-            padding: 18px 24px;
-            font-size: 20px;
-            font-weight: 700;
+            background: linear-gradient(130deg, #0f172a 0%, #1f2937 48%, #134e4a 100%);
+            color: #f8fafc;
+            padding: 22px 26px;
+            font-size: 21px;
+            font-weight: 800;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            gap: 12px;
             letter-spacing: 0.5px;
         }
 
-        .tool-header::before {
-            content: "📱";
-            margin-right: 12px;
-            color: var(--success-color);
-            font-family: monospace;
+        .tool-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-header-title i {
+            color: #67e8f9;
+            font-size: 18px;
+        }
+
+        .tool-header-sub {
+            font-size: 12px;
+            color: #cbd5e1;
+            letter-spacing: 0.2px;
+            font-weight: 500;
         }
 
         /* 优化：Tab 标签栏样式 */
         .tab-nav {
             display: flex;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
             margin: 0 24px;
             justify-content: center;
+            padding-top: 12px;
         }
 
         .tab-btn {
-            padding: 10px 20px;
+            padding: 12px 20px;
             border: none;
             background: none;
             font-size: 14px;
@@ -90,20 +109,21 @@
         }
 
         .tab-btn.active {
-            color: var(--primary-color);
+            color: #0f172a;
             border-bottom-color: var(--primary-color);
+            background: linear-gradient(180deg, rgba(15, 118, 110, 0.09) 0%, rgba(15, 118, 110, 0.02) 100%);
         }
 
         .tab-btn:hover:not(.active) {
             color: var(--text-main);
             border-bottom-color: var(--border-color);
-            background-color: rgba(67, 97, 238, 0.05);
+            background-color: rgba(15, 118, 110, 0.07);
         }
 
         /* Tab 内容区域样式 */
         .tab-content {
             display: none;
-            padding: 20px 24px;
+            padding: 24px;
         }
 
         .tab-content.active {
@@ -130,29 +150,29 @@
             display: block;
             margin-bottom: 8px;
             color: var(--text-main);
-            font-weight: 600;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.25px;
         }
 
         textarea, input[type="text"], select {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 14px;
             color: var(--text-main);
             resize: none;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: "Cascadia Code", "Consolas", monospace;
+            background-color: #fcfeff;
+            font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
         }
 
         textarea:focus, input[type="text"]:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
             background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
         }
 
         textarea {
@@ -169,12 +189,12 @@
             margin-bottom: 12px;
             padding: 8px 10px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            background-color: #fafcff;
+            background: linear-gradient(180deg, #f8fbff 0%, #f4f8fb 100%);
         }
 
         .prefix-compact-left {
@@ -202,9 +222,9 @@
         .prefix-manage-panel {
             margin-bottom: 20px;
             padding: 12px;
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
-            background-color: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            background: #ffffff;
         }
 
         .prefix-manage-panel.hidden {
@@ -230,7 +250,7 @@
         .prefix-alias {
             color: var(--primary-color);
             font-weight: 600;
-            background-color: rgba(67, 97, 238, 0.1);
+            background-color: rgba(15, 118, 110, 0.1);
             padding: 2px 6px;
             border-radius: 4px;
             margin-right: 4px;
@@ -281,7 +301,7 @@
         }
 
         .prefix-item .prefix-select-btn.active {
-            background-color: rgba(67, 97, 238, 0.12);
+            background-color: rgba(15, 118, 110, 0.12);
             color: var(--primary-color);
         }
 
@@ -311,18 +331,18 @@
         .decode-group {
             margin: 20px 0;
             padding: 20px;
-            border: 2px dashed var(--primary-color);
-            border-radius: 8px;
+            border: 2px dashed rgba(15, 118, 110, 0.5);
+            border-radius: 14px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            background-color: rgba(67, 97, 238, 0.02);
+            background: linear-gradient(180deg, rgba(15, 118, 110, 0.04) 0%, rgba(15, 118, 110, 0.01) 100%);
         }
 
         /* 拖拽悬浮态：高亮边框，提示用户可释放 */
         .decode-group.drag-over {
             border-color: var(--primary-color);
-            background-color: rgba(67, 97, 238, 0.1);
-            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+            background-color: rgba(15, 118, 110, 0.1);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
         }
 
         /* 拖拽上传提示（默认隐藏，拖拽悬浮时显示） */
@@ -375,11 +395,11 @@
         }
 
         button {
-            padding: 10px 16px;
+            padding: 11px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
@@ -403,7 +423,7 @@
 
         .btn-primary:hover {
             background-color: var(--primary-hover);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 10px 16px -10px rgba(15, 118, 110, 0.75);
         }
 
         .btn-success {
@@ -412,8 +432,8 @@
         }
 
         .btn-success:hover {
-            background-color: #25a99f;
-            box-shadow: 0 4px 12px rgba(46, 196, 182, 0.3);
+            background-color: #0369a1;
+            box-shadow: 0 10px 16px -10px rgba(2, 132, 199, 0.7);
         }
 
         .btn-secondary {
@@ -423,6 +443,7 @@
 
         .btn-secondary:hover {
             background-color: #475569;
+            box-shadow: var(--shadow-soft);
         }
 
         .btn-danger {
@@ -432,12 +453,12 @@
 
         .btn-danger:hover {
             background-color: #b91c1c;
-            box-shadow: 0 4px 12px rgba(214, 40, 40, 0.3);
+            box-shadow: 0 10px 16px -10px rgba(185, 28, 28, 0.8);
         }
 
         .btn-outline {
             background-color: transparent;
-            color: var(--text-muted);
+            color: #1f2937;
             border: 1px solid var(--border-color);
         }
 
@@ -454,7 +475,7 @@
 
         #generateBtn:hover {
             background-color: var(--primary-hover);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 10px 16px -10px rgba(15, 118, 110, 0.75);
         }
 
         #resetBtn {
@@ -486,7 +507,7 @@
 
         #uploadBtn:hover {
             background-color: var(--primary-hover);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 10px 16px -10px rgba(15, 118, 110, 0.75);
         }
 
         #pasteBtn {
@@ -496,8 +517,8 @@
         }
 
         #pasteBtn:hover {
-            background-color: #25a99f;
-            box-shadow: 0 4px 12px rgba(46, 196, 182, 0.3);
+            background-color: #0369a1;
+            box-shadow: 0 10px 16px -10px rgba(2, 132, 199, 0.7);
         }
 
         #copyDecodeResult {
@@ -545,10 +566,10 @@
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 16px;
             margin-top: 16px;
-            padding: 16px;
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
-            background-color: rgba(67, 97, 238, 0.02);
+            padding: 18px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.06) 0%, rgba(148, 163, 184, 0.02) 100%);
         }
 
         /* 二维码卡片样式 */
@@ -557,18 +578,18 @@
             flex-direction: column;
             align-items: center;
             padding: 12px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
+            border-radius: 14px;
+            box-shadow: 0 16px 24px -20px rgba(15, 23, 42, 0.65);
             position: relative;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(148, 163, 184, 0.22);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
 
         .qrcode-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
+            box-shadow: 0 24px 34px -26px rgba(15, 23, 42, 0.75);
+            transform: translateY(-3px);
         }
 
         .qrcode-card .close-btn {
@@ -657,13 +678,13 @@
 
         .modal-content {
             background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
+            padding: 22px;
+            border-radius: 14px;
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 36px 48px -28px rgba(2, 6, 23, 0.55);
             border: 1px solid var(--border-color);
             animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -711,7 +732,7 @@
 
         .modal .copy-btn:hover {
             background-color: var(--primary-hover);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 10px 16px -10px rgba(15, 118, 110, 0.75);
         }
 
         /* 复制成功提示样式 */
@@ -741,13 +762,57 @@
             font-size: 14px;
             font-weight: 500;
         }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 14px;
+            }
+
+            .tool-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 18px;
+            }
+
+            .tab-nav {
+                margin: 0 14px;
+            }
+
+            .tab-content {
+                padding: 16px 14px 18px;
+            }
+
+            .prefix-input-row {
+                flex-direction: column;
+            }
+
+            .prefix-alias-input {
+                max-width: none;
+            }
+
+            .decode-btn-group,
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .qrcodes-grid {
+                padding: 12px;
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
     <!-- 引入图标库（用于拖拽提示图标，增强视觉体验） -->
     <link rel="stylesheet" href="https://jsd.onmicrosoft.cn/npm/font-awesome@4.7.0/css/font-awesome.min.css">
 </head>
 <body>
     <div class="container">
-        <div class="tool-header">二维码工具</div>
+        <div class="tool-header">
+            <div class="tool-header-title">
+                <i class="fa fa-qrcode"></i>
+                <span>二维码工具</span>
+            </div>
+            <div class="tool-header-sub">生成与解码，一键完成</div>
+        </div>
 
         <!-- Tab 标签栏 -->
         <div class="tab-nav">
@@ -789,7 +854,7 @@
 
             <div class="btn-group">
                 <button id="generateBtn" class="btn-primary">
-                    <i class="fa fa-qrcode"></i>生成并添加二维码
+                    <i class="fa fa-qrcode"></i>生成二维码
                 </button>
                 <button id="resetBtn" class="btn-secondary">
                     <i class="fa fa-refresh"></i>重置表单
