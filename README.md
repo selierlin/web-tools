@@ -46,6 +46,24 @@
 
 直接打开 index.html 文件即可使用所有工具。
 
+## 更新记录页面
+
+项目已增加“更新记录”页面（`更新记录.html`），用于展示仓库的 Git 提交历史。
+
+- 数据来源：`更新记录.json`
+- 生成脚本：`scripts/generate-updates-json.mjs`
+- 脚本作用：读取本地 `git log`，提取提交哈希、时间、作者、提交说明，并写入 `更新记录.json`
+
+每次有新提交后，执行以下命令刷新页面数据：
+
+```bash
+node scripts/generate-updates-json.mjs 120
+```
+
+说明：
+- `120` 表示最多生成最近 120 条提交记录，可按需调整
+- `index.html` 已提供“更新记录”入口菜单
+
 ## 扩展新工具
 
 如需添加新工具，请参考项目规则文档 [.qoder/rules.md](.qoder/rules.md)，按照规范创建新的HTML文件并在index.html中添加相应的菜单项。

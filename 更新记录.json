@@ -1,0 +1,202 @@
+{
+  "generatedAt": "2026-02-15T15:31:38.949Z",
+  "total": 28,
+  "commits": [
+    {
+      "hash": "b8ddf60fb5099b0ced3f333c393d38461c73b4fc",
+      "shortHash": "b8ddf60",
+      "date": "2026-02-15T23:28:09+08:00",
+      "author": "Selier",
+      "subject": "美化多个页面"
+    },
+    {
+      "hash": "a827c58b6c566fd385627b9daa4885b61b558d8f",
+      "shortHash": "a827c58",
+      "date": "2026-02-15T22:53:26+08:00",
+      "author": "Selier",
+      "subject": "增加颜色转换工具.html"
+    },
+    {
+      "hash": "daa5af87e3d43c7fdbf7bbf7fd573a9c1b941bce",
+      "shortHash": "daa5af8",
+      "date": "2026-02-14T10:12:19+08:00",
+      "author": "Selier",
+      "subject": "二维码前缀优化"
+    },
+    {
+      "hash": "b4b38689313f0284cb606c99dc52a7b9954865d7",
+      "shortHash": "b4b3868",
+      "date": "2026-02-13T17:19:22+08:00",
+      "author": "Selier",
+      "subject": "增加二维码生成器中前缀别名"
+    },
+    {
+      "hash": "887e5060918058d01641c29d5d7c89c9f5f236c2",
+      "shortHash": "887e506",
+      "date": "2026-02-13T17:14:45+08:00",
+      "author": "Selier",
+      "subject": "优化Base64图片转换.html"
+    },
+    {
+      "hash": "ece5af72af19098a755527d3508a4a8aca8eb77c",
+      "shortHash": "ece5af7",
+      "date": "2026-02-12T22:44:45+08:00",
+      "author": "Selier",
+      "subject": "增加Base64图片转换.html"
+    },
+    {
+      "hash": "184eccb03135f3ebc3f97cd9bcc794960a32ed30",
+      "shortHash": "184eccb",
+      "date": "2026-02-12T22:06:04+08:00",
+      "author": "Selier",
+      "subject": "add agents"
+    },
+    {
+      "hash": "8d4573646908cff813019899ec282ec3ebf5d915",
+      "shortHash": "8d45736",
+      "date": "2026-02-11T13:50:07+08:00",
+      "author": "Selier",
+      "subject": "美化 index.html"
+    },
+    {
+      "hash": "fc1b7d457141c10f8f559eb9028dcfdfe7fb7dc9",
+      "shortHash": "fc1b7d4",
+      "date": "2026-02-11T12:29:48+08:00",
+      "author": "Selier",
+      "subject": "优化二维码生成器.html"
+    },
+    {
+      "hash": "613039d8f16d176ce5ff3ed53418312a23757a27",
+      "shortHash": "613039d",
+      "date": "2026-02-10T22:45:12+08:00",
+      "author": "Selier",
+      "subject": "增加 uuid 生成器"
+    },
+    {
+      "hash": "3d7c35a5e8fa7de865caaf4cebf8f42ef99bf3d6",
+      "shortHash": "3d7c35a",
+      "date": "2026-02-10T12:32:22+08:00",
+      "author": "Selier",
+      "subject": "适配移动端，增加汉堡菜单"
+    },
+    {
+      "hash": "ed7c5e00afebc6e29a4f8e0c9e36272c1f8e9d9b",
+      "shortHash": "ed7c5e0",
+      "date": "2026-02-10T11:51:35+08:00",
+      "author": "Selier",
+      "subject": "增加网站图标"
+    },
+    {
+      "hash": "710d0b672e4c2d5b0389ea73456e3c245b885418",
+      "shortHash": "710d0b6",
+      "date": "2026-02-09T17:32:35+08:00",
+      "author": "Selier",
+      "subject": "修改编码解码.html样式"
+    },
+    {
+      "hash": "dbd5ab5f56c83e8bf2c80b6c2b939e7a9af3251b",
+      "shortHash": "dbd5ab5",
+      "date": "2026-02-09T16:08:40+08:00",
+      "author": "Selier",
+      "subject": "增加Cron 表达式工具.html"
+    },
+    {
+      "hash": "0d0d7fd331a8a6c87e2357263e66e550744630a4",
+      "shortHash": "0d0d7fd",
+      "date": "2026-02-08T21:46:01+08:00",
+      "author": "Selier",
+      "subject": "增加正则可视化"
+    },
+    {
+      "hash": "c0f34465bf21acf07c1aa76483658a7e3d5c3617",
+      "shortHash": "c0f3446",
+      "date": "2026-02-03T20:36:02+08:00",
+      "author": "Selier",
+      "subject": "优化文本加工手机版"
+    },
+    {
+      "hash": "7c6e003008d93176a39911c7c0d949b06d01ecf6",
+      "shortHash": "7c6e003",
+      "date": "2026-02-03T14:46:27+08:00",
+      "author": "Selier",
+      "subject": "增加统计"
+    },
+    {
+      "hash": "ab38c23f4b4686ac6e301abba1f9d000307d2e79",
+      "shortHash": "ab38c23",
+      "date": "2026-02-03T14:26:35+08:00",
+      "author": "Selier",
+      "subject": "增加统计"
+    },
+    {
+      "hash": "9fce18b31c6d0bcde9d21b0bce5869850ebeee4c",
+      "shortHash": "9fce18b",
+      "date": "2026-02-03T13:32:22+08:00",
+      "author": "Selier",
+      "subject": "增加SEO优化"
+    },
+    {
+      "hash": "af07e9ae7e86162ca818bedb952ba4599048c47a",
+      "shortHash": "af07e9a",
+      "date": "2026-02-03T09:54:53+08:00",
+      "author": "Selier",
+      "subject": "增加文本加工行号"
+    },
+    {
+      "hash": "ea428421ab96acde3fcb4d78555b5687a7a25036",
+      "shortHash": "ea42842",
+      "date": "2026-02-02T15:56:49+08:00",
+      "author": "Selier",
+      "subject": "增加日期计算器"
+    },
+    {
+      "hash": "521c6c74601c2c615bbca9f567c7921a945e0a82",
+      "shortHash": "521c6c7",
+      "date": "2026-02-02T15:56:41+08:00",
+      "author": "Selier",
+      "subject": "更新首页样式"
+    },
+    {
+      "hash": "ac0376c917a9e1752537feefdef6de9e2a701c25",
+      "shortHash": "ac0376c",
+      "date": "2026-01-29T01:11:50+08:00",
+      "author": "Selier",
+      "subject": "更新页面样式"
+    },
+    {
+      "hash": "d965b075f3e644ed6c82c5915c4f6ea26f6911df",
+      "shortHash": "d965b07",
+      "date": "2026-01-21T20:53:13+08:00",
+      "author": "Selier",
+      "subject": "Nacos 服务管理.html"
+    },
+    {
+      "hash": "f542c1e8de794b089c3835af62c4dccfa978747b",
+      "shortHash": "f542c1e",
+      "date": "2026-01-21T16:43:11+08:00",
+      "author": "Selier",
+      "subject": "Nacos 服务管理.html"
+    },
+    {
+      "hash": "4033e1f785e36c03bdcb3b636d74a4d34194aa38",
+      "shortHash": "4033e1f",
+      "date": "2026-01-20T14:48:54+08:00",
+      "author": "Selier",
+      "subject": "增加时间计算器.html"
+    },
+    {
+      "hash": "9669220cffb053e73b9a33624cc2ed8840cf40f0",
+      "shortHash": "9669220",
+      "date": "2026-01-19T10:57:17+08:00",
+      "author": "Selier",
+      "subject": "init"
+    },
+    {
+      "hash": "831598163826e6a6396712bf1170b72e91566af2",
+      "shortHash": "8315981",
+      "date": "2026-01-19T09:24:50+08:00",
+      "author": "Selier",
+      "subject": "Initial commit"
+    }
+  ]
+}
