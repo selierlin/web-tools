@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRoot = resolve(__dirname, '..');
-const outputPath = resolve(repoRoot, '更新记录.json');
+const outputDir = resolve(repoRoot, 'json');
+const outputPath = resolve(outputDir, '更新记录.json');
 const limitArg = Number.parseInt(process.argv[2] || '100', 10);
 const limit = Number.isFinite(limitArg) && limitArg > 0 ? limitArg : 100;
 
@@ -40,5 +41,6 @@ const payload = {
   commits
 };
 
+mkdirSync(outputDir, { recursive: true });
 writeFileSync(outputPath, JSON.stringify(payload, null, 2) + '\n', 'utf8');
 console.log(`Wrote ${commits.length} commits to ${outputPath}`);

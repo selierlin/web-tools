@@ -379,7 +379,7 @@
             .join('');
     }
 
-    fetch('更新记录.json', {cache: 'no-store'})
+    fetch('json/更新记录.json', {cache: 'no-store'})
         .then((res) => {
             if (!res.ok) {
                 throw new Error('HTTP ' + res.status);
@@ -398,7 +398,7 @@
             statTotalEl.textContent = '0';
             statLatestEl.textContent = '-';
             statGeneratedEl.textContent = '-';
-            listEl.innerHTML = `<div class="empty">无法加载 更新记录.json：${escapeHtml(err.message)}</div>`;
+            listEl.innerHTML = `<div class="empty">无法加载 json/更新记录.json：${escapeHtml(err.message)}</div>`;
         });
 
     keywordInputEl.addEventListener('input', refreshView);

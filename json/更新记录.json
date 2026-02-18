@@ -1,7 +1,14 @@
 {
-  "generatedAt": "2026-02-15T15:39:53.724Z",
-  "total": 29,
+  "generatedAt": "2026-02-18T10:09:30.594Z",
+  "total": 30,
   "commits": [
+    {
+      "hash": "1756044eef1a9bbd020bdccbc9ad70a2b657c9cc",
+      "shortHash": "1756044",
+      "date": "2026-02-18T18:04:35+08:00",
+      "author": "Selier",
+      "subject": "feat(command-dict): 添加命令查询字典子工具及界面"
+    },
     {
       "hash": "141af32757bec61de0ef2732289dbb13a57d5bdd",
       "shortHash": "141af32",
