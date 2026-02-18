@@ -120,6 +120,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "Linux 权限",
+        name: "递归修改目录权限",
+        desc: "递归设置目录及其子文件的权限。",
+        command: "chmod -R 755 /path/to/dir",
+        tags: ["linux", "debian", "centos", "macos", "权限", "chmod", "递归", "-R"]
+      },
+      {
+        category: "Linux 权限",
         name: "修改文件归属",
         desc: "设置文件所属用户和组。",
         command: "chown user:group file.txt",
