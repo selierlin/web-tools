@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>命令查询字典</title>
+  <style>
+    :root {
+      --bg: #eef5ff;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #5f6b81;
+      --border: #dbe5f3;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --danger: #b91c1c;
+      --focus: #2563eb;
+      --shadow: 0 10px 30px rgba(20, 36, 75, 0.08);
+      --shadow-soft: 0 6px 18px rgba(20, 36, 75, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(1200px 480px at -10% -20%, #dbeafe 0%, transparent 60%),
+        radial-gradient(1200px 520px at 110% -10%, #ccfbf1 0%, transparent 62%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 16px 48px;
+    }
+
+    .header {
+      margin-bottom: 18px;
+      padding: 20px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.65));
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::after {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      right: -60px;
+      top: -110px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.16), rgba(59, 130, 246, 0));
+      pointer-events: none;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .header-meta {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .meta-pill {
+      border: 1px solid #d1e1f6;
+      background: #f7fbff;
+      color: #214065;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin: 18px 0 12px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid #e4ecf8;
+      border-radius: 16px;
+      backdrop-filter: blur(6px);
+      box-shadow: var(--shadow-soft);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .search-wrap input {
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 15px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .search-wrap:focus-within {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .search-icon {
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .btn-search-clear {
+      border: none;
+      background: #eff6ff;
+      color: #4b6b93;
+      border-radius: 8px;
+      width: 22px;
+      height: 22px;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .btn-search-clear:hover { filter: brightness(0.95); }
+
+    .btn-search-clear.is-hidden { display: none; }
+
+    select {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: var(--panel);
+      font-size: 14px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      min-width: 170px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .tips {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 8px 0 16px;
+    }
+
+    .filters-summary {
+      margin: 8px 0 12px;
+      font-size: 13px;
+      color: #3c5a80;
+      background: #f5f9ff;
+      border: 1px solid #d9e6f8;
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      margin-bottom: 2px;
+    }
+
+    .btn-mini {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .btn-mini:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+
+    .btn-mini.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: #5eead4;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: #f8fbff;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      color: #374151;
+      cursor: pointer;
+      max-width: 260px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: all 0.16s ease;
+    }
+
+    .chip:hover { border-color: #bfdbfe; background: #eff6ff; }
+
+    .chip.active {
+      border-color: #93c5fd;
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .quick-title {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 2px 0 8px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .cards {
+      display: grid;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      animation: fadeInUp 0.22s ease both;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #bfd3ee;
+      box-shadow: 0 14px 30px rgba(31, 72, 135, 0.12);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .cmd-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .badge {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: 999px;
+      font-size: 12px;
+      padding: 4px 8px;
+      font-weight: 600;
+    }
+
+    .badge-wrap {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge-platform {
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+    }
+
+    .badge-risk {
+      border: 1px solid transparent;
+    }
+
+    .risk-low {
+      background: #ecfdf5;
+      color: #047857;
+      border-color: #a7f3d0;
+    }
+
+    .risk-mid {
+      background: #fffbeb;
+      color: #b45309;
+      border-color: #fde68a;
+    }
+
+    .risk-high {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    .desc {
+      margin: 0 0 10px;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .command-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      background: linear-gradient(160deg, #0d1528, #121f3a);
+      border-radius: 10px;
+      padding: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(147, 197, 253, 0.14);
+    }
+
+    .command {
+      margin: 0;
+      color: #e5edf9;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      align-self: center;
+    }
+
+    .command.collapsed {
+      max-height: 78px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .command.collapsed::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 28px;
+      background: linear-gradient(to bottom, rgba(13, 21, 40, 0), rgba(13, 21, 40, 0.95));
+    }
+
+    .btn-copy {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #062a26;
+      background: #99f6e4;
+      cursor: pointer;
+      min-width: 58px;
+      height: fit-content;
+    }
+
+    .btn-copy:hover { filter: brightness(0.96); transform: translateY(-1px); }
+
+    .btn-copy, .btn-fav, .btn-mini {
+      transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+    }
+
+    .btn-fav {
+      border: 1px solid #eab308;
+      color: #a16207;
+      background: #fef9c3;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 58px;
+      height: fit-content;
+    }
+
+    .btn-fav.active {
+      background: #facc15;
+      color: #4a2f00;
+    }
+
+    .btn-cmd-toggle, .btn-tag-toggle {
+      margin-top: 8px;
+    }
+
+    .tag.is-hidden {
+      display: none;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      background: #f1f5ff;
+      color: #2f3e62;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      border: 1px solid #dbe5f3;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 26px 10px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .footer {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .warn { color: var(--danger); }
+
+    .to-top {
+      position: fixed;
+      right: 16px;
+      bottom: 18px;
+      z-index: 3;
+      border: 1px solid #c9dcf6;
+      background: rgba(255, 255, 255, 0.95);
+      color: #24446c;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .to-top.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* ---- Visual refresh: modern glass + soft aurora ---- */
+    :root {
+      --bg-deep: #f5f8ff;
+      --bg-mid: #edf4ff;
+      --text: #1b2741;
+      --muted: #5d6f92;
+      --panel: rgba(255, 255, 255, 0.78);
+      --border: rgba(139, 165, 217, 0.34);
+      --accent: #2563eb;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --danger: #b91c1c;
+      --shadow: 0 18px 44px rgba(47, 75, 135, 0.18);
+      --shadow-soft: 0 10px 22px rgba(47, 75, 135, 0.14);
+    }
+
+    body {
+      position: relative;
+      background:
+        radial-gradient(840px 420px at 0% -10%, rgba(96, 165, 250, 0.2), transparent 62%),
+        radial-gradient(720px 380px at 100% 0%, rgba(45, 212, 191, 0.16), transparent 64%),
+        linear-gradient(165deg, var(--bg-deep), var(--bg-mid) 54%, #e9f2ff);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .fx-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .fx-grid {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(700px 260px at 20% 18%, rgba(59, 130, 246, 0.22), transparent 64%),
+        radial-gradient(760px 300px at 82% 16%, rgba(20, 184, 166, 0.2), transparent 66%);
+      filter: blur(42px);
+      opacity: 0.62;
+      animation: auroraDrift 14s ease-in-out infinite alternate;
+    }
+
+    .fx-noise {
+      position: absolute;
+      inset: -20%;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 0.6px, transparent 0.8px);
+      background-size: 5px 5px;
+      opacity: 0.028;
+      animation: noiseFloat 4s steps(2, end) infinite;
+    }
+
+    .fx-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(26px);
+      opacity: 0.28;
+      animation: floatOrb 18s ease-in-out infinite alternate;
+    }
+
+    .fx-orb-a {
+      width: 360px;
+      height: 360px;
+      left: -110px;
+      top: 80px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.36), rgba(59, 130, 246, 0));
+    }
+
+    .fx-orb-b {
+      width: 420px;
+      height: 420px;
+      right: -140px;
+      top: -80px;
+      animation-delay: 1.8s;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.34), rgba(45, 212, 191, 0));
+    }
+
+    .fx-orb-c {
+      width: 340px;
+      height: 340px;
+      left: 35%;
+      bottom: -180px;
+      animation-delay: 3.2s;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.24), rgba(56, 189, 248, 0));
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+    }
+
+    .header {
+      background:
+        linear-gradient(140deg, rgba(255, 255, 255, 0.86), rgba(247, 251, 255, 0.74)),
+        radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.1), transparent 42%);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .header::after {
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.16), rgba(56, 189, 248, 0));
+    }
+
+    .title {
+      color: #13233f;
+      text-shadow: none;
+    }
+
+    .subtitle, .tips, .footer, .stats, .warn {
+      color: var(--muted);
+    }
+
+    .meta-pill {
+      border-color: rgba(137, 164, 216, 0.42);
+      background: rgba(243, 248, 255, 0.9);
+      color: #2e436f;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+    }
+
+    .controls {
+      background: rgba(251, 253, 255, 0.8);
+      border-color: var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px) saturate(115%);
+    }
+
+    .search-wrap,
+    select {
+      background: var(--panel);
+      border-color: rgba(137, 164, 216, 0.34);
+      color: var(--text);
+    }
+
+    .search-wrap input,
+    select {
+      color: var(--text);
+    }
+
+    .search-wrap input::placeholder {
+      color: #8197c2;
+    }
+
+    .search-wrap:focus-within,
+    select:focus {
+      border-color: rgba(37, 99, 235, 0.56);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .btn-search-clear {
+      background: #eef4ff;
+      color: #2d4778;
+    }
+
+    .filters-summary {
+      background: rgba(248, 251, 255, 0.92);
+      border-color: rgba(137, 164, 216, 0.36);
+      color: #3e588a;
+    }
+
+    .btn-mini,
+    .chip,
+    .to-top {
+      background: rgba(248, 252, 255, 0.92);
+      border-color: rgba(137, 164, 216, 0.34);
+      color: #28406d;
+    }
+
+    .btn-mini:hover,
+    .chip:hover,
+    .to-top:hover {
+      border-color: rgba(59, 130, 246, 0.56);
+      box-shadow: 0 8px 18px rgba(47, 75, 135, 0.2);
+    }
+
+    .btn-mini.active,
+    .chip.active {
+      background: var(--accent-soft);
+      color: #1d4ed8;
+      border-color: rgba(37, 99, 235, 0.5);
+    }
+
+    .card {
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(249, 252, 255, 0.8));
+      border-color: rgba(137, 164, 216, 0.34);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      width: 140%;
+      height: 110px;
+      left: -20%;
+      top: -80px;
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0), rgba(59, 130, 246, 0.14), rgba(59, 130, 246, 0));
+      transform: rotate(6deg);
+      transition: top 0.32s ease;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(59, 130, 246, 0.48);
+      box-shadow: 0 20px 36px rgba(47, 75, 135, 0.24);
+    }
+
+    .card:hover::before {
+      top: -28px;
+    }
+
+    .cmd-name,
+    .desc {
+      color: #233862;
+    }
+
+    .badge {
+      background: rgba(59, 130, 246, 0.12);
+      color: #1e40af;
+      border: 1px solid rgba(59, 130, 246, 0.26);
+    }
+
+    .badge-platform {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4338ca;
+      border-color: rgba(99, 102, 241, 0.24);
+    }
+
+    .risk-low {
+      background: rgba(16, 185, 129, 0.14);
+      color: #047857;
+      border-color: rgba(16, 185, 129, 0.36);
+    }
+
+    .risk-mid {
+      background: rgba(245, 158, 11, 0.15);
+      color: #b45309;
+      border-color: rgba(245, 158, 11, 0.38);
+    }
+
+    .risk-high {
+      background: rgba(239, 68, 68, 0.14);
+      color: #b91c1c;
+      border-color: rgba(239, 68, 68, 0.36);
+    }
+
+    .command-box {
+      background: linear-gradient(160deg, #0e1935, #16284a 52%, #1a3057);
+      border-color: rgba(147, 197, 253, 0.3);
+      box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.08);
+    }
+
+    .command {
+      color: #dbe8ff;
+    }
+
+    .btn-copy {
+      background: linear-gradient(145deg, #bae6fd, #7dd3fc);
+      color: #0f2443;
+      box-shadow: 0 10px 18px rgba(56, 189, 248, 0.24);
+    }
+
+    .btn-fav {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fcd34d;
+      border-color: rgba(251, 191, 36, 0.42);
+    }
+
+    .btn-fav.active {
+      background: #facc15;
+      color: #422006;
+      border-color: #facc15;
+    }
+
+    .tag {
+      background: rgba(243, 248, 255, 0.9);
+      color: #38527f;
+      border-color: rgba(137, 164, 216, 0.3);
+    }
+
+    .empty {
+      background: rgba(250, 253, 255, 0.94);
+      border-color: rgba(137, 164, 216, 0.4);
+      color: #38527f;
+    }
+
+    .warn {
+      color: #fca5a5;
+    }
+
+    @keyframes floatOrb {
+      from { transform: translateY(-6px) translateX(-4px) scale(1); }
+      to { transform: translateY(12px) translateX(9px) scale(1.05); }
+    }
+
+    @keyframes auroraDrift {
+      from { transform: translateX(-12px) translateY(0); }
+      to { transform: translateX(16px) translateY(6px); }
+    }
+
+    @keyframes noiseFloat {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(16px, -12px, 0); }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .controls { grid-template-columns: 1fr; }
+      .title { font-size: 26px; }
+      .command-box { grid-template-columns: 1fr; }
+      .to-top { right: 12px; bottom: 14px; }
+      .fx-grid { opacity: 0.58; }
+      .fx-orb-a { width: 240px; height: 240px; left: -80px; top: 120px; }
+      .fx-orb-b { width: 260px; height: 260px; right: -90px; top: 40px; }
+      .fx-orb-c { width: 220px; height: 220px; left: 24%; bottom: -110px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fx-grid, .fx-orb, .fx-noise, .card {
+        animation: none !important;
+      }
+      .card, .card:hover {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="fx-bg" aria-hidden="true">
+    <div class="fx-grid"></div>
+    <div class="fx-noise"></div>
+    <div class="fx-orb fx-orb-a"></div>
+    <div class="fx-orb fx-orb-b"></div>
+    <div class="fx-orb fx-orb-c"></div>
+  </div>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">命令查询字典</h1>
+      <p class="subtitle">支持中文关键词搜索：例如“搜索文件”“启动容器”“macOS 查端口”“Debian 安装软件”。</p>
+      <div class="header-meta">
+        <span class="meta-pill" id="totalCountPill">总命令数: 0</span>
+        <span class="meta-pill">支持快捷键: `/`、`Esc`、`Ctrl/Cmd + K`</span>
+      </div>
+    </header>
+
+    <section class="controls">
+      <label class="search-wrap" for="searchInput">
+        <span class="search-icon">🔎</span>
+        <input id="searchInput" type="text" placeholder="输入关键词：如 linux 查文件 / macos open / debian apt 安装" />
+        <button id="searchClearBtn" class="btn-search-clear is-hidden" type="button" aria-label="清空输入">×</button>
+      </label>
+      <select id="categorySelect" aria-label="分类筛选"></select>
+    </section>
+
+    <p class="tips">匹配范围：命令名、中文说明、命令内容、标签。支持多个关键词（空格分隔）联合筛选，快捷键：/ 聚焦搜索，Esc 清空。</p>
+
+    <div class="toolbar">
+      <button id="clearSearchBtn" class="btn-mini" type="button">清空搜索</button>
+      <button id="favoritesOnlyBtn" class="btn-mini" type="button">仅看收藏</button>
+      <button id="recentTrackBtn" class="btn-mini" type="button">最近记录: 开</button>
+      <button id="clearRecentBtn" class="btn-mini" type="button">清空最近</button>
+    </div>
+
+    <div class="quick-title">快捷筛选</div>
+    <div id="quickCategoryChips" class="chips"></div>
+
+    <div id="recentChips" class="chips"></div>
+    <div id="activeFilters" class="filters-summary">当前筛选：全部分类</div>
+
+    <div class="stats">
+      <span id="resultCount">0 条结果</span>
+      <span class="warn">提示：执行前先确认命令是否符合你的生产环境安全要求。</span>
+    </div>
+
+    <main id="cards" class="cards"></main>
+
+    <p class="footer">单文件离线版，可直接双击打开。</p>
+  </div>
+  <button id="toTopBtn" class="to-top" type="button">回到顶部</button>
+
+  <script src="./scripts/commands-data.js"></script>
+  <script>
+    const FAVORITES_KEY = "cmd_dict_favorites_v1";
+    const RECENT_KEY = "cmd_dict_recent_v1";
+    const RECENT_ENABLED_KEY = "cmd_dict_recent_enabled_v1";
+    const CATEGORY_USAGE_KEY = "cmd_dict_category_usage_v1";
+    const MAX_RECENT = 5;
+    const osTags = ["linux", "debian", "centos", "macos"];
+    const PLATFORM_SPECIFIC = new Set(["Debian", "CentOS", "macOS"]);
+    const groupTagSet = {
+      "包管理与依赖": new Set(["包管理", "依赖", "apt", "yum", "dnf", "rpm", "brew", "npm", "npx", "dpkg"]),
+      "代理与网络环境": new Set(["代理", "proxy", "http_proxy", "https_proxy"]),
+      "文件与目录": new Set(["文件名", "压缩包", "目录", "路径", "查文件", "搜索文件", "文本编辑", "查看文件", "解压", "压缩", "日志"]),
+      "网络与端口": new Set(["网络", "端口占用", "查端口", "ping", "ssh", "scp", "rsync", "下载"]),
+      "进程与系统": new Set(["进程", "监控", "系统信息", "内存", "环境变量", "命令路径", "状态"]),
+      "服务与部署": new Set(["服务", "compose", "k8s", "docker", "pm2", "部署"])
+    };
+
+    const searchInput = document.getElementById("searchInput");
+    const categorySelect = document.getElementById("categorySelect");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    const favoritesOnlyBtn = document.getElementById("favoritesOnlyBtn");
+    const recentTrackBtn = document.getElementById("recentTrackBtn");
+    const clearRecentBtn = document.getElementById("clearRecentBtn");
+    const searchClearBtn = document.getElementById("searchClearBtn");
+    const quickCategoryChips = document.getElementById("quickCategoryChips");
+    const recentChips = document.getElementById("recentChips");
+    const cards = document.getElementById("cards");
+    const resultCount = document.getElementById("resultCount");
+    const activeFilters = document.getElementById("activeFilters");
+    const totalCountPill = document.getElementById("totalCountPill");
+    const toTopBtn = document.getElementById("toTopBtn");
+
+    const categories = [
+      "全部分类",
+      "Linux/Unix 通用",
+      "macOS 专用",
+      "Debian 专用",
+      "CentOS 专用",
+      "Docker / Compose",
+      "Git",
+      "Kubernetes",
+      "数据库",
+      "包管理与依赖",
+      "代理与网络环境",
+      "文件与目录",
+      "网络与端口",
+      "进程与系统",
+      "服务与部署"
+    ];
+
+    const QUICK_LIMIT = 6;
+
+    let favoritesOnly = false;
+    let favorites = new Set(readStorageArray(FAVORITES_KEY));
+    let recentCommands = readStorageArray(RECENT_KEY);
+    let recentEnabled = readStorageBoolean(RECENT_ENABLED_KEY, true);
+    let categoryUsage = readStorageObject(CATEGORY_USAGE_KEY);
+
+    function normalize(text) {
+      return String(text || "").toLowerCase().trim();
+    }
+
+    function hasTag(item, tag) {
+      return item.tags.includes(tag);
+    }
+
+    function matchTags(item, groupName) {
+      const wanted = groupTagSet[groupName];
+      if (!wanted) return false;
+      for (const tag of item.tags) {
+        if (wanted.has(tag)) return true;
+      }
+      return false;
+    }
+
+    function isUnixCommon(item) {
+      if (PLATFORM_SPECIFIC.has(item.category)) return false;
+      if (item.category.startsWith("Linux ")) return true;
+      const count = osTags.reduce((sum, tag) => sum + (hasTag(item, tag) ? 1 : 0), 0);
+      return count >= 2;
+    }
+
+    const COMMANDS = (window.COMMANDS_DATA || []).map(item => {
+      const searchText = normalize([
+        item.category,
+        item.name,
+        item.desc,
+        item.command,
+        item.tags.join(" ")
+      ].join(" "));
+      const id = encodeURIComponent(`${item.category}::${item.name}::${item.command}`);
+      return { ...item, id, searchText };
+    });
+
+    categorySelect.innerHTML = categories
+      .map(category => `<option value="${category}">${category}</option>`)
+      .join("");
+
+    function inCategory(item, category) {
+      if (category === "全部分类") return true;
+      if (category === "Linux/Unix 通用") return isUnixCommon(item);
+      if (category === "macOS 专用") return item.category === "macOS";
+      if (category === "Debian 专用") return item.category === "Debian";
+      if (category === "CentOS 专用") return item.category === "CentOS";
+      if (category === "Docker / Compose") return item.category === "Docker" || item.category === "Docker Compose";
+      if (category === "Git") return item.category === "Git";
+      if (category === "Kubernetes") return item.category === "Kubernetes";
+      if (category === "数据库") return item.category === "数据库";
+      if (category === "包管理与依赖") return matchTags(item, category) || item.category === "Debian" || item.category === "CentOS";
+      if (category === "代理与网络环境") return matchTags(item, category);
+      if (category === "文件与目录") return item.category === "Linux 文件" || matchTags(item, category);
+      if (category === "网络与端口") return item.category === "Linux 网络" || matchTags(item, category);
+      if (category === "进程与系统") return item.category === "Linux 进程" || item.category === "Linux 系统" || matchTags(item, category);
+      if (category === "服务与部署") return item.category === "Linux 服务" || item.category === "Docker" || item.category === "Docker Compose" || item.category === "Kubernetes" || matchTags(item, category);
+      return false;
+    }
+
+    function getPlatformLabel(item) {
+      if (hasTag(item, "macos")) return "macOS";
+      if (hasTag(item, "debian")) return "Debian";
+      if (hasTag(item, "centos")) return "CentOS";
+      if (hasTag(item, "linux")) return "Linux";
+      if (hasTag(item, "windows")) return "Windows";
+      return "通用";
+    }
+
+    function getRisk(item) {
+      const cmd = normalize(item.command);
+      if (/--hard|rm -rf|setenforce 0|firewall-cmd --permanent|kill -9/.test(cmd)) {
+        return { label: "高风险", className: "risk-high" };
+      }
+      if (/sudo |systemctl restart|docker system prune|apt remove|yum install|dnf install/.test(cmd)) {
+        return { label: "需确认", className: "risk-mid" };
+      }
+      return { label: "常规", className: "risk-low" };
+    }
+
+    function readStorageArray(key) {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function readStorageObject(key) {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(key) || "{}");
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function readStorageBoolean(key, defaultValue) {
+      try {
+        const val = localStorage.getItem(key);
+        if (val === null) return defaultValue;
+        return val === "true";
+      } catch {
+        return defaultValue;
+      }
+    }
+
+    function writeStorageArray(key, arr) {
+      try {
+        localStorage.setItem(key, JSON.stringify(arr));
+      } catch {
+        // ignore storage errors (private mode / quota)
+      }
+    }
+
+    function writeStorageObject(key, obj) {
+      try {
+        localStorage.setItem(key, JSON.stringify(obj));
+      } catch {
+        // ignore storage errors (private mode / quota)
+      }
+    }
+
+    function writeStorageBoolean(key, value) {
+      try {
+        localStorage.setItem(key, String(Boolean(value)));
+      } catch {
+        // ignore storage errors
+      }
+    }
+
+    function trackCategoryUsage(category) {
+      if (!category || category === "全部分类") return;
+      categoryUsage[category] = (categoryUsage[category] || 0) + 1;
+      writeStorageObject(CATEGORY_USAGE_KEY, categoryUsage);
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function setButtonFlash(btn, text) {
+      const old = btn.textContent;
+      btn.textContent = text;
+      setTimeout(() => { btn.textContent = old; }, 900);
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    }
+
+    function copyText(text, btn) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => setButtonFlash(btn, "已复制"))
+          .catch(() => {
+            const ok = fallbackCopyText(text);
+            setButtonFlash(btn, ok ? "已复制" : "失败");
+          });
+        return;
+      }
+      const ok = fallbackCopyText(text);
+      setButtonFlash(btn, ok ? "已复制" : "失败");
+    }
+
+    function setFavorite(itemId, enabled) {
+      if (enabled) favorites.add(itemId);
+      else favorites.delete(itemId);
+      writeStorageArray(FAVORITES_KEY, Array.from(favorites));
+    }
+
+    function pushRecent(itemName) {
+      if (!recentEnabled) return;
+      recentCommands = [itemName, ...recentCommands.filter(name => name !== itemName)].slice(0, MAX_RECENT);
+      writeStorageArray(RECENT_KEY, recentCommands);
+      renderRecentChips();
+    }
+
+    function renderRecentChips() {
+      if (!recentEnabled || !recentCommands.length) {
+        recentChips.innerHTML = "";
+        return;
+      }
+      recentChips.innerHTML = recentCommands
+        .map(name => `<button type="button" class="chip" data-keyword="${encodeURIComponent(name)}">最近: ${escapeHtml(name)}</button>`)
+        .join("");
+      recentChips.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          searchInput.value = decodeURIComponent(chip.getAttribute("data-keyword"));
+          filterCommands();
+        });
+      });
+    }
+
+    function renderQuickCategoryChips() {
+      const candidates = categories.filter(c => c !== "全部分类");
+      const sorted = candidates.sort((a, b) => {
+        const ca = categoryUsage[a] || 0;
+        const cb = categoryUsage[b] || 0;
+        if (cb !== ca) return cb - ca;
+        return categories.indexOf(a) - categories.indexOf(b);
+      });
+      const ordered = ["全部分类", ...sorted.slice(0, QUICK_LIMIT)];
+
+      quickCategoryChips.innerHTML = ordered
+        .map(c => `<button type="button" class="chip ${categorySelect.value === c ? "active" : ""}" data-category="${encodeURIComponent(c)}">${escapeHtml(c)}</button>`)
+        .join("");
+      quickCategoryChips.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          const selected = decodeURIComponent(chip.getAttribute("data-category"));
+          categorySelect.value = selected;
+          trackCategoryUsage(selected);
+          filterCommands();
+        });
+      });
+    }
+
+    function toggleFavoritesOnly() {
+      favoritesOnly = !favoritesOnly;
+      favoritesOnlyBtn.classList.toggle("active", favoritesOnly);
+      favoritesOnlyBtn.textContent = favoritesOnly ? "仅看收藏: 开" : "仅看收藏";
+      filterCommands();
+    }
+
+    function syncRecentButtons() {
+      recentTrackBtn.classList.toggle("active", recentEnabled);
+      recentTrackBtn.textContent = recentEnabled ? "最近记录: 开" : "最近记录: 关";
+    }
+
+    function filterCommands() {
+      const query = normalize(searchInput.value);
+      const category = categorySelect.value;
+      const terms = query.split(/\s+/).filter(Boolean);
+      searchClearBtn.classList.toggle("is-hidden", !query.length);
+
+      const list = COMMANDS.filter(item => {
+        if (!inCategory(item, category)) return false;
+        if (favoritesOnly && !favorites.has(item.id)) return false;
+        if (!terms.length) return true;
+        return terms.every(term => item.searchText.includes(term));
+      });
+
+      const filterBits = [];
+      filterBits.push(`分类：${category}`);
+      if (query) filterBits.push(`关键词：${query}`);
+      if (favoritesOnly) filterBits.push("仅看收藏：开");
+      activeFilters.textContent = `当前筛选：${filterBits.join(" | ")}`;
+
+      renderCards(list);
+      renderQuickCategoryChips();
+    }
+
+    function renderCards(list) {
+      resultCount.textContent = `${list.length} 条结果`;
+      if (!list.length) {
+        cards.innerHTML = '<div class="empty">没有匹配结果。可以试试：docker 启动 / linux 搜索文件 / git 回退</div>';
+        return;
+      }
+
+      cards.innerHTML = list.map(item => {
+        const risk = getRisk(item);
+        const platform = getPlatformLabel(item);
+        const showPlatformBadge = platform !== item.category;
+        const tags = item.tags || [];
+        const hiddenTagStart = 8;
+        const tagHtml = tags
+          .map((tag, idx) => `<span class="tag ${idx >= hiddenTagStart ? "is-hidden" : ""}" data-hidden="${idx >= hiddenTagStart ? "1" : "0"}">${escapeHtml(tag)}</span>`)
+          .join("");
+        const hasHiddenTags = tags.length > hiddenTagStart;
+        const lineCount = item.command.split("\n").length;
+        const isLongCommand = lineCount > 4 || item.command.length > 170;
+
+        return `
+        <article class="card">
+          <div class="card-head">
+            <div class="cmd-name">${escapeHtml(item.name)}</div>
+            <div class="badge-wrap">
+              <span class="badge">${escapeHtml(item.category)}</span>
+              ${showPlatformBadge ? `<span class="badge badge-platform">${escapeHtml(platform)}</span>` : ""}
+              <span class="badge badge-risk ${risk.className}">${risk.label}</span>
+            </div>
+          </div>
+          <p class="desc">${escapeHtml(item.desc)}</p>
+          <div class="command-box">
+            <pre class="command ${isLongCommand ? "collapsed" : ""}" data-cmd-pre="1">${escapeHtml(item.command)}</pre>
+            <button class="btn-copy" data-cmd="${encodeURIComponent(item.command)}" type="button">复制</button>
+          </div>
+          ${isLongCommand ? '<button class="btn-mini btn-cmd-toggle" type="button" data-cmd-toggle="1">展开命令</button>' : ""}
+          <div class="card-actions">
+            <button class="btn-fav ${favorites.has(item.id) ? "active" : ""}" type="button" data-fav-id="${item.id}">
+              ${favorites.has(item.id) ? "已收藏" : "收藏"}
+            </button>
+          </div>
+          <div class="tags">
+            ${tagHtml}
+          </div>
+          ${hasHiddenTags ? '<button class="btn-mini btn-tag-toggle" type="button" data-tag-toggle="1">展开标签</button>' : ""}
+        </article>
+      `;}).join("");
+
+      cards.querySelectorAll(".btn-copy").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const cmd = decodeURIComponent(btn.getAttribute("data-cmd"));
+          copyText(cmd, btn);
+          const card = btn.closest(".card");
+          const title = card ? card.querySelector(".cmd-name") : null;
+          if (title) pushRecent(title.textContent);
+        });
+      });
+
+      cards.querySelectorAll(".btn-fav").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const itemId = btn.getAttribute("data-fav-id");
+          const enable = !favorites.has(itemId);
+          setFavorite(itemId, enable);
+          filterCommands();
+        });
+      });
+
+      cards.querySelectorAll("[data-cmd-toggle='1']").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const card = btn.closest(".card");
+          const pre = card ? card.querySelector("[data-cmd-pre='1']") : null;
+          if (!pre) return;
+          const collapsed = pre.classList.toggle("collapsed");
+          btn.textContent = collapsed ? "展开命令" : "收起命令";
+        });
+      });
+
+      cards.querySelectorAll("[data-tag-toggle='1']").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const card = btn.closest(".card");
+          if (!card) return;
+          const hiddenTags = card.querySelectorAll(".tag.is-hidden");
+          const expand = btn.textContent.includes("展开");
+          hiddenTags.forEach(tag => {
+            tag.style.display = expand ? "inline-flex" : "none";
+          });
+          btn.textContent = expand ? "收起标签" : "展开标签";
+        });
+      });
+    }
+
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      categorySelect.value = "全部分类";
+      favoritesOnly = false;
+      favoritesOnlyBtn.classList.remove("active");
+      favoritesOnlyBtn.textContent = "仅看收藏";
+      searchInput.focus();
+      filterCommands();
+    });
+    searchClearBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      searchInput.focus();
+      filterCommands();
+    });
+    favoritesOnlyBtn.addEventListener("click", toggleFavoritesOnly);
+    recentTrackBtn.addEventListener("click", () => {
+      recentEnabled = !recentEnabled;
+      writeStorageBoolean(RECENT_ENABLED_KEY, recentEnabled);
+      syncRecentButtons();
+      renderRecentChips();
+    });
+    clearRecentBtn.addEventListener("click", () => {
+      recentCommands = [];
+      writeStorageArray(RECENT_KEY, recentCommands);
+      renderRecentChips();
+      setButtonFlash(clearRecentBtn, "已清空");
+    });
+    searchInput.addEventListener("input", filterCommands);
+    categorySelect.addEventListener("change", () => {
+      trackCategoryUsage(categorySelect.value);
+      filterCommands();
+    });
+    document.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+      if (event.key === "/" && document.activeElement !== searchInput) {
+        event.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+      }
+      if (event.key === "Escape") {
+        searchInput.value = "";
+        filterCommands();
+      }
+    });
+    window.addEventListener("scroll", () => {
+      toTopBtn.classList.toggle("show", window.scrollY > 220);
+    });
+    toTopBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    totalCountPill.textContent = `总命令数: ${COMMANDS.length}`;
+    syncRecentButtons();
+    renderRecentChips();
+    renderQuickCategoryChips();
+    filterCommands();
+  </script>
+</body>
+</html>

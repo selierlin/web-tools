@@ -1,7 +1,14 @@
 {
-  "generatedAt": "2026-02-15T15:31:38.949Z",
-  "total": 28,
+  "generatedAt": "2026-02-15T15:39:53.724Z",
+  "total": 29,
   "commits": [
+    {
+      "hash": "141af32757bec61de0ef2732289dbb13a57d5bdd",
+      "shortHash": "141af32",
+      "date": "2026-02-15T23:39:46+08:00",
+      "author": "Selier",
+      "subject": "feat(updates): 增加更新记录页面及相关数据脚本"
+    },
     {
       "hash": "b8ddf60fb5099b0ced3f333c393d38461c73b4fc",
       "shortHash": "b8ddf60",

@@ -610,6 +610,14 @@
             icon: 'fa-server'
         },
         {
+            id: 'command-dict',
+            name: '命令查询字典',
+            src: '命令查询字典.html',
+            keywords: '命令 查询 字典 linux macos debian docker git kubernetes',
+            category: '开发',
+            icon: 'fa-terminal'
+        },
+        {
             id: 'uuid',
             name: 'UUID生成',
             src: 'UUID生成器.html',
@@ -776,6 +784,10 @@
 
     // 快捷键：Windows Ctrl+K / macOS ⌘+K 聚焦搜索框
     document.addEventListener('keydown', function (e) {
+        // 当焦点在子工具 iframe 内时，不拦截快捷键，交给子页面处理
+        if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+            return;
+        }
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
             e.preventDefault();
             searchBox.focus();
