@@ -1,7 +1,14 @@
 {
-  "generatedAt": "2026-02-18T13:09:40.344Z",
-  "total": 32,
+  "generatedAt": "2026-02-18T14:11:50.820Z",
+  "total": 33,
   "commits": [
+    {
+      "hash": "a2ece8e3b503537f205208a7d9fbbebc165697f4",
+      "shortHash": "a2ece8e",
+      "date": "2026-02-18T21:09:48+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 新增多条实用命令并优化命令速查页面名称"
+    },
     {
       "hash": "a97409d0cb03c689ad9c99c00cfec802e97bceab",
       "shortHash": "a97409d",

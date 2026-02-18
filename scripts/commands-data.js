@@ -85,10 +85,10 @@ window.COMMANDS_DATA = [
       },
       {
         category: "Linux 网络",
-        name: "下载文件",
-        desc: "从 URL 下载文件到当前目录。",
-        command: "curl -LO https://example.com/file.tar.gz",
-        tags: ["linux", "debian", "centos", "macos", "下载", "curl", "wget"]
+        name: "下载文件（curl/wget）",
+        desc: "从 URL 下载文件，提供 curl 与 wget 两种写法。",
+        command: "curl -LO https://example.com/file.tar.gz\n# 或\nwget https://example.com/file.tar.gz",
+        tags: ["linux", "debian", "centos", "macos", "下载", "curl", "wget", "网络"]
       },
       {
         category: "Linux 系统",
@@ -123,7 +123,7 @@ window.COMMANDS_DATA = [
         name: "递归修改目录权限",
         desc: "递归设置目录及其子文件的权限。",
         command: "chmod -R 755 /path/to/dir",
-        tags: ["linux", "debian", "centos", "macos", "权限", "chmod", "递归", "-R"]
+        tags: ["linux", "debian", "centos", "macos", "权限", "chmod", "递归"]
       },
       {
         category: "Linux 权限",
@@ -470,6 +470,97 @@ window.COMMANDS_DATA = [
       },
       {
         category: "数据库",
+        name: "MySQL 查看数据库列表",
+        desc: "列出当前实例中的所有数据库（在 MySQL 客户端中执行）。",
+        command: "SHOW DATABASES;",
+        tags: ["mysql", "数据库", "show databases", "sql", "查询"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 创建数据库",
+        desc: "创建新数据库并指定字符集（在 MySQL 客户端中执行）。",
+        command: "CREATE DATABASE app_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;",
+        tags: ["mysql", "建库", "create database", "sql"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 切换数据库",
+        desc: "切换到目标数据库执行后续 SQL（在 MySQL 客户端中执行）。",
+        command: "USE app_db;",
+        tags: ["mysql", "use", "切库", "sql"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 创建数据表",
+        desc: "创建带主键和时间字段的示例表（在 MySQL 客户端中执行）。",
+        command: "CREATE TABLE users (\n  id BIGINT PRIMARY KEY AUTO_INCREMENT,\n  name VARCHAR(100) NOT NULL,\n  email VARCHAR(150) NOT NULL UNIQUE,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+        tags: ["mysql", "建表", "create table", "sql", "innodb"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 查看表结构",
+        desc: "快速查看字段、类型、索引信息（在 MySQL 客户端中执行）。",
+        command: "DESC users;",
+        tags: ["mysql", "表结构", "desc", "字段", "sql"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 插入数据",
+        desc: "向表中插入一条记录（在 MySQL 客户端中执行）。",
+        command: "INSERT INTO users (name, email) VALUES ('Alice', 'alice@example.com');",
+        tags: ["mysql", "插入", "insert into", "sql", "写入"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL INSERT SELECT 批量写入",
+        desc: "将查询结果批量插入到目标表（在 MySQL 客户端中执行）。",
+        command: "INSERT INTO users_backup (id, name, email)\nSELECT id, name, email FROM users WHERE id > 1000;",
+        tags: ["mysql", "insert select", "批量插入", "数据迁移", "sql"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 更新数据",
+        desc: "按条件更新字段值（在 MySQL 客户端中执行）。",
+        command: "UPDATE users SET email = 'alice_new@example.com' WHERE id = 1;",
+        tags: ["mysql", "更新", "update", "sql", "修改"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 条件查询",
+        desc: "按条件筛选并按时间倒序查看（在 MySQL 客户端中执行）。",
+        command: "SELECT id, name, email FROM users WHERE id > 0 ORDER BY id DESC LIMIT 20;",
+        tags: ["mysql", "查询", "select", "where", "sql"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 删除数据",
+        desc: "按条件删除记录（在 MySQL 客户端中执行，执行前先确认条件）。",
+        command: "DELETE FROM users WHERE id = 1;",
+        tags: ["mysql", "删除", "delete", "sql", "谨慎操作"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 查看当前连接与进程",
+        desc: "查看当前会话和正在执行的 SQL（在 MySQL 客户端中执行）。",
+        command: "SHOW FULL PROCESSLIST;",
+        tags: ["mysql", "进程", "processlist", "连接", "sql", "排查"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 终止慢查询连接",
+        desc: "通过连接 ID 终止异常会话（在 MySQL 客户端中执行）。",
+        command: "KILL <process_id>;",
+        tags: ["mysql", "kill", "进程", "慢查询", "排查", "谨慎操作"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 创建普通索引",
+        desc: "为高频过滤字段添加索引提升查询速度（在 MySQL 客户端中执行）。",
+        command: "CREATE INDEX idx_users_email ON users(email);",
+        tags: ["mysql", "索引", "create index", "性能优化", "sql"]
+      },
+      {
+        category: "数据库",
         name: "PostgreSQL 登录",
         desc: "连接 PostgreSQL 数据库。",
         command: "psql -h 127.0.0.1 -p 5432 -U postgres -d mydb",
@@ -477,10 +568,178 @@ window.COMMANDS_DATA = [
       },
       {
         category: "数据库",
-        name: "Redis CLI",
+        name: "连接 Redis",
         desc: "连接 Redis 并执行命令。",
         command: "redis-cli -h 127.0.0.1 -p 6379",
-        tags: ["redis", "数据库", "缓存", "登录"]
+        tags: ["redis", "redis-cli", "数据库", "缓存", "连接"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 连通性检查",
+        desc: "检查 Redis 服务是否正常响应。",
+        command: "redis-cli -h 127.0.0.1 -p 6379 ping",
+        tags: ["redis", "redis-cli", "ping", "连通性", "排查"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 设置字符串",
+        desc: "写入一个字符串键值（在 redis-cli 中执行）。",
+        command: "SET user:1:name \"Alice\"",
+        tags: ["redis", "set", "string", "写入", "缓存"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 读取字符串",
+        desc: "读取指定 key 的字符串值（在 redis-cli 中执行）。",
+        command: "GET user:1:name",
+        tags: ["redis", "get", "string", "读取", "缓存"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 查看键是否存在",
+        desc: "判断 key 是否存在（返回 1/0，在 redis-cli 中执行）。",
+        command: "EXISTS user:1:name",
+        tags: ["redis", "exists", "key", "检查", "排查"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 设置过期时间",
+        desc: "为 key 设置过期秒数（在 redis-cli 中执行）。",
+        command: "EXPIRE user:1:name 3600",
+        tags: ["redis", "expire", "ttl", "过期", "缓存"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 查看剩余过期时间",
+        desc: "查看 key 的 TTL（秒，在 redis-cli 中执行）。",
+        command: "TTL user:1:name",
+        tags: ["redis", "ttl", "expire", "过期", "排查"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 删除键",
+        desc: "删除一个或多个 key（在 redis-cli 中执行）。",
+        command: "DEL user:1:name",
+        tags: ["redis", "del", "删除", "key", "谨慎操作"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 批量扫描键",
+        desc: "按模式扫描键（在 redis-cli 中执行，生产环境优先用 SCAN 而非 KEYS）。",
+        command: "SCAN 0 MATCH user:* COUNT 100",
+        tags: ["redis", "scan", "键扫描", "排查", "性能友好"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 查看键类型",
+        desc: "查看 key 的数据类型（在 redis-cli 中执行）。",
+        command: "TYPE user:1:name",
+        tags: ["redis", "type", "key", "数据类型", "排查"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 列表左侧入队",
+        desc: "向列表头部插入元素（在 redis-cli 中执行）。",
+        command: "LPUSH queue:jobs \"job-1\" \"job-2\"",
+        tags: ["redis", "list", "lpush", "队列", "写入"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 列表右侧出队",
+        desc: "从列表尾部弹出一个元素（在 redis-cli 中执行）。",
+        command: "RPOP queue:jobs",
+        tags: ["redis", "list", "rpop", "队列", "消费"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 哈希写入字段",
+        desc: "向哈希类型写入多个字段（在 redis-cli 中执行）。",
+        command: "HSET user:1 name \"Alice\" email \"alice@example.com\"",
+        tags: ["redis", "hash", "hset", "写入", "对象"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 哈希读取字段",
+        desc: "读取哈希中的指定字段（在 redis-cli 中执行）。",
+        command: "HGET user:1 email",
+        tags: ["redis", "hash", "hget", "读取", "对象"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 集合添加成员",
+        desc: "向集合中添加一个或多个成员（在 redis-cli 中执行）。",
+        command: "SADD online_users 1001 1002 1003",
+        tags: ["redis", "set", "sadd", "集合", "写入"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 集合查看成员",
+        desc: "查看集合中的全部成员（在 redis-cli 中执行）。",
+        command: "SMEMBERS online_users",
+        tags: ["redis", "set", "smembers", "集合", "读取"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 计数器自增",
+        desc: "对数值型 key 执行原子自增（在 redis-cli 中执行）。",
+        command: "INCR page:view:home",
+        tags: ["redis", "incr", "计数器", "原子操作", "统计"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 批量设置键值",
+        desc: "一次写入多个字符串键值（在 redis-cli 中执行）。",
+        command: "MSET user:1:name \"Alice\" user:1:city \"Shanghai\"",
+        tags: ["redis", "mset", "批量写入", "string", "性能优化"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 批量读取键值",
+        desc: "一次读取多个字符串 key（在 redis-cli 中执行）。",
+        command: "MGET user:1:name user:1:city",
+        tags: ["redis", "mget", "批量读取", "string", "性能优化"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 有序集合写入成员",
+        desc: "向 ZSET 写入分数与成员（在 redis-cli 中执行）。",
+        command: "ZADD leaderboard 100 user_1001 88 user_1002",
+        tags: ["redis", "zset", "zadd", "排行榜", "有序集合"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 读取有序集合区间",
+        desc: "按排名区间读取成员（含分值，在 redis-cli 中执行）。",
+        command: "ZRANGE leaderboard 0 9 WITHSCORES",
+        tags: ["redis", "zset", "zrange", "排行榜", "查询"]
+      },
+      {
+        category: "数据库",
+        name: "Redis Stream 追加消息",
+        desc: "向 Stream 追加一条事件消息（在 redis-cli 中执行）。",
+        command: "XADD orders * order_id 10001 status created",
+        tags: ["redis", "stream", "xadd", "消息队列", "事件"]
+      },
+      {
+        category: "数据库",
+        name: "Redis Stream 读取消息",
+        desc: "从 Stream 最早消息开始读取（在 redis-cli 中执行）。",
+        command: "XREAD COUNT 10 STREAMS orders 0-0",
+        tags: ["redis", "stream", "xread", "消息队列", "消费"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 查看运行信息",
+        desc: "查看服务器内存、连接、命令统计等（在 redis-cli 中执行）。",
+        command: "INFO",
+        tags: ["redis", "info", "运行状态", "监控", "排查"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 查看慢查询日志",
+        desc: "查看最近慢查询记录（在 redis-cli 中执行）。",
+        command: "SLOWLOG GET 20",
+        tags: ["redis", "slowlog", "慢查询", "性能分析", "排查"]
       },
       {
         category: "常用工具",
@@ -516,6 +775,13 @@ window.COMMANDS_DATA = [
         desc: "列出当前 shell 环境变量。",
         command: "printenv",
         tags: ["环境变量", "env", "shell"]
+      },
+      {
+        category: "常用工具",
+        name: "查看历史命令",
+        desc: "查看当前 shell 的历史命令记录。",
+        command: "history",
+        tags: ["linux", "debian", "centos", "macos", "history", "历史命令", "shell", "排查"]
       },
       {
         category: "常用工具",
@@ -572,6 +838,104 @@ window.COMMANDS_DATA = [
         desc: "使用 vim 打开并编辑文本文件。",
         command: "vim /path/to/file",
         tags: ["linux", "debian", "centos", "macos", "vim", "编辑器", "文本编辑"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 保存文件",
+        desc: "在 Vim 普通模式下执行，保存当前文件。",
+        command: ":w",
+        tags: ["linux", "debian", "centos", "macos", "vim", "保存", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 退出编辑器",
+        desc: "在 Vim 普通模式下执行，退出编辑器。",
+        command: ":q",
+        tags: ["linux", "debian", "centos", "macos", "vim", "退出", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 保存并退出",
+        desc: "在 Vim 普通模式下执行，保存并退出。",
+        command: ":wq",
+        tags: ["linux", "debian", "centos", "macos", "vim", "保存退出", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 强制退出不保存",
+        desc: "在 Vim 普通模式下执行，丢弃改动并退出（谨慎）。",
+        command: ":q!",
+        tags: ["linux", "debian", "centos", "macos", "vim", "强制退出", "不保存", "谨慎操作"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 搜索关键字",
+        desc: "在 Vim 中执行，向下搜索关键字。",
+        command: "/keyword",
+        tags: ["linux", "debian", "centos", "macos", "vim", "搜索", "关键字", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 全文替换",
+        desc: "在 Vim 中执行，替换全文件中所有匹配内容。",
+        command: ":%s/old/new/g",
+        tags: ["linux", "debian", "centos", "macos", "vim", "替换", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 显示行号",
+        desc: "在 Vim 中执行，开启行号显示便于定位。",
+        command: ":set number",
+        tags: ["linux", "debian", "centos", "macos", "vim", "行号", "set number", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 跳到首行/末行",
+        desc: "在 Vim 普通模式下执行，快速跳转到文件开头或结尾。",
+        command: "gg    # 跳到首行\nG     # 跳到末行",
+        tags: ["linux", "debian", "centos", "macos", "vim", "跳转", "首行", "末行"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 删除当前行",
+        desc: "在 Vim 普通模式下执行，删除光标所在整行。",
+        command: "dd",
+        tags: ["linux", "debian", "centos", "macos", "vim", "删除行", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 撤销与重做",
+        desc: "在 Vim 普通模式下执行，撤销上一步操作或重做。",
+        command: "u         # 撤销\nCtrl+r    # 重做",
+        tags: ["linux", "debian", "centos", "macos", "vim", "撤销", "重做", "快捷键"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 复制当前行",
+        desc: "在 Vim 普通模式下执行，复制光标所在整行到寄存器。",
+        command: "yy",
+        tags: ["linux", "debian", "centos", "macos", "vim", "复制", "yank", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 可视模式复制",
+        desc: "在 Vim 中执行，进入可视模式选择文本后复制。",
+        command: "v         # 进入可视模式\nh/j/k/l   # 选择文本\ny         # 复制所选内容",
+        tags: ["linux", "debian", "centos", "macos", "vim", "复制", "可视模式", "选择文本"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 在下方粘贴",
+        desc: "在 Vim 普通模式下执行，将复制内容粘贴到当前光标后或下一行。",
+        command: "p",
+        tags: ["linux", "debian", "centos", "macos", "vim", "粘贴", "paste", "编辑器"]
+      },
+      {
+        category: "常用工具",
+        name: "VIM 在上方粘贴",
+        desc: "在 Vim 普通模式下执行，将复制内容粘贴到当前光标前或上一行。",
+        command: "P",
+        tags: ["linux", "debian", "centos", "macos", "vim", "粘贴", "上方粘贴", "编辑器"]
       },
       {
         category: "常用工具",
@@ -645,6 +1009,34 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "删除文件（rm）",
+        desc: "删除单个文件（可加 -i 交互确认）。",
+        command: "rm -i file.txt",
+        tags: ["linux", "debian", "centos", "macos", "rm", "删除文件", "文件操作", "谨慎操作"]
+      },
+      {
+        category: "常用工具",
+        name: "递归删除目录（rm -r）",
+        desc: "递归删除目录及其内容。",
+        command: "rm -r /path/to/dir",
+        tags: ["linux", "debian", "centos", "macos", "rm", "删除目录", "递归", "文件操作", "谨慎操作"]
+      },
+      {
+        category: "常用工具",
+        name: "强制删除目录（rm -rf）",
+        desc: "不提示直接删除，风险高，执行前务必确认路径。",
+        command: "rm -rf /path/to/dir",
+        tags: ["linux", "debian", "centos", "macos", "rm", "rm -rf", "强制删除", "高风险", "谨慎操作"]
+      },
+      {
+        category: "常用工具",
+        name: "移到回收站（trash）",
+        desc: "优先使用回收站删除，避免误删后无法恢复。",
+        command: "trash file.txt    # 需先安装 trash-cli\n# macOS 可用\nmv file.txt ~/.Trash/",
+        tags: ["linux", "debian", "centos", "macos", "trash", "回收站", "删除文件", "安全删除"]
+      },
+      {
+        category: "常用工具",
         name: "分页查看文件",
         desc: "适合查看大文件，支持上下翻页。",
         command: "less /path/to/file",
@@ -670,6 +1062,97 @@ window.COMMANDS_DATA = [
         desc: "显示可执行路径和别名信息。",
         command: "type -a python3",
         tags: ["linux", "debian", "centos", "macos", "type", "命令路径", "别名"]
+      },
+      {
+        category: "常用工具",
+        name: "重新加载 shell 配置（source）",
+        desc: "修改配置文件后立即生效（bash/zsh）。",
+        command: "source ~/.zshrc    # bash 可用 source ~/.bashrc",
+        tags: ["linux", "debian", "centos", "macos", "source", "shell", "环境变量", "配置生效"]
+      },
+      {
+        category: "常用工具",
+        name: "测试 TCP 端口连通（telnet）",
+        desc: "快速验证目标主机端口是否可连接。",
+        command: "telnet 127.0.0.1 6379",
+        tags: ["linux", "debian", "centos", "macos", "telnet", "网络", "端口连通", "排查"]
+      },
+      {
+        category: "常用工具",
+        name: "查看当前登录用户（whoami）",
+        desc: "输出当前 shell 会话的用户名。",
+        command: "whoami",
+        tags: ["linux", "debian", "centos", "macos", "whoami", "用户", "身份", "系统信息"]
+      },
+      {
+        category: "常用工具",
+        name: "查找命令二进制与手册位置（whereis）",
+        desc: "查看命令的二进制路径、源码路径和 man 路径。",
+        command: "whereis nginx",
+        tags: ["linux", "debian", "centos", "macos", "whereis", "命令路径", "man", "排查"]
+      },
+      {
+        category: "常用工具",
+        name: "查看命令所有匹配路径（which -a）",
+        desc: "显示 PATH 中所有同名可执行文件位置。",
+        command: "which -a python3",
+        tags: ["linux", "debian", "centos", "macos", "which", "路径查找", "命令路径", "排查"]
+      },
+      {
+        category: "常用工具",
+        name: "显示物理路径（pwd -P）",
+        desc: "输出解析软链接后的真实目录路径。",
+        command: "pwd -P",
+        tags: ["linux", "debian", "centos", "macos", "pwd", "路径", "软链接", "目录"]
+      },
+      {
+        category: "常用工具",
+        name: "NVM 安装并切换 Node 版本",
+        desc: "安装指定 Node 版本并切换到该版本。",
+        command: "nvm install 20\nnvm use 20",
+        tags: ["nvm", "node", "版本管理", "安装", "切换版本"]
+      },
+      {
+        category: "常用工具",
+        name: "NVM 查看已安装版本",
+        desc: "列出本机已安装的 Node 版本。",
+        command: "nvm ls",
+        tags: ["nvm", "node", "版本管理", "列表", "排查"]
+      },
+      {
+        category: "常用工具",
+        name: "jenv 初始化到 shell",
+        desc: "初始化 jenv 并立即在当前会话生效。",
+        command: "echo 'export PATH=\"$HOME/.jenv/bin:$PATH\"' >> ~/.zshrc\necho 'eval \"$(jenv init -)\"' >> ~/.zshrc\nsource ~/.zshrc",
+        tags: ["jenv", "java", "版本管理", "shell", "初始化"]
+      },
+      {
+        category: "常用工具",
+        name: "jenv 添加本机 JDK",
+        desc: "把指定 JDK 路径加入 jenv 管理。",
+        command: "jenv add /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home",
+        tags: ["jenv", "java", "jdk", "版本管理", "添加版本"]
+      },
+      {
+        category: "常用工具",
+        name: "jenv 设置全局 Java 版本",
+        desc: "设置默认 Java 版本（影响全部目录）。",
+        command: "jenv global 17",
+        tags: ["jenv", "java", "jdk", "global", "版本切换"]
+      },
+      {
+        category: "常用工具",
+        name: "jenv 设置项目 Java 版本",
+        desc: "在当前项目目录设置本地 Java 版本。",
+        command: "jenv local 17",
+        tags: ["jenv", "java", "jdk", "local", "项目配置"]
+      },
+      {
+        category: "常用工具",
+        name: "jenv 查看当前版本状态",
+        desc: "查看当前生效 Java 版本和来源。",
+        command: "jenv versions\njenv version",
+        tags: ["jenv", "java", "版本管理", "状态检查", "排查"]
       },
       {
         category: "Linux 服务",
@@ -813,6 +1296,34 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "TMUX 新建会话",
+        desc: "创建并进入一个新的 tmux 会话。",
+        command: "tmux new -s work",
+        tags: ["tmux", "会话", "新建", "终端复用", "linux", "debian", "centos", "macos"]
+      },
+      {
+        category: "常用工具",
+        name: "TMUX 查看会话列表",
+        desc: "列出当前所有 tmux 会话。",
+        command: "tmux ls",
+        tags: ["tmux", "会话", "列表", "终端复用", "linux", "debian", "centos", "macos"]
+      },
+      {
+        category: "常用工具",
+        name: "TMUX 连接已有会话",
+        desc: "附着到指定会话继续工作。",
+        command: "tmux attach -t work",
+        tags: ["tmux", "attach", "会话", "恢复会话", "linux", "debian", "centos", "macos"]
+      },
+      {
+        category: "常用工具",
+        name: "TMUX 分离当前会话",
+        desc: "在 tmux 会话内按该快捷键，从会话退出但保持进程在后台运行。",
+        command: "Ctrl+b d",
+        tags: ["tmux", "分离", "detach", "后台运行", "快捷键", "linux", "debian", "centos", "macos"]
+      },
+      {
+        category: "常用工具",
         name: "Homebrew 安装软件",
         desc: "使用 brew 安装软件包（macOS 常用）。",
         command: "brew install <formula>",
@@ -949,7 +1460,7 @@ window.COMMANDS_DATA = [
         name: "Linux/macOS 设置代理环境变量",
         desc: "适用于 Linux、Debian、CentOS、macOS 当前 shell 会话。",
         command: "export http_proxy=http://127.0.0.1:7890\nexport https_proxy=http://127.0.0.1:7890",
-        tags: ["linux", "debian", "debain", "centos", "macos", "proxy", "代理", "http_proxy", "https_proxy", "shell"]
+        tags: ["linux", "debian", "centos", "macos", "proxy", "代理", "http_proxy", "https_proxy", "shell"]
       },
       {
         category: "常用工具",
@@ -957,5 +1468,320 @@ window.COMMANDS_DATA = [
         desc: "取消当前 shell 的代理设置。",
         command: "unset http_proxy https_proxy",
         tags: ["linux", "debian", "centos", "macos", "proxy", "代理", "unset", "shell"]
+      },
+      {
+        category: "Linux 服务",
+        name: "开机自启并立即启动服务",
+        desc: "设置服务开机自启，并立刻启动。",
+        command: "sudo systemctl enable --now nginx",
+        tags: ["linux", "debian", "centos", "服务", "systemctl", "开机自启", "启动"]
+      },
+      {
+        category: "Linux 服务",
+        name: "重载 systemd 配置",
+        desc: "修改 service 文件后重新加载 systemd。",
+        command: "sudo systemctl daemon-reload",
+        tags: ["linux", "debian", "centos", "服务", "systemctl", "daemon-reload", "配置更新"]
+      },
+      {
+        category: "Linux 服务",
+        name: "列出运行中的服务",
+        desc: "查看当前运行状态的 systemd 服务。",
+        command: "systemctl list-units --type=service --state=running",
+        tags: ["linux", "debian", "centos", "服务", "systemctl", "状态", "排查"]
+      },
+      {
+        category: "Linux 网络",
+        name: "查询 DNS 解析记录（dig）",
+        desc: "快速查看域名解析到的 IP。",
+        command: "dig +short example.com",
+        tags: ["linux", "debian", "centos", "macos", "dns", "dig", "网络诊断"]
+      },
+      {
+        category: "Linux 网络",
+        name: "查询 DNS 解析记录（nslookup）",
+        desc: "使用 nslookup 查询域名解析结果。",
+        command: "nslookup example.com",
+        tags: ["linux", "debian", "centos", "macos", "dns", "nslookup", "网络诊断"]
+      },
+      {
+        category: "Linux 网络",
+        name: "追踪网络路由",
+        desc: "查看到目标主机的网络路径。",
+        command: "traceroute example.com",
+        tags: ["linux", "debian", "centos", "macos", "路由", "traceroute", "网络诊断"]
+      },
+      {
+        category: "Linux 网络",
+        name: "测试端口连通性",
+        desc: "检查目标主机端口是否可访问。",
+        command: "nc -zv 127.0.0.1 3306",
+        tags: ["linux", "debian", "centos", "macos", "端口", "连通性", "nc", "网络诊断"]
+      },
+      {
+        category: "Linux 网络",
+        name: "查看 HTTP 响应头",
+        desc: "仅请求并显示响应头信息。",
+        command: "curl -I https://example.com",
+        tags: ["linux", "debian", "centos", "macos", "curl", "http", "响应头", "网络诊断"]
+      },
+      {
+        category: "Linux 网络",
+        name: "查看路由表",
+        desc: "查看本机网络路由与默认网关。",
+        command: "ip route",
+        tags: ["linux", "debian", "centos", "路由", "网关", "网络", "排查"]
+      },
+      {
+        category: "Docker",
+        name: "查看 Docker 网络列表",
+        desc: "列出当前主机上的 Docker 网络。",
+        command: "docker network ls",
+        tags: ["docker", "network", "网络", "排查", "列表"]
+      },
+      {
+        category: "Docker",
+        name: "查看 Docker 数据卷列表",
+        desc: "列出当前主机上的 Docker 卷。",
+        command: "docker volume ls",
+        tags: ["docker", "volume", "数据卷", "存储", "列表"]
+      },
+      {
+        category: "Docker Compose",
+        name: "查看 compose 服务状态",
+        desc: "查看 compose 项目下各服务运行状态。",
+        command: "docker compose ps",
+        tags: ["docker", "compose", "ps", "状态", "服务"]
+      },
+      {
+        category: "Docker Compose",
+        name: "查看 compose 服务日志",
+        desc: "持续跟踪指定服务日志输出。",
+        command: "docker compose logs -f <service_name>",
+        tags: ["docker", "compose", "日志", "排查", "服务"]
+      },
+      {
+        category: "Docker Compose",
+        name: "构建并后台启动 compose 服务",
+        desc: "重新构建镜像后启动服务。",
+        command: "docker compose up -d --build",
+        tags: ["docker", "compose", "build", "启动", "部署"]
+      },
+      {
+        category: "Docker Compose",
+        name: "停止并删除 compose 资源（含卷）",
+        desc: "停止服务并删除容器、网络和匿名卷。",
+        command: "docker compose down -v",
+        tags: ["docker", "compose", "down", "清理", "volume"]
+      },
+      {
+        category: "Docker",
+        name: "查看本地镜像列表",
+        desc: "列出本地所有镜像及标签。",
+        command: "docker images",
+        tags: ["docker", "image", "images", "镜像", "列表"]
+      },
+      {
+        category: "Docker",
+        name: "拉取镜像",
+        desc: "从镜像仓库拉取指定镜像版本。",
+        command: "docker pull nginx:latest",
+        tags: ["docker", "pull", "镜像", "下载", "仓库"]
+      },
+      {
+        category: "Docker",
+        name: "给镜像打标签",
+        desc: "为已有镜像添加新标签。",
+        command: "docker tag myapp:latest registry.example.com/myapp:1.0.0",
+        tags: ["docker", "tag", "镜像", "版本", "发布"]
+      },
+      {
+        category: "Docker",
+        name: "推送镜像到仓库",
+        desc: "将本地镜像推送到远程仓库。",
+        command: "docker push registry.example.com/myapp:1.0.0",
+        tags: ["docker", "push", "镜像", "仓库", "发布"]
+      },
+      {
+        category: "Docker",
+        name: "查看 Docker 网络详情",
+        desc: "检查网络内连接的容器和网段信息。",
+        command: "docker network inspect bridge",
+        tags: ["docker", "network", "inspect", "网络排查", "容器"]
+      },
+      {
+        category: "Docker",
+        name: "查看 Docker 数据卷详情",
+        desc: "查看数据卷挂载路径和元数据。",
+        command: "docker volume inspect <volume_name>",
+        tags: ["docker", "volume", "inspect", "数据卷", "排查"]
+      },
+      {
+        category: "Docker",
+        name: "清理悬空镜像",
+        desc: "删除未被引用的 dangling 镜像层。",
+        command: "docker image prune -f",
+        tags: ["docker", "image", "prune", "清理", "磁盘"]
+      },
+      {
+        category: "Docker Compose",
+        name: "在 compose 服务内执行命令",
+        desc: "进入指定服务容器执行交互命令。",
+        command: "docker compose exec <service_name> sh",
+        tags: ["docker", "compose", "exec", "调试", "服务"]
+      },
+      {
+        category: "Docker Compose",
+        name: "查看 compose 最终配置",
+        desc: "展开变量与合并结果，检查配置是否符合预期。",
+        command: "docker compose config",
+        tags: ["docker", "compose", "config", "配置检查", "排查"]
+      },
+      {
+        category: "Docker Compose",
+        name: "拉取 compose 依赖镜像",
+        desc: "提前拉取 docker-compose.yml 中定义的镜像。",
+        command: "docker compose pull",
+        tags: ["docker", "compose", "pull", "镜像", "部署准备"]
+      },
+      {
+        category: "Docker Compose",
+        name: "重启 compose 服务",
+        desc: "重启全部服务或指定服务。",
+        command: "docker compose restart\n# 或\ndocker compose restart <service_name>",
+        tags: ["docker", "compose", "restart", "服务", "重启"]
+      },
+      {
+        category: "Docker Compose",
+        name: "只重建单个服务并启动",
+        desc: "变更某个服务后仅重建该服务，避免全量重启。",
+        command: "docker compose up -d --build <service_name>",
+        tags: ["docker", "compose", "build", "服务", "部署"]
+      },
+      {
+        category: "Git",
+        name: "获取并清理远程分支引用",
+        desc: "抓取所有远程更新并删除失效引用。",
+        command: "git fetch --all --prune",
+        tags: ["git", "fetch", "远程分支", "同步", "清理"]
+      },
+      {
+        category: "Git",
+        name: "查看远程仓库地址",
+        desc: "检查当前仓库关联的远程地址。",
+        command: "git remote -v",
+        tags: ["git", "remote", "origin", "仓库地址", "排查"]
+      },
+      {
+        category: "Git",
+        name: "交互式整理最近提交",
+        desc: "对最近提交进行压缩、改序或修改信息。",
+        command: "git rebase -i HEAD~3",
+        tags: ["git", "rebase", "提交整理", "历史", "高级"]
+      },
+      {
+        category: "Git",
+        name: "挑选提交到当前分支",
+        desc: "将指定提交拣选到当前分支。",
+        command: "git cherry-pick <commit_id>",
+        tags: ["git", "cherry-pick", "拣选提交", "分支", "合并"]
+      },
+      {
+        category: "Git",
+        name: "生成反向提交撤销改动",
+        desc: "通过新提交撤销目标提交，不改写历史。",
+        command: "git revert <commit_id>",
+        tags: ["git", "revert", "撤销提交", "安全回滚", "历史保留"]
+      },
+      {
+        category: "Git",
+        name: "软回退到上一个提交",
+        desc: "回退提交但保留改动在暂存区。",
+        command: "git reset --soft HEAD~1",
+        tags: ["git", "reset", "soft", "回退", "暂存区"]
+      },
+      {
+        category: "Git",
+        name: "查看代码行最后修改者",
+        desc: "定位某文件每一行最后的提交来源。",
+        command: "git blame <file>",
+        tags: ["git", "blame", "追踪修改", "排查", "历史"]
+      },
+      {
+        category: "Kubernetes",
+        name: "查看服务列表",
+        desc: "查看当前命名空间的 Service 资源。",
+        command: "kubectl get svc",
+        tags: ["k8s", "kubernetes", "service", "svc", "查看"]
+      },
+      {
+        category: "Kubernetes",
+        name: "按时间查看集群事件",
+        desc: "按时间排序查看最近事件，便于排障。",
+        command: "kubectl get events --sort-by=.lastTimestamp",
+        tags: ["k8s", "kubernetes", "events", "排查", "故障定位"]
+      },
+      {
+        category: "Kubernetes",
+        name: "本地转发到集群服务",
+        desc: "把本地端口转发到集群内 Service。",
+        command: "kubectl port-forward svc/<service_name> 8080:80",
+        tags: ["k8s", "kubernetes", "port-forward", "调试", "服务"]
+      },
+      {
+        category: "Kubernetes",
+        name: "应用资源清单",
+        desc: "根据 YAML 清单创建或更新资源。",
+        command: "kubectl apply -f k8s.yaml",
+        tags: ["k8s", "kubernetes", "apply", "部署", "yaml"]
+      },
+      {
+        category: "Kubernetes",
+        name: "查看 Deployment 发布状态",
+        desc: "跟踪 Deployment 滚动发布进度。",
+        command: "kubectl rollout status deploy/<deploy_name>",
+        tags: ["k8s", "kubernetes", "rollout", "deployment", "发布"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 备份数据库",
+        desc: "导出指定数据库到 SQL 文件。",
+        command: "mysqldump -h 127.0.0.1 -P 3306 -u root -p app_db > app_db.sql",
+        tags: ["mysql", "mysqldump", "备份", "导出", "数据库"]
+      },
+      {
+        category: "数据库",
+        name: "PostgreSQL 备份数据库",
+        desc: "导出指定 PostgreSQL 数据库。",
+        command: "pg_dump -h 127.0.0.1 -p 5432 -U postgres app_db > app_db.sql",
+        tags: ["postgresql", "pg_dump", "备份", "导出", "数据库"]
+      },
+      {
+        category: "常用工具",
+        name: "NPM 按锁文件安装依赖",
+        desc: "严格按 lock 文件安装，常用于 CI 环境。",
+        command: "npm ci",
+        tags: ["npm", "node", "ci", "依赖安装", "构建"]
+      },
+      {
+        category: "常用工具",
+        name: "创建 Python 虚拟环境",
+        desc: "在当前目录创建独立 Python 环境。",
+        command: "python3 -m venv .venv",
+        tags: ["python", "venv", "虚拟环境", "环境隔离", "python3"]
+      },
+      {
+        category: "常用工具",
+        name: "查看过期 Python 包",
+        desc: "列出当前环境可升级的 Python 依赖。",
+        command: "python3 -m pip list --outdated",
+        tags: ["pip", "python", "依赖检查", "过期", "包管理"]
+      },
+      {
+        category: "常用工具",
+        name: "查看 Homebrew 后台服务",
+        desc: "查看通过 brew 管理的服务状态。",
+        command: "brew services list",
+        tags: ["homebrew", "brew", "services", "macos", "服务管理"]
       }
     ];

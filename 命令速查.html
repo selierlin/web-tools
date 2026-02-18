@@ -937,6 +937,30 @@
     ];
 
     const QUICK_LIMIT = 6;
+    const TAG_CANONICAL_MAP = Object.freeze({
+      k8s: "kubernetes",
+      postgres: "postgresql",
+      svc: "service",
+      log: "日志"
+    });
+    const SEARCH_EQUIV_GROUPS = [
+      ["回滚", "回退", "撤销", "恢复"],
+      ["日志", "log"],
+      ["容器", "docker"],
+      ["k8s", "kubernetes", "kubectl"],
+      ["redis", "缓存"],
+      ["数据库", "db"],
+      ["下载", "curl", "wget"],
+      ["查端口", "端口占用", "监听端口"]
+    ];
+    const SEARCH_SYNONYM_INDEX = (() => {
+      const index = new Map();
+      for (const group of SEARCH_EQUIV_GROUPS) {
+        const normalizedGroup = Array.from(new Set(group.map(normalize)));
+        for (const term of normalizedGroup) index.set(term, normalizedGroup);
+      }
+      return index;
+    })();
 
     let favoritesOnly = false;
     let favorites = new Set(readStorageArray(FAVORITES_KEY));
@@ -946,6 +970,44 @@
 
     function normalize(text) {
       return String(text || "").toLowerCase().trim();
+    }
+
+    function normalizeTag(tag) {
+      const raw = normalize(tag);
+      return TAG_CANONICAL_MAP[raw] || raw;
+    }
+
+    function normalizeTags(tags) {
+      const normalized = [];
+      const seen = new Set();
+      for (const tag of (tags || [])) {
+        const canonical = normalizeTag(tag);
+        if (seen.has(canonical)) continue;
+        seen.add(canonical);
+        normalized.push(canonical);
+      }
+      return normalized;
+    }
+
+    function expandSearchTerms(terms) {
+      const expanded = [];
+      const seen = new Set();
+      for (const term of terms) {
+        const group = SEARCH_SYNONYM_INDEX.get(term) || [term];
+        for (const alias of group) {
+          if (seen.has(alias)) continue;
+          seen.add(alias);
+          expanded.push(alias);
+        }
+      }
+      return expanded;
+    }
+
+    function commandSignature(command) {
+      return String(command || "")
+        .replace(/#.*$/gm, "")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     function hasTag(item, tag) {
@@ -968,17 +1030,26 @@
       return count >= 2;
     }
 
-    const COMMANDS = (window.COMMANDS_DATA || []).map(item => {
-      const searchText = normalize([
-        item.category,
-        item.name,
-        item.desc,
-        item.command,
-        item.tags.join(" ")
-      ].join(" "));
-      const id = encodeURIComponent(`${item.category}::${item.name}::${item.command}`);
-      return { ...item, id, searchText };
-    });
+    const COMMANDS = (() => {
+      const seenSignatures = new Set();
+      return (window.COMMANDS_DATA || []).reduce((list, rawItem) => {
+        const tags = normalizeTags(rawItem.tags);
+        const signature = commandSignature(rawItem.command);
+        if (signature && seenSignatures.has(signature)) return list;
+        if (signature) seenSignatures.add(signature);
+        const item = { ...rawItem, tags };
+        const searchText = normalize([
+          item.category,
+          item.name,
+          item.desc,
+          item.command,
+          item.tags.join(" ")
+        ].join(" "));
+        const id = encodeURIComponent(`${item.category}::${item.name}::${item.command}`);
+        list.push({ ...item, id, searchText });
+        return list;
+      }, []);
+    })();
 
     categorySelect.innerHTML = categories
       .map(category => `<option value="${category}">${category}</option>`)
@@ -1014,10 +1085,18 @@
 
     function getRisk(item) {
       const cmd = normalize(item.command);
-      if (/--hard|rm -rf|setenforce 0|firewall-cmd --permanent|kill -9/.test(cmd)) {
+      if (/\brm\s+-rf\b|\bgit reset --hard\b|\bsetenforce 0\b|\bkill -9\b/.test(cmd)) {
         return { label: "高风险", className: "risk-high" };
       }
-      if (/sudo |systemctl restart|docker system prune|apt remove|yum install|dnf install/.test(cmd)) {
+      if (
+        /\brm\s+-r\b/.test(cmd) ||
+        /\bsystemctl (restart|reload|start|stop|enable|disable|daemon-reload)\b/.test(cmd) ||
+        /\bdocker system prune\b|\bdocker (rm|rmi)\b|\bdocker compose down\b/.test(cmd) ||
+        /\bapt (install|remove|purge)\b|\byum install\b|\bdnf install\b/.test(cmd) ||
+        /\bgit reset --(soft|mixed)\b|\bgit revert\b|\bgit checkout --\b/.test(cmd) ||
+        /\bdelete from\b|\bdrop table\b|\btruncate table\b/.test(cmd) ||
+        /\bfirewall-cmd\b.*--permanent\b/.test(cmd)
+      ) {
         return { label: "需确认", className: "risk-mid" };
       }
       return { label: "常规", className: "risk-low" };
@@ -1191,7 +1270,8 @@
     function filterCommands() {
       const query = normalize(searchInput.value);
       const category = categorySelect.value;
-      const terms = query.split(/\s+/).filter(Boolean);
+      const rawTerms = query.split(/\s+/).filter(Boolean);
+      const terms = expandSearchTerms(rawTerms);
       searchClearBtn.classList.toggle("is-hidden", !query.length);
 
       const list = COMMANDS.filter(item => {
