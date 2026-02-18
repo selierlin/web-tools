@@ -1,7 +1,21 @@
 {
-  "generatedAt": "2026-02-18T10:09:30.594Z",
-  "total": 30,
+  "generatedAt": "2026-02-18T13:09:40.344Z",
+  "total": 32,
   "commits": [
+    {
+      "hash": "a97409d0cb03c689ad9c99c00cfec802e97bceab",
+      "shortHash": "a97409d",
+      "date": "2026-02-18T19:21:13+08:00",
+      "author": "Selier",
+      "subject": "feat(todo): 添加优雅待办功能模块"
+    },
+    {
+      "hash": "989de21e3d490960c50699a1dc769441d9b05366",
+      "shortHash": "989de21",
+      "date": "2026-02-18T18:09:57+08:00",
+      "author": "Selier",
+      "subject": "feat(updates): 优化更新记录文件存放路径"
+    },
     {
       "hash": "1756044eef1a9bbd020bdccbc9ad70a2b657c9cc",
       "shortHash": "1756044",

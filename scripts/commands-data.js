@@ -330,6 +330,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "Docker",
+        name: "在主机与容器间复制文件",
+        desc: "支持主机到容器、容器到主机双向复制。",
+        command: "docker cp ./local-file.txt <container_name_or_id>:/tmp/local-file.txt\ndocker cp <container_name_or_id>:/var/log/app.log ./app.log",
+        tags: ["docker", "cp", "docker cp", "复制文件", "容器", "主机"]
+      },
+      {
+        category: "Docker",
         name: "删除容器",
         desc: "删除停止状态容器。",
         command: "docker rm <container_name_or_id>",
@@ -383,6 +390,20 @@ window.COMMANDS_DATA = [
         desc: "创建新分支并切换过去。",
         command: "git checkout -b feature/my-task",
         tags: ["git", "分支", "checkout", "新建"]
+      },
+      {
+        category: "Git",
+        name: "克隆远程仓库",
+        desc: "把远程仓库下载到本地目录。",
+        command: "git clone https://github.com/<owner>/<repo>.git\n# 或\ngit clone git@github.com:<owner>/<repo>.git",
+        tags: ["git", "clone", "克隆", "远程仓库", "下载代码"]
+      },
+      {
+        category: "Git",
+        name: "浅克隆仓库（仅最近提交）",
+        desc: "仅拉取最近提交，速度更快但历史不完整。",
+        command: "git clone --depth 1 <repository_url>",
+        tags: ["git", "clone", "浅克隆", "depth", "下载代码", "性能优化"]
       },
       {
         category: "Git",
@@ -658,6 +679,20 @@ window.COMMANDS_DATA = [
         tags: ["linux", "debian", "centos", "服务", "日志", "systemd", "排查"]
       },
       {
+        category: "Linux 服务",
+        name: "检查 Nginx 配置是否正确",
+        desc: "在重载前先校验配置语法。",
+        command: "sudo nginx -t",
+        tags: ["linux", "debian", "centos", "nginx", "配置检查", "语法检查", "服务"]
+      },
+      {
+        category: "Linux 服务",
+        name: "平滑重载 Nginx",
+        desc: "不中断连接重新加载配置。",
+        command: "sudo systemctl reload nginx",
+        tags: ["linux", "debian", "centos", "nginx", "reload", "重载配置", "服务"]
+      },
+      {
         category: "Docker",
         name: "查看容器资源占用",
         desc: "实时查看容器 CPU/内存等资源。",
@@ -698,6 +733,13 @@ window.COMMANDS_DATA = [
         desc: "查看未暂存改动的具体差异。",
         command: "git diff",
         tags: ["git", "diff", "差异", "改动"]
+      },
+      {
+        category: "Git",
+        name: "批量删除已合并本地分支（保留主分支）",
+        desc: "清理已合并分支，自动排除当前分支与常见主分支。",
+        command: "git branch --merged | grep -vE '^\\*|main$|master$|develop$|dev$' | xargs git branch -d",
+        tags: ["git", "branch", "清理分支", "删除分支", "merged", "谨慎操作"]
       },
       {
         category: "常用工具",
@@ -859,6 +901,20 @@ window.COMMANDS_DATA = [
         desc: "检查哪些依赖存在新版本。",
         command: "npm outdated",
         tags: ["npm", "node", "依赖检查", "过期", "包管理"]
+      },
+      {
+        category: "常用工具",
+        name: "PIP 安装 Python 包",
+        desc: "为当前 Python 环境安装包。",
+        command: "python3 -m pip install <package_name>",
+        tags: ["pip", "python", "安装依赖", "包管理", "python3"]
+      },
+      {
+        category: "常用工具",
+        name: "PIP 从 requirements 安装依赖",
+        desc: "根据 requirements.txt 批量安装依赖。",
+        command: "python3 -m pip install -r requirements.txt",
+        tags: ["pip", "python", "requirements", "安装依赖", "包管理"]
       },
       {
         category: "常用工具",
