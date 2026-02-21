@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文本对比系统</title>
+    <title>文本对比</title>
     <style>
         :root {
             --neon-blue: #00d2ff;
@@ -509,7 +509,7 @@
 <div class="container">
     <header class="tool-header">
         <div class="header-left">
-            <div class="tool-title">文本对比系统 v2.0</div>
+            <div class="tool-title">文本对比 v2.0</div>
         </div>
         <div class="btn-group">
             <div class="header-summary" id="summaryBar">
@@ -1012,9 +1012,11 @@
         if (state.mode === 'set') {
             resetEditorsToTextarea();
             result = await compareSet(leftItems, rightItems);
+            resultSection.style.display = 'grid';
         } else {
             renderDiffPanels(leftRaw.split(/\r?\n/), rightRaw.split(/\r?\n/));
             result = await compareLine(leftItems, rightItems);
+            resultSection.style.display = 'none';
         }
 
         state.result = result;
@@ -1054,6 +1056,11 @@
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
         backToEditBtn.style.display = mode === 'line' && isReplaced.left ? 'inline-flex' : 'none';
+        if (mode === 'set') {
+            resultSection.style.display = 'grid';
+        } else {
+            resultSection.style.display = 'none';
+        }
     }
 
     function wireDrop(panel, textarea) {
