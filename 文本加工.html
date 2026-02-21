@@ -81,24 +81,71 @@
             align-items: center;
             justify-content: center;
             gap: 0.8rem;
+            flex-wrap: wrap;
             margin-bottom: 1.4rem;
             color: var(--text-soft);
             font-size: 0.95rem;
         }
-
-        .quote-select select {
-            padding: 0.55rem 0.95rem;
+        .quote-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.55rem;
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.24);
-            background: rgba(16, 35, 56, 0.7);
-            color: #f7fbff;
-            outline: none;
-            transition: border-color .2s ease, box-shadow .2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(9, 22, 40, 0.38);
+        }
+        .quote-main label {
+            white-space: nowrap;
+            color: #d7e7fb;
+            font-size: 0.9rem;
         }
 
-        .quote-select select:focus {
+        .quote-main select,
+        .sort-control select {
+            padding: 0.25rem 1rem 0.25rem 0.2rem;
+            border: none;
+            background: transparent;
+            color: #f7fbff;
+            outline: none;
+            font-size: 0.86rem;
+            min-height: 28px;
+            border-radius: 0;
+            box-shadow: none;
+        }
+        .quote-main:focus-within,
+        .sort-control:focus-within {
             border-color: var(--accent-c);
-            box-shadow: 0 0 0 3px rgba(75, 163, 255, 0.18);
+            box-shadow: 0 0 0 2px rgba(75, 163, 255, 0.18);
+        }
+        .inline-options {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin-left: 0.2rem;
+        }
+        .sort-control, .check-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.55rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(9, 22, 40, 0.38);
+            color: #d7e7fb;
+            font-size: 0.9rem;
+        }
+        .check-control {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sort-control .control-label {
+            white-space: nowrap;
+        }
+        .inline-options input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #4ba3ff;
         }
 
         .text-area-group {
@@ -321,7 +368,38 @@
             body { padding: 14px; }
             .container { padding: 1rem; border-radius: 16px; }
             h1 { margin-bottom: 1.2rem; }
-            .quote-select { justify-content: space-between; font-size: 0.85rem; }
+            .quote-select {
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.85rem;
+                gap: 0.45rem;
+            }
+            .quote-main { width: auto; gap: 0.3rem; padding: 0.24rem 0.45rem; }
+            .quote-main label { min-width: auto; white-space: nowrap; font-size: 0.82rem; }
+            .quote-main select {
+                min-width: 108px;
+                padding: 0.2rem 0.8rem 0.2rem 0.1rem;
+                font-size: 0.82rem;
+            }
+            .inline-options {
+                width: auto;
+                justify-content: flex-end;
+                margin-left: 0;
+                gap: 0.5rem;
+            }
+            .sort-control, .check-control {
+                min-height: 32px;
+                padding: 0.2rem 0.44rem;
+                font-size: 0.82rem;
+            }
+            .sort-control select {
+                padding: 0.2rem 0.8rem 0.2rem 0.1rem;
+                font-size: 0.82rem;
+            }
+            .inline-options input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+            }
             .text-area-group { flex-direction: column; gap: 0.55rem; }
             .editor-wrapper { height: 220px; border-radius: 12px; }
             .line-numbers { width: 48px; font-size: 13px; }
@@ -347,6 +425,24 @@
             button { font-size: 13px; padding: 0.56rem 0.9rem; }
             .tip { font-size: 13px; }
         }
+
+        @media (max-width: 420px) {
+            .quote-select {
+                justify-content: flex-start;
+                gap: 0.4rem;
+            }
+            .quote-main {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .inline-options {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .quote-main select {
+                min-width: 98px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -356,11 +452,23 @@
     <h1>文本批量加工处理</h1>
 
     <div class="quote-select">
-        <label>引号类型：</label>
-        <select id="quoteType">
-            <option value="single">单引号 (')</option>
-            <option value="double">双引号 (")</option>
-        </select>
+        <div class="quote-main">
+            <label>引号类型：</label>
+            <select id="quoteType">
+                <option value="single">单引号 (')</option>
+                <option value="double">双引号 (")</option>
+            </select>
+        </div>
+        <div class="inline-options">
+            <label class="sort-control"> <span class="control-label">排序</span>
+                <select id="sortMode">
+                    <option value="none">不排序</option>
+                    <option value="asc">升序</option>
+                    <option value="desc">降序</option>
+                </select>
+            </label>
+            <label class="check-control"><input type="checkbox" id="dedupeOption"> 去重</label>
+        </div>
     </div>
 
     <div class="text-area-group">
@@ -423,6 +531,9 @@
     const outputStats = document.getElementById('outputStats');
     const tipInfo = document.getElementById('tipInfo');
     const transferBtn = document.getElementById('transferBtn');
+    const sortMode = document.getElementById('sortMode');
+    const dedupeOption = document.getElementById('dedupeOption');
+    let currentActionFn = (t) => t;
 
     let lastInputLines = 0;
     const getStatsText = (text) => {
@@ -465,8 +576,9 @@
 
     const trimStr = (str) => str.replace(/^\s+|\s+$/g, '');
 
-    const processAction = (actionFn) => {
-        const val = actionFn(inputText.value);
+    const processAction = (actionFn = currentActionFn) => {
+        currentActionFn = actionFn;
+        const val = applySelectedOptions(currentActionFn(inputText.value));
         outputText.value = val;
         updateLineNumbers(outputText, outputLineNums);
         updateStats();
@@ -478,7 +590,42 @@
         multiToSingle: (text) => text.split(/\r?\n/).map(trimStr).filter(Boolean).join(','),
         multiToSingleWithQuote: (text, quote) => text.split(/\r?\n/).map(trimStr).filter(Boolean).map(s => `${quote}${s}${quote}`).join(','),
         singleToMulti: (text) => text.split(',').map(trimStr).filter(Boolean).join('\n'),
-        singleQuotedToMultiUnquoted: (text) => text.replace(/["']/g, '').split(',').map(trimStr).filter(Boolean).join('\n')
+        singleQuotedToMultiUnquoted: (text) => text.replace(/["']/g, '').split(',').map(trimStr).filter(Boolean).join('\n'),
+        sortText: (text) => {
+            const hasLineBreak = text.includes('\n');
+            const splitter = hasLineBreak ? /\r?\n/ : ',';
+            return text
+                .split(splitter)
+                .map(trimStr)
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' }))
+                .join(hasLineBreak ? '\n' : ',');
+        },
+        sortTextDesc: (text) => {
+            const hasLineBreak = text.includes('\n');
+            const splitter = hasLineBreak ? /\r?\n/ : ',';
+            return text
+                .split(splitter)
+                .map(trimStr)
+                .filter(Boolean)
+                .sort((a, b) => b.localeCompare(a, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' }))
+                .join(hasLineBreak ? '\n' : ',');
+        },
+        deduplicateText: (text) => {
+            const hasLineBreak = text.includes('\n');
+            const splitter = hasLineBreak ? /\r?\n/ : ',';
+            const unique = Array.from(new Set(
+                text.split(splitter).map(trimStr).filter(Boolean)
+            ));
+            return unique.join(hasLineBreak ? '\n' : ',');
+        }
+    };
+    const applySelectedOptions = (text) => {
+        let val = text;
+        if (dedupeOption.checked) val = batchProcessText.deduplicateText(val);
+        if (sortMode.value === 'asc') val = batchProcessText.sortText(val);
+        if (sortMode.value === 'desc') val = batchProcessText.sortTextDesc(val);
+        return val;
     };
 
     const judgeInputTypeAndShowButtons = () => {
@@ -509,6 +656,8 @@
     });
     document.getElementById('btn3').addEventListener('click', () => processAction(batchProcessText.singleToMulti));
     document.getElementById('btn4').addEventListener('click', () => processAction(batchProcessText.singleQuotedToMultiUnquoted));
+    sortMode.addEventListener('change', () => processAction());
+    dedupeOption.addEventListener('change', () => processAction());
 
     transferBtn.addEventListener('click', () => {
         if (!outputText.value) return;
@@ -532,6 +681,9 @@
         }
     });
 
+    updateLineNumbers(inputText, inputLineNums);
+    updateLineNumbers(outputText, outputLineNums);
+    judgeInputTypeAndShowButtons();
     updateStats();
 </script>
 </body>

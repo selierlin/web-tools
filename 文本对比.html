@@ -11,8 +11,8 @@
             --neon-green: #00ff88;
             --neon-red: #ff0055;
             --bg-dark: #0a0c10;
-            --panel-bg: rgba(16, 20, 28, 0.8);
-            --border-glow: rgba(0, 210, 255, 0.3);
+            --panel-bg: rgba(16, 20, 28, 0.84);
+            --card-bg: rgba(255, 255, 255, 0.03);
         }
 
         * {
@@ -23,7 +23,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 动态赛博背景 */
         body {
             background: var(--bg-dark);
             height: 100vh;
@@ -53,10 +52,9 @@
 
         .container {
             width: 95vw;
-            height: 90vh;
+            height: 92vh;
             background: var(--panel-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(18px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
@@ -66,73 +64,179 @@
             position: relative;
         }
 
-        /* 顶部流光条 */
         .container::after {
             content: "";
             position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
             background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-purple), transparent);
         }
 
-        /* 导航栏 */
         .tool-header {
-            padding: 15px 25px;
+            padding: 14px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            min-width: 0;
         }
 
         .tool-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             letter-spacing: 1px;
             background: linear-gradient(to right, var(--neon-blue), #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 8px var(--border-glow));
+            white-space: nowrap;
+        }
+
+        .header-summary {
+            display: none;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .header-summary.visible {
+            display: flex;
+        }
+
+        .metric-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+            color: #9ab5d5;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .metric-chip strong {
+            color: #e2e8f0;
+            font-size: 13px;
         }
 
         .btn-group {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        button,
+        select,
+        input[type="text"] {
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            font-size: 14px;
+            padding: 7px 11px;
+            outline: none;
         }
 
         button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        button:hover {
+            filter: brightness(1.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            color: #fff;
+            box-shadow: 0 0 14px rgba(0, 210, 255, 0.35);
+        }
+
+        .btn-danger {
+            background: rgba(255, 0, 85, 0.16);
+            border-color: rgba(255, 0, 85, 0.38);
+        }
+
+        .control-panel {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.16);
+        }
+
+        .control-group {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 13px;
+            flex-wrap: wrap;
         }
 
-        #compareBtn {
-            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-            color: white;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+        .mode-switch {
+            display: inline-flex;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        #compareBtn:hover {
-            transform: scale(1.05);
-            filter: brightness(1.2);
-            box-shadow: 0 0 20px var(--neon-blue);
-        }
-
-        #clearBtn {
+        .mode-btn {
+            border: none;
+            border-radius: 0;
             background: rgba(255, 255, 255, 0.05);
-            color: #ccc;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 7px 12px;
+            font-size: 14px;
         }
 
-        /* 面板区域 */
+        .mode-btn.active {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.35), rgba(157, 80, 187, 0.35));
+            color: #fff;
+        }
+
+        .option-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 14px;
+            color: #cbd5e1;
+            user-select: none;
+        }
+
+        .option-chip input {
+            accent-color: var(--neon-blue);
+        }
+
+        .progress {
+            margin-left: auto;
+            font-size: 14px;
+            color: #9cc8ff;
+            min-height: 18px;
+        }
+
         .compare-content {
             display: flex;
             flex: 1;
@@ -144,19 +248,36 @@
             display: flex;
             background: rgba(0, 0, 0, 0.15);
             position: relative;
+            min-width: 0;
         }
 
         .text-panel:first-child {
             border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        /* 行号 */
+        .drop-mask {
+            position: absolute;
+            inset: 0;
+            border: 2px dashed rgba(0, 210, 255, 0.65);
+            background: rgba(0, 210, 255, 0.08);
+            color: #cdefff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            z-index: 8;
+        }
+
+        .text-panel.drag-over .drop-mask {
+            display: flex;
+        }
+
         .line-numbers {
             width: 45px;
             padding-top: 20px;
             background: rgba(0, 0, 0, 0.2);
             color: #4b5563;
-            font-size: 11px;
+            font-size: 13px;
             text-align: center;
             border-right: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden;
@@ -164,59 +285,168 @@
         }
 
         .line-num {
-            height: 28px;
-            line-height: 28px;
+            height: 22px;
+            line-height: 22px;
         }
 
-        /* 编辑区 */
         .text-editor {
             flex: 1;
-            padding: 20px 0;
+            padding: 16px 0;
             overflow: auto;
         }
 
-        textarea, .editable-div {
+        textarea,
+        .editable-div {
             width: 100%;
             height: 100%;
-            padding: 0 15px;
+            padding: 0 12px;
             background: transparent;
             border: none;
             outline: none;
             color: #cbd5e1;
-            font-size: 14px;
-            line-height: 28px;
+            font-size: 15px;
+            line-height: 22px;
             white-space: pre;
             tab-size: 4;
             resize: none;
         }
 
-        /* 差异高亮 */
         .text-line {
-            padding: 0 15px;
-            min-height: 28px;
+            padding: 0 12px;
+            min-height: 22px;
             border-left: 3px solid transparent;
         }
 
         .diff-added {
             background: rgba(0, 255, 136, 0.08);
             color: var(--neon-green);
-            border-left: 3px solid var(--neon-green);
+            border-left-color: var(--neon-green);
+            margin-left: -12px;
+            padding-left: 9px;
             display: block;
-            margin-left: -15px;
-            padding-left: 12px;
         }
 
         .diff-removed {
             background: rgba(255, 0, 85, 0.08);
             color: var(--neon-red);
-            border-left: 3px solid var(--neon-red);
+            border-left-color: var(--neon-red);
+            margin-left: -12px;
+            padding-left: 9px;
             display: block;
-            margin-left: -15px;
-            padding-left: 12px;
         }
 
-        /* --- 手机端适配关键修改 --- */
-        @media (max-width: 768px) {
+        .result-section {
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.18);
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            max-height: 33vh;
+            overflow: hidden;
+        }
+
+        .result-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .result-card.hidden {
+            display: none;
+        }
+
+        .result-header {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .result-title {
+            font-size: 14px;
+            color: #d5e8ff;
+            font-weight: 700;
+        }
+
+        .result-count {
+            margin-left: auto;
+            color: #9ab5d5;
+            font-size: 13px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .result-actions button {
+            padding: 4px 7px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .result-body {
+            position: relative;
+            overflow: auto;
+            flex: 1;
+            font-size: 14px;
+            line-height: 20px;
+            color: #dbeafe;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .virtual-top,
+        .virtual-bottom {
+            width: 100%;
+        }
+
+        .virtual-items {
+            width: 100%;
+        }
+
+        .result-item {
+            min-height: 20px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+        }
+
+        .item-no {
+            width: 38px;
+            color: #7f9bbc;
+            text-align: right;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .item-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .result-empty {
+            color: #64748b;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        mark {
+            background: rgba(253, 224, 71, 0.5);
+            color: #1f2937;
+            padding: 0;
+        }
+
+        @media (max-width: 900px) {
             body {
                 padding: 0;
             }
@@ -227,20 +457,12 @@
                 border-radius: 0;
             }
 
-            .tool-header {
-                padding: 10px 15px;
-            }
-
             .tool-title {
-                font-size: 16px;
-            }
-
-            .btn-group button span {
-                display: none; /* 极窄屏幕隐藏按钮文字只留图标 */
+                font-size: 18px;
             }
 
             .compare-content {
-                flex-direction: column; /* 纵向堆叠 */
+                flex-direction: column;
             }
 
             .text-panel:first-child {
@@ -249,179 +471,695 @@
             }
 
             .line-numbers {
-                width: 35px; /* 进一步缩小行号栏 */
+                width: 35px;
             }
 
-            .text-editor {
-                padding: 10px 0;
+            .metric-chip {
+                font-size: 11px;
+                padding: 3px 7px;
             }
 
-            textarea, .editable-div {
-                font-size: 13px; /* 缩小字号适配屏幕 */
-                padding: 0 10px;
+            .metric-chip strong {
+                font-size: 12px;
             }
 
-            .text-line {
-                padding: 0 10px;
+            .result-section {
+                grid-template-columns: 1fr;
+                max-height: 34vh;
             }
 
-            .diff-added, .diff-removed {
-                margin-left: -10px;
-                padding-left: 7px;
+            .progress {
+                margin-left: 0;
+                width: 100%;
             }
         }
 
-        /* 滚动条 */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.16);
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
     <header class="tool-header">
-        <div class="tool-title">文本对比系统 v1.0</div>
+        <div class="header-left">
+            <div class="tool-title">文本对比系统 v2.0</div>
+        </div>
         <div class="btn-group">
-            <button id="clearBtn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                </svg>
-                <span>清空内容</span>
-            </button>
-            <button id="compareBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-                <span>执行对比</span>
-            </button>
-            <button id="backToEditBtn" style="display: none;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-                <span>返回编辑</span>
-            </button>
+            <div class="header-summary" id="summaryBar">
+                <span class="metric-chip">左侧 <strong id="metricATotal">0</strong></span>
+                <span class="metric-chip">右侧 <strong id="metricBTotal">0</strong></span>
+                <span class="metric-chip">相同 <strong id="metricSame">0</strong></span>
+                <span class="metric-chip">左多 <strong id="metricAMore">0</strong></span>
+                <span class="metric-chip">右多 <strong id="metricBMore">0</strong></span>
+                <span class="metric-chip">相似度 <strong id="metricSimilarity">0%</strong></span>
+            </div>
+            <button id="clearBtn" class="btn-danger">清空</button>
+            <button id="compareBtn" class="btn-primary">执行对比</button>
+            <button id="backToEditBtn" style="display: none;">返回编辑</button>
         </div>
     </header>
 
+    <section class="control-panel">
+        <div class="control-group">
+            <span>比较模式</span>
+            <div class="mode-switch">
+                <button class="mode-btn active" data-mode="set" id="modeSet">集合比较</button>
+                <button class="mode-btn" data-mode="line" id="modeLine">逐行比较</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <span>输入拆分</span>
+            <select id="parseMode">
+                <option value="line">按行</option>
+                <option value="column">按列</option>
+            </select>
+            <select id="delimiterSelect">
+                <option value="auto">自动识别分隔符</option>
+                <option value="newline">换行</option>
+                <option value="comma">逗号</option>
+                <option value="tab">制表符</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label class="option-chip"><input type="checkbox" id="optTrim"> 忽略首尾空格</label>
+            <label class="option-chip"><input type="checkbox" id="optCase"> 忽略大小写</label>
+            <label class="option-chip"><input type="checkbox" id="optEmpty"> 忽略空行</label>
+            <label class="option-chip"><input type="checkbox" id="optDedupe"> 去重后比较</label>
+        </div>
+
+        <div class="control-group">
+            <input type="text" id="searchInput" placeholder="搜索结果并高亮">
+        </div>
+
+        <div class="progress" id="progressText"></div>
+    </section>
+
     <main class="compare-content">
         <div class="text-panel" id="leftPanel">
+            <div class="drop-mask">拖拽文件到左侧区域</div>
             <div class="line-numbers" id="leftLineNumbers"></div>
             <div class="text-editor" id="leftTextEditor">
-                <textarea id="leftText" placeholder="// 请在此输入或粘贴原始内容..."></textarea>
+                <textarea id="leftText" placeholder="// 左侧内容：支持拖拽文件或粘贴"></textarea>
             </div>
         </div>
         <div class="text-panel" id="rightPanel">
+            <div class="drop-mask">拖拽文件到右侧区域</div>
             <div class="line-numbers" id="rightLineNumbers"></div>
             <div class="text-editor" id="rightTextEditor">
-                <textarea id="rightText" placeholder="// 请在此输入或粘贴修改后的内容..."></textarea>
+                <textarea id="rightText" placeholder="// 右侧内容：支持拖拽文件或粘贴"></textarea>
             </div>
         </div>
     </main>
+
+    <section class="result-section" id="resultSection">
+        <article class="result-card" data-group="aMore">
+            <div class="result-header">
+                <span class="result-title">仅在左侧</span>
+                <span class="result-count" id="aMoreCount">0 条</span>
+                <div class="result-actions">
+                    <button data-action="copy" data-group="aMore">复制</button>
+                    <button data-action="txt" data-group="aMore">TXT</button>
+                    <button data-action="csv" data-group="aMore">CSV</button>
+                    <button data-action="focus" data-group="aMore">仅看</button>
+                </div>
+            </div>
+            <div class="result-body" id="aMoreBody"></div>
+        </article>
+
+        <article class="result-card" data-group="bMore">
+            <div class="result-header">
+                <span class="result-title">仅在右侧</span>
+                <span class="result-count" id="bMoreCount">0 条</span>
+                <div class="result-actions">
+                    <button data-action="copy" data-group="bMore">复制</button>
+                    <button data-action="txt" data-group="bMore">TXT</button>
+                    <button data-action="csv" data-group="bMore">CSV</button>
+                    <button data-action="focus" data-group="bMore">仅看</button>
+                </div>
+            </div>
+            <div class="result-body" id="bMoreBody"></div>
+        </article>
+
+        <article class="result-card" data-group="same">
+            <div class="result-header">
+                <span class="result-title">左侧与右侧共有</span>
+                <span class="result-count" id="sameCount">0 条</span>
+                <div class="result-actions">
+                    <button data-action="copy" data-group="same">复制</button>
+                    <button data-action="txt" data-group="same">TXT</button>
+                    <button data-action="csv" data-group="same">CSV</button>
+                    <button data-action="focus" data-group="same">仅看</button>
+                </div>
+            </div>
+            <div class="result-body" id="sameBody"></div>
+        </article>
+    </section>
 </div>
 
 <script>
-    // 逻辑部分完全保留，未作修改
     const leftText = document.getElementById('leftText');
     const rightText = document.getElementById('rightText');
     const leftLineNumbers = document.getElementById('leftLineNumbers');
     const rightLineNumbers = document.getElementById('rightLineNumbers');
     const leftTextEditor = document.getElementById('leftTextEditor');
     const rightTextEditor = document.getElementById('rightTextEditor');
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
+
     const compareBtn = document.getElementById('compareBtn');
     const clearBtn = document.getElementById('clearBtn');
     const backToEditBtn = document.getElementById('backToEditBtn');
+    const progressText = document.getElementById('progressText');
+    const resultSection = document.getElementById('resultSection');
+    const summaryBar = document.getElementById('summaryBar');
+
+    const metricATotal = document.getElementById('metricATotal');
+    const metricBTotal = document.getElementById('metricBTotal');
+    const metricSame = document.getElementById('metricSame');
+    const metricAMore = document.getElementById('metricAMore');
+    const metricBMore = document.getElementById('metricBMore');
+    const metricSimilarity = document.getElementById('metricSimilarity');
+
+    const parseMode = document.getElementById('parseMode');
+    const delimiterSelect = document.getElementById('delimiterSelect');
+
+    const optTrim = document.getElementById('optTrim');
+    const optCase = document.getElementById('optCase');
+    const optEmpty = document.getElementById('optEmpty');
+    const optDedupe = document.getElementById('optDedupe');
+
+    const searchInput = document.getElementById('searchInput');
+    const modeButtons = Array.from(document.querySelectorAll('.mode-btn'));
+
+    const groupMeta = {
+        aMore: { body: document.getElementById('aMoreBody'), count: document.getElementById('aMoreCount'), empty: '左侧中没有仅左侧存在的数据。' },
+        bMore: { body: document.getElementById('bMoreBody'), count: document.getElementById('bMoreCount'), empty: '右侧中没有仅右侧存在的数据。' },
+        same: { body: document.getElementById('sameBody'), count: document.getElementById('sameCount'), empty: '左侧与右侧没有共同数据。' }
+    };
 
     let isReplaced = { left: false, right: false };
 
-    function syncLineNumbers() {
-        const getCount = (side) => {
-            if (isReplaced[side]) {
-                const el = document.getElementById(`${side}TextEditable`);
-                return el ? el.children.length : 1;
+    const state = {
+        mode: 'set',
+        filter: 'all',
+        search: '',
+        result: { aMore: [], bMore: [], same: [] }
+    };
+
+    class VirtualList {
+        constructor(container, emptyText) {
+            this.container = container;
+            this.emptyText = emptyText;
+            this.items = [];
+            this.filtered = [];
+            this.rowHeight = 20;
+            this.top = document.createElement('div');
+            this.mid = document.createElement('div');
+            this.bottom = document.createElement('div');
+            this.top.className = 'virtual-top';
+            this.mid.className = 'virtual-items';
+            this.bottom.className = 'virtual-bottom';
+            container.innerHTML = '';
+            container.append(this.top, this.mid, this.bottom);
+            container.addEventListener('scroll', () => this.render());
+        }
+
+        setItems(items) {
+            this.items = items;
+            this.applyFilter(state.search);
+        }
+
+        applyFilter(term) {
+            if (!term) {
+                this.filtered = this.items;
+            } else {
+                const q = term.toLowerCase();
+                this.filtered = this.items.filter(v => v.toLowerCase().includes(q));
             }
-            const val = (side === 'left' ? leftText.value : rightText.value);
-            return val ? val.split('\n').length : 1;
+            this.container.scrollTop = 0;
+            this.render();
+        }
+
+        render() {
+            const total = this.filtered.length;
+            if (!total) {
+                this.top.style.height = '0px';
+                this.bottom.style.height = '0px';
+                this.mid.innerHTML = `<div class="result-empty">${this.emptyText}</div>`;
+                return;
+            }
+
+            const viewHeight = this.container.clientHeight || 220;
+            const visibleCount = Math.ceil(viewHeight / this.rowHeight) + 8;
+            const start = Math.max(0, Math.floor(this.container.scrollTop / this.rowHeight) - 4);
+            const end = Math.min(total, start + visibleCount);
+
+            this.top.style.height = `${start * this.rowHeight}px`;
+            this.bottom.style.height = `${(total - end) * this.rowHeight}px`;
+
+            const rows = [];
+            for (let i = start; i < end; i++) {
+                rows.push(`<div class="result-item"><span class="item-no">${i + 1}</span><span class="item-text">${highlightText(escapeHtml(this.filtered[i]), state.search)}</span></div>`);
+            }
+            this.mid.innerHTML = rows.join('');
+        }
+    }
+
+    const virtualLists = {
+        aMore: new VirtualList(groupMeta.aMore.body, groupMeta.aMore.empty),
+        bMore: new VirtualList(groupMeta.bMore.body, groupMeta.bMore.empty),
+        same: new VirtualList(groupMeta.same.body, groupMeta.same.empty)
+    };
+
+    function escapeHtml(text) {
+        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlightText(safeText, query) {
+        if (!query) return safeText;
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const reg = new RegExp(escapedQuery, 'ig');
+        return safeText.replace(reg, m => `<mark>${m}</mark>`);
+    }
+
+    function detectDelimiter(text) {
+        const n = (text.match(/\n/g) || []).length;
+        const t = (text.match(/\t/g) || []).length;
+        const c = (text.match(/,/g) || []).length;
+        if (n >= t && n >= c && n > 0) return 'newline';
+        if (t >= c && t > 0) return 'tab';
+        if (c > 0) return 'comma';
+        return 'newline';
+    }
+
+    function normalizeToken(token) {
+        let v = token;
+        if (optTrim.checked) v = v.trim();
+        if (optCase.checked) v = v.toLowerCase();
+        return v;
+    }
+
+    function tokenize(text) {
+        const mode = parseMode.value;
+        let tokens;
+
+        if (mode === 'line') {
+            tokens = text.split(/\r?\n/);
+        } else {
+            let delimiter = delimiterSelect.value;
+            if (delimiter === 'auto') {
+                delimiter = detectDelimiter(text);
+            }
+            if (delimiter === 'newline') tokens = text.split(/\r?\n/);
+            if (delimiter === 'comma') tokens = text.split(',');
+            if (delimiter === 'tab') tokens = text.split('\t');
+        }
+
+        tokens = tokens.map(normalizeToken);
+        if (optEmpty.checked) tokens = tokens.filter(Boolean);
+        if (optDedupe.checked) {
+            const seen = new Set();
+            tokens = tokens.filter(v => {
+                if (seen.has(v)) return false;
+                seen.add(v);
+                return true;
+            });
+        }
+        return tokens;
+    }
+
+    function syncLineNumbers() {
+        const lVal = isReplaced.left ? document.getElementById('leftTextEditable')?.innerText || '' : leftText.value;
+        const rVal = isReplaced.right ? document.getElementById('rightTextEditable')?.innerText || '' : rightText.value;
+        renderLines(leftLineNumbers, Math.max(1, lVal.split('\n').length));
+        renderLines(rightLineNumbers, Math.max(1, rVal.split('\n').length));
+    }
+
+    function renderLines(target, count) {
+        target.innerHTML = Array.from({ length: count }, (_, i) => `<div class="line-num">${i + 1}</div>`).join('');
+    }
+
+    function setProgress(text) {
+        progressText.textContent = text || '';
+    }
+
+    function setSummaryVisible(visible) {
+        summaryBar.classList.toggle('visible', visible);
+    }
+
+    function resetEditorsToTextarea() {
+        if (isReplaced.left) {
+            leftTextEditor.innerHTML = '';
+            leftTextEditor.appendChild(leftText);
+            isReplaced.left = false;
+        }
+        if (isReplaced.right) {
+            rightTextEditor.innerHTML = '';
+            rightTextEditor.appendChild(rightText);
+            isReplaced.right = false;
+        }
+    }
+
+    function renderDiffPanels(leftLines, rightLines) {
+        const max = Math.max(leftLines.length, rightLines.length);
+        let leftHtml = '';
+        let rightHtml = '';
+
+        for (let i = 0; i < max; i++) {
+            const l = leftLines[i] || '';
+            const r = rightLines[i] || '';
+            if (l === r) {
+                leftHtml += `<div class="text-line">${escapeHtml(l)}</div>`;
+                rightHtml += `<div class="text-line">${escapeHtml(r)}</div>`;
+            } else {
+                leftHtml += `<div class="text-line ${l ? 'diff-removed' : ''}">${escapeHtml(l)}</div>`;
+                rightHtml += `<div class="text-line ${r ? 'diff-added' : ''}">${escapeHtml(r)}</div>`;
+            }
+        }
+
+        leftTextEditor.innerHTML = `<div id="leftTextEditable" class="editable-div" contenteditable="false">${leftHtml}</div>`;
+        rightTextEditor.innerHTML = `<div id="rightTextEditable" class="editable-div" contenteditable="false">${rightHtml}</div>`;
+        isReplaced.left = true;
+        isReplaced.right = true;
+        backToEditBtn.style.display = 'inline-flex';
+    }
+
+    function toCountMap(items) {
+        const map = new Map();
+        for (const item of items) {
+            map.set(item, (map.get(item) || 0) + 1);
+        }
+        return map;
+    }
+
+    function mapToExpandedArray(map) {
+        const arr = [];
+        for (const [item, count] of map.entries()) {
+            for (let i = 0; i < count; i++) arr.push(item);
+        }
+        return arr;
+    }
+
+    function delayFrame() {
+        return new Promise(resolve => requestAnimationFrame(resolve));
+    }
+
+    async function compareSet(aItems, bItems) {
+        const aMap = toCountMap(aItems);
+        const bMap = toCountMap(bItems);
+        const sameMap = new Map();
+        const aMoreMap = new Map();
+        const bMoreMap = new Map();
+
+        const keys = [...new Set([...aMap.keys(), ...bMap.keys()])];
+        const chunk = 1200;
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            const aCount = aMap.get(key) || 0;
+            const bCount = bMap.get(key) || 0;
+            const common = Math.min(aCount, bCount);
+            if (common > 0) sameMap.set(key, common);
+            if (aCount > bCount) aMoreMap.set(key, aCount - bCount);
+            if (bCount > aCount) bMoreMap.set(key, bCount - aCount);
+
+            if (i % chunk === 0) {
+                const p = Math.min(99, Math.floor(i / Math.max(keys.length, 1) * 100));
+                setProgress(`比较中... ${p}%`);
+                await delayFrame();
+            }
+        }
+
+        return {
+            aMore: mapToExpandedArray(aMoreMap),
+            bMore: mapToExpandedArray(bMoreMap),
+            same: mapToExpandedArray(sameMap)
         };
-
-        renderLines(leftLineNumbers, getCount('left'));
-        renderLines(rightLineNumbers, getCount('right'));
     }
 
-    function renderLines(el, count) {
-        el.innerHTML = Array.from({length: count}, (_, i) => `<div class="line-num">${i+1}</div>`).join('');
+    async function compareLine(aItems, bItems) {
+        const max = Math.max(aItems.length, bItems.length);
+        const result = { aMore: [], bMore: [], same: [] };
+        const chunk = 1200;
+
+        for (let i = 0; i < max; i++) {
+            const a = aItems[i] || '';
+            const b = bItems[i] || '';
+            if (a === b) {
+                if (a !== '' || b !== '') result.same.push(a);
+                continue;
+            }
+            if (a) result.aMore.push(a);
+            if (b) result.bMore.push(b);
+
+            if (i % chunk === 0) {
+                const p = Math.min(99, Math.floor(i / Math.max(max, 1) * 100));
+                setProgress(`比较中... ${p}%`);
+                await delayFrame();
+            }
+        }
+
+        return result;
     }
+
+    function updateSummary(aTotal, bTotal, sameCount, aMoreCountValue, bMoreCountValue) {
+        metricATotal.textContent = String(aTotal);
+        metricBTotal.textContent = String(bTotal);
+        metricSame.textContent = String(sameCount);
+        metricAMore.textContent = String(aMoreCountValue);
+        metricBMore.textContent = String(bMoreCountValue);
+
+        const denom = Math.max(aTotal, bTotal, 1);
+        const similarity = ((sameCount / denom) * 100).toFixed(2);
+        metricSimilarity.textContent = `${similarity}%`;
+    }
+
+    function updateCards() {
+        ['aMore', 'bMore', 'same'].forEach(group => {
+            const allItems = state.result[group];
+            groupMeta[group].count.textContent = `${allItems.length} 条`;
+            virtualLists[group].setItems(allItems);
+        });
+        applySearch();
+    }
+
+    function applySearch() {
+        state.search = searchInput.value.trim();
+        ['aMore', 'bMore', 'same'].forEach(group => {
+            if (state.result[group].length) {
+                virtualLists[group].applyFilter(state.search);
+            }
+        });
+    }
+
+    function applyCardFilter() {
+        const cards = Array.from(document.querySelectorAll('.result-card'));
+        cards.forEach(card => {
+            const group = card.getAttribute('data-group');
+            card.classList.toggle('hidden', state.filter !== 'all' && state.filter !== group);
+        });
+    }
+
+    function downloadFile(name, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function toCsv(items) {
+        const escaped = items.map(v => `"${v.replace(/"/g, '""')}"`);
+        return `value\n${escaped.join('\n')}`;
+    }
+
+    async function copyGroup(group) {
+        const text = state.result[group].join('\n');
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            setProgress(`已复制 ${groupMeta[group].count.textContent}`);
+        } catch {
+            setProgress('复制失败，请检查浏览器权限');
+        }
+    }
+
+    async function compare() {
+        const leftRaw = leftText.value;
+        const rightRaw = rightText.value;
+
+        if (!leftRaw && !rightRaw) {
+            setProgress('请输入待比较内容');
+            return;
+        }
+
+        setProgress('准备比较...');
+
+        const leftItems = tokenize(leftRaw);
+        const rightItems = tokenize(rightRaw);
+
+        let result;
+        if (state.mode === 'set') {
+            resetEditorsToTextarea();
+            result = await compareSet(leftItems, rightItems);
+        } else {
+            renderDiffPanels(leftRaw.split(/\r?\n/), rightRaw.split(/\r?\n/));
+            result = await compareLine(leftItems, rightItems);
+        }
+
+        state.result = result;
+
+        updateSummary(
+            leftItems.length,
+            rightItems.length,
+            result.same.length,
+            result.aMore.length,
+            result.bMore.length
+        );
+        updateCards();
+        setSummaryVisible(true);
+
+        setProgress(`比较完成：${state.mode === 'set' ? '集合比较' : '逐行比较'}`);
+        syncLineNumbers();
+    }
+
+    function resetResults() {
+        state.result = { aMore: [], bMore: [], same: [] };
+        metricATotal.textContent = '0';
+        metricBTotal.textContent = '0';
+        metricSame.textContent = '0';
+        metricAMore.textContent = '0';
+        metricBMore.textContent = '0';
+        metricSimilarity.textContent = '0%';
+
+        ['aMore', 'bMore', 'same'].forEach(group => {
+            groupMeta[group].count.textContent = '0 条';
+            virtualLists[group].setItems([]);
+        });
+    }
+
+    function onModeChange(mode) {
+        state.mode = mode;
+        modeButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+        backToEditBtn.style.display = mode === 'line' && isReplaced.left ? 'inline-flex' : 'none';
+    }
+
+    function wireDrop(panel, textarea) {
+        panel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            panel.classList.add('drag-over');
+        });
+        panel.addEventListener('dragleave', () => panel.classList.remove('drag-over'));
+        panel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            panel.classList.remove('drag-over');
+            const file = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                textarea.value = String(reader.result || '');
+                syncLineNumbers();
+                if (delimiterSelect.value === 'auto') {
+                    delimiterSelect.value = detectDelimiter(textarea.value);
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    function handlePasteAutoDetect() {
+        const handler = (e) => {
+            const txt = e.clipboardData?.getData('text/plain') || '';
+            if (!txt) return;
+            const detected = detectDelimiter(txt);
+            if (delimiterSelect.value === 'auto') {
+                setProgress(`已自动识别分隔符：${detected === 'newline' ? '换行' : detected === 'tab' ? '制表符' : '逗号'}`);
+            } else {
+                delimiterSelect.value = detected;
+            }
+        };
+        leftText.addEventListener('paste', handler);
+        rightText.addEventListener('paste', handler);
+    }
+
+    resultSection.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const group = btn.dataset.group;
+
+        if (action === 'copy') copyGroup(group);
+        if (action === 'txt') downloadFile(`${group}.txt`, state.result[group].join('\n'), 'text/plain;charset=utf-8');
+        if (action === 'csv') downloadFile(`${group}.csv`, toCsv(state.result[group]), 'text/csv;charset=utf-8');
+        if (action === 'focus') {
+            state.filter = state.filter === group ? 'all' : group;
+            applyCardFilter();
+            btn.textContent = state.filter === group ? '显示全部' : '仅看';
+            Array.from(document.querySelectorAll(`button[data-action="focus"]`)).forEach(other => {
+                if (other.dataset.group !== group) other.textContent = '仅看';
+            });
+        }
+    });
+
+    compareBtn.addEventListener('click', compare);
+
+    clearBtn.addEventListener('click', () => {
+        resetEditorsToTextarea();
+        leftText.value = '';
+        rightText.value = '';
+        state.filter = 'all';
+        applyCardFilter();
+        Array.from(document.querySelectorAll('button[data-action="focus"]')).forEach(btn => btn.textContent = '仅看');
+        resetResults();
+        syncLineNumbers();
+        setProgress('');
+        setSummaryVisible(false);
+        backToEditBtn.style.display = 'none';
+    });
+
+    backToEditBtn.addEventListener('click', () => {
+        resetEditorsToTextarea();
+        syncLineNumbers();
+        backToEditBtn.style.display = 'none';
+    });
 
     leftTextEditor.onscroll = () => { leftLineNumbers.scrollTop = leftTextEditor.scrollTop; };
     rightTextEditor.onscroll = () => { rightLineNumbers.scrollTop = rightTextEditor.scrollTop; };
 
-    function compare() {
-        const lVal = isReplaced.left ? document.getElementById('leftTextEditable').innerText : leftText.value;
-        const rVal = isReplaced.right ? document.getElementById('rightTextEditable').innerText : rightText.value;
+    leftText.addEventListener('input', syncLineNumbers);
+    rightText.addEventListener('input', syncLineNumbers);
+    searchInput.addEventListener('input', applySearch);
 
-        if (!lVal && !rVal) return;
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => onModeChange(btn.dataset.mode));
+    });
 
-        const lLines = lVal.split('\n');
-        const rLines = rVal.split('\n');
-        const max = Math.max(lLines.length, rLines.length);
+    parseMode.addEventListener('change', () => {
+        delimiterSelect.disabled = parseMode.value === 'line';
+    });
 
-        let lHtml = '', rHtml = '';
+    wireDrop(leftPanel, leftText);
+    wireDrop(rightPanel, rightText);
+    handlePasteAutoDetect();
 
-        for (let i = 0; i < max; i++) {
-            const l = lLines[i] || '';
-            const r = rLines[i] || '';
-
-            if (l !== r) {
-                lHtml += `<div class="text-line ${l ? 'diff-removed' : ''}">${escape(l)}</div>`;
-                rHtml += `<div class="text-line ${r ? 'diff-added' : ''}">${escape(r)}</div>`;
-            } else {
-                lHtml += `<div class="text-line">${escape(l)}</div>`;
-                rHtml += `<div class="text-line">${escape(r)}</div>`;
-            }
-        }
-
-        updatePanel('left', lHtml);
-        updatePanel('right', rHtml);
+    window.onload = () => {
+        delimiterSelect.disabled = parseMode.value === 'line';
+        resetResults();
         syncLineNumbers();
-        backToEditBtn.style.display = 'inline-flex';
-    }
-
-    function updatePanel(side, html) {
-        const editor = side === 'left' ? leftTextEditor : rightTextEditor;
-        editor.innerHTML = `<div id="${side}TextEditable" class="editable-div" contenteditable="false">${html}</div>`;
-        isReplaced[side] = true;
-    }
-
-    function escape(s) {
-        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    clearBtn.onclick = () => {
-        leftTextEditor.innerHTML = '';
-        leftTextEditor.appendChild(leftText);
-        rightTextEditor.innerHTML = '';
-        rightTextEditor.appendChild(rightText);
-        leftText.value = '';
-        rightText.value = '';
-        isReplaced = { left: false, right: false };
-        syncLineNumbers();
-        backToEditBtn.style.display = 'none';
+        setSummaryVisible(false);
     };
-
-    compareBtn.onclick = compare;
-    leftText.oninput = syncLineNumbers;
-    rightText.oninput = syncLineNumbers;
-
-    backToEditBtn.onclick = () => {
-        leftTextEditor.innerHTML = '';
-        leftTextEditor.appendChild(leftText);
-        rightTextEditor.innerHTML = '';
-        rightTextEditor.appendChild(rightText);
-        isReplaced = { left: false, right: false };
-        syncLineNumbers();
-        backToEditBtn.style.display = 'none';
-    };
-
-    window.onload = syncLineNumbers;
 </script>
 </body>
 </html>
