@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>打牌计分器</title>
+  <style>
+    :root {
+      --bg: #f4f7ff;
+      --panel: #ffffff;
+      --line: #d9e3f2;
+      --text: #17233b;
+      --muted: #5b6c8c;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 12px 28px rgba(37, 72, 140, 0.12);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(980px 420px at 0% -10%, rgba(37, 99, 235, 0.12), transparent 60%),
+        radial-gradient(860px 380px at 100% 0%, rgba(16, 185, 129, 0.12), transparent 60%),
+        var(--bg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 22px 14px 36px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-rain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .float-card {
+      position: absolute;
+      top: 112%;
+      width: 58px;
+      height: 84px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(236, 245, 255, 0.9));
+      box-shadow: 0 10px 24px rgba(8, 20, 48, 0.3);
+      opacity: 0.36;
+      animation: cardRise var(--dur, 18s) linear infinite;
+      animation-delay: var(--delay, 0s);
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .float-card::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 7px;
+      top: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--card-color, #0f172a);
+    }
+
+    .float-card::after {
+      content: attr(data-suit);
+      position: absolute;
+      right: 8px;
+      bottom: 6px;
+      font-size: 18px;
+      color: var(--card-color, #0f172a);
+    }
+
+    @keyframes cardRise {
+      0% {
+        transform: translate3d(0, 0, 0) rotate(var(--rot, 0deg));
+        opacity: 0;
+      }
+      8% { opacity: 0.36; }
+      92% { opacity: 0.36; }
+      100% {
+        transform: translate3d(var(--drift, 14px), -132vh, 0) rotate(calc(var(--rot, 0deg) + 22deg));
+        opacity: 0;
+      }
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0f172a, #1d4ed8);
+      color: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .tabs {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #fff;
+      color: #1d4ed8;
+      border-color: #fff;
+      font-weight: 700;
+    }
+
+    .layout {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    .player-setup-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .player-summary {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    .player-setup {
+      border: 1px solid #dbe7f6;
+      border-radius: 12px;
+      background: #f8fbff;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .player-setup.collapsed {
+      display: none;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input,
+    select,
+    button {
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .grid2.single-col {
+      grid-template-columns: 1fr;
+    }
+
+    .grid2-compact {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .inline-controls {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .step-btn {
+      border: 1px solid #cfe0f7;
+      background: #f5f9ff;
+      color: #274774;
+      border-radius: 8px;
+      padding: 6px 10px;
+      min-width: 42px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .quick-tag {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .quick-round {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .btn {
+      border: 1px solid #c6d6ef;
+      background: #f8fbff;
+      color: #24436d;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn:hover { filter: brightness(0.98); }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .btn.danger {
+      border-color: #fecaca;
+      color: #b91c1c;
+      background: #fef2f2;
+    }
+
+    .btn.quick-win {
+      padding: 10px 8px;
+      font-size: 13px;
+    }
+
+    .score-board {
+      display: grid;
+      gap: 8px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: #f9fbff;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .score-name {
+      font-weight: 600;
+    }
+
+    .score-val {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-pos { color: var(--success); }
+    .score-neg { color: var(--danger); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #e7eef9;
+      text-align: left;
+      padding: 9px 6px;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th { color: var(--muted); font-weight: 600; }
+
+    td pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: inherit;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .empty {
+      border: 1px dashed #c8d7ef;
+      border-radius: 12px;
+      background: #fbfdff;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+      padding: 16px;
+    }
+
+    .sum-warning {
+      color: #b45309;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .sum-warning.show { display: block; }
+
+    .mobile-fast-actions {
+      display: none;
+    }
+
+    .score-step-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .score-step-btn {
+      border: 1px solid #d6e3f6;
+      background: #f7fbff;
+      color: #24436d;
+      border-radius: 8px;
+      padding: 6px 4px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .quick-round { display: none; }
+      .actions .btn {
+        flex: 1 1 calc(50% - 6px);
+        min-height: 42px;
+      }
+      .actions .btn:not(.danger) {
+        display: none;
+      }
+      .quick-round .btn {
+        min-height: 44px;
+      }
+      .mobile-fast-actions {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+        background: rgba(255, 255, 255, 0.94);
+        border-top: 1px solid #dbe5f3;
+        backdrop-filter: blur(8px);
+        z-index: 20;
+      }
+      .mobile-fast-actions .btn {
+        min-height: 44px;
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+      .container {
+        padding-bottom: 90px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card-rain" aria-hidden="true">
+    <div class="float-card" data-label="A" data-suit="♠" style="left:7%;--dur:20s;--delay:-2s;--rot:-14deg;--drift:18px;--card-color:#0f172a;"></div>
+    <div class="float-card" data-label="K" data-suit="♥" style="left:18%;--dur:17s;--delay:-11s;--rot:10deg;--drift:-14px;--card-color:#b91c1c;"></div>
+    <div class="float-card" data-label="Q" data-suit="♣" style="left:30%;--dur:22s;--delay:-6s;--rot:-9deg;--drift:15px;--card-color:#14532d;"></div>
+    <div class="float-card" data-label="J" data-suit="♦" style="left:41%;--dur:18s;--delay:-14s;--rot:12deg;--drift:-12px;--card-color:#be123c;"></div>
+    <div class="float-card" data-label="10" data-suit="♠" style="left:52%;--dur:24s;--delay:-4s;--rot:-12deg;--drift:12px;--card-color:#0f172a;"></div>
+    <div class="float-card" data-label="9" data-suit="♥" style="left:63%;--dur:16s;--delay:-10s;--rot:8deg;--drift:-16px;--card-color:#b91c1c;"></div>
+    <div class="float-card" data-label="8" data-suit="♣" style="left:74%;--dur:21s;--delay:-7s;--rot:-11deg;--drift:14px;--card-color:#14532d;"></div>
+    <div class="float-card" data-label="7" data-suit="♦" style="left:85%;--dur:15s;--delay:-12s;--rot:9deg;--drift:-13px;--card-color:#be123c;"></div>
+    <div class="float-card" data-label="A" data-suit="♥" style="left:12%;--dur:19s;--delay:-15s;--rot:6deg;--drift:-17px;--card-color:#b91c1c;"></div>
+    <div class="float-card" data-label="K" data-suit="♠" style="left:24%;--dur:23s;--delay:-8s;--rot:-7deg;--drift:11px;--card-color:#0f172a;"></div>
+    <div class="float-card" data-label="Q" data-suit="♦" style="left:36%;--dur:17s;--delay:-3s;--rot:13deg;--drift:-15px;--card-color:#be123c;"></div>
+    <div class="float-card" data-label="J" data-suit="♣" style="left:47%;--dur:20s;--delay:-9s;--rot:-10deg;--drift:16px;--card-color:#14532d;"></div>
+    <div class="float-card" data-label="10" data-suit="♥" style="left:58%;--dur:18s;--delay:-13s;--rot:7deg;--drift:-12px;--card-color:#b91c1c;"></div>
+    <div class="float-card" data-label="9" data-suit="♠" style="left:69%;--dur:22s;--delay:-5s;--rot:-8deg;--drift:13px;--card-color:#0f172a;"></div>
+    <div class="float-card" data-label="8" data-suit="♦" style="left:79%;--dur:16s;--delay:-16s;--rot:11deg;--drift:-11px;--card-color:#be123c;"></div>
+    <div class="float-card" data-label="7" data-suit="♣" style="left:92%;--dur:21s;--delay:-6s;--rot:-9deg;--drift:10px;--card-color:#14532d;"></div>
+  </div>
+  <div class="container">
+    <header class="hero">
+      <h1>打牌计分器</h1>
+      <p>适合过年过节快速记分。支持斗地主自动算分，支持五十K手动录分。每局结束点一次，自动累计总分。</p>
+      <div class="tabs" id="modeTabs">
+        <button type="button" class="tab-btn active" data-mode="doudizhu">斗地主</button>
+        <button type="button" class="tab-btn" data-mode="wushik">五十K</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <h2 id="formTitle">本局录分（斗地主）</h2>
+        <p class="muted" id="modeHint">规则：地主赢时地主 +2x 底分倍数，两个农民各 -1x；农民赢时反向。</p>
+
+        <div class="player-setup-head">
+          <button type="button" class="btn" id="togglePlayerSetupBtn">编辑玩家</button>
+          <div class="player-summary" id="playerSummary"></div>
+        </div>
+        <div class="player-setup" id="playerSetupSection">
+          <div class="grid2">
+            <div class="field">
+              <label for="player1">玩家1</label>
+              <input id="player1" type="text" value="玩家A" maxlength="16" />
+            </div>
+            <div class="field">
+              <label for="player2">玩家2</label>
+              <input id="player2" type="text" value="玩家B" maxlength="16" />
+            </div>
+          </div>
+          <div class="grid2 single-col" id="player34Row">
+            <div class="field" id="player3Wrap">
+              <label for="player3">玩家3</label>
+              <input id="player3" type="text" value="玩家C" maxlength="16" />
+            </div>
+            <div class="field" id="player4Wrap" style="display:none;">
+              <label for="player4">玩家4</label>
+              <input id="player4" type="text" value="玩家D" maxlength="16" />
+            </div>
+          </div>
+        </div>
+
+        <div id="doudizhuForm">
+          <div class="grid2">
+            <div class="field">
+              <label for="landlordSelect">谁是地主</label>
+              <select id="landlordSelect"></select>
+            </div>
+            <div class="field">
+              <label>本局赢家</label>
+              <div class="muted">点击下方快捷按钮直接记录结果。</div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label for="baseScore">底分</label>
+              <input id="baseScore" type="number" min="1" step="1" value="1" />
+              <div class="inline-controls">
+                <button type="button" class="step-btn" data-target="baseScore" data-step="-1">-1</button>
+                <button type="button" class="step-btn" data-target="baseScore" data-step="1">+1</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="multiplier">倍数</label>
+              <input id="multiplier" type="number" min="1" step="1" value="1" />
+              <div class="inline-controls">
+                <button type="button" class="step-btn" data-target="multiplier" data-step="-1">-1</button>
+                <button type="button" class="step-btn" data-target="multiplier" data-step="1">+1</button>
+                <button type="button" class="quick-tag" data-multi="2">x2</button>
+                <button type="button" class="quick-tag" data-multi="4">x4</button>
+                <button type="button" class="quick-tag" data-multi="8">x8</button>
+              </div>
+            </div>
+          </div>
+          <div class="quick-round">
+            <button type="button" class="btn quick-win" id="quickLandlordWinBtn">地主赢并记录</button>
+            <button type="button" class="btn quick-win" id="quickFarmersWinBtn">农民赢并记录</button>
+          </div>
+        </div>
+
+        <div id="wushikForm" style="display:none;">
+          <div class="grid2-compact">
+            <div class="field">
+              <label for="scoreP1">玩家1分数</label>
+              <input id="scoreP1" type="number" step="1" value="0" />
+              <div class="score-step-grid">
+                <button type="button" class="score-step-btn" data-target="scoreP1" data-delta="-10">-10</button>
+                <button type="button" class="score-step-btn" data-target="scoreP1" data-delta="-1">-1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP1" data-delta="1">+1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP1" data-delta="10">+10</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="scoreP2">玩家2分数</label>
+              <input id="scoreP2" type="number" step="1" value="0" />
+              <div class="score-step-grid">
+                <button type="button" class="score-step-btn" data-target="scoreP2" data-delta="-10">-10</button>
+                <button type="button" class="score-step-btn" data-target="scoreP2" data-delta="-1">-1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP2" data-delta="1">+1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP2" data-delta="10">+10</button>
+              </div>
+            </div>
+          </div>
+          <div class="grid2-compact">
+            <div class="field">
+              <label for="scoreP3">玩家3分数</label>
+              <input id="scoreP3" type="number" step="1" value="0" />
+              <div class="score-step-grid">
+                <button type="button" class="score-step-btn" data-target="scoreP3" data-delta="-10">-10</button>
+                <button type="button" class="score-step-btn" data-target="scoreP3" data-delta="-1">-1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP3" data-delta="1">+1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP3" data-delta="10">+10</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="scoreP4">玩家4分数</label>
+              <input id="scoreP4" type="number" step="1" value="0" />
+              <div class="score-step-grid">
+                <button type="button" class="score-step-btn" data-target="scoreP4" data-delta="-10">-10</button>
+                <button type="button" class="score-step-btn" data-target="scoreP4" data-delta="-1">-1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP4" data-delta="1">+1</button>
+                <button type="button" class="score-step-btn" data-target="scoreP4" data-delta="10">+10</button>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" id="strictZeroSum" checked style="width:auto; margin-right:6px;" /> 启用零和校验（四人分数合计应为 0）</label>
+          </div>
+          <div id="sumWarning" class="sum-warning">当前四人分数合计不为 0，请确认规则是否允许。</div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn primary" id="addRoundBtn">记录本局</button>
+          <button type="button" class="btn" id="undoBtn">撤销上一局</button>
+          <button type="button" class="btn danger" id="resetBtn">清空记录</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>当前总分</h2>
+        <div class="score-board" id="scoreBoard"></div>
+
+        <h2 style="margin-top:14px;">对局记录</h2>
+        <div id="historyWrap"></div>
+      </section>
+    </div>
+  </div>
+  <div class="mobile-fast-actions">
+    <button type="button" class="btn primary" data-mobile-action="landlord">地主赢</button>
+    <button type="button" class="btn" data-mobile-action="farmers">农民赢</button>
+    <button type="button" class="btn" data-mobile-action="add">记录本局</button>
+    <button type="button" class="btn" data-mobile-action="undo">撤销上一局</button>
+  </div>
+
+  <script>
+    const modeTabs = document.getElementById("modeTabs");
+    const formTitle = document.getElementById("formTitle");
+    const modeHint = document.getElementById("modeHint");
+    const player1 = document.getElementById("player1");
+    const player2 = document.getElementById("player2");
+    const player3 = document.getElementById("player3");
+    const player4 = document.getElementById("player4");
+    const player3Wrap = document.getElementById("player3Wrap");
+    const player4Wrap = document.getElementById("player4Wrap");
+    const player34Row = document.getElementById("player34Row");
+    const togglePlayerSetupBtn = document.getElementById("togglePlayerSetupBtn");
+    const playerSetupSection = document.getElementById("playerSetupSection");
+    const playerSummary = document.getElementById("playerSummary");
+
+    const landlordSelect = document.getElementById("landlordSelect");
+    const baseScore = document.getElementById("baseScore");
+    const multiplier = document.getElementById("multiplier");
+
+    const doudizhuForm = document.getElementById("doudizhuForm");
+    const wushikForm = document.getElementById("wushikForm");
+    const scoreP1 = document.getElementById("scoreP1");
+    const scoreP2 = document.getElementById("scoreP2");
+    const scoreP3 = document.getElementById("scoreP3");
+    const scoreP4 = document.getElementById("scoreP4");
+    const strictZeroSum = document.getElementById("strictZeroSum");
+    const sumWarning = document.getElementById("sumWarning");
+
+    const addRoundBtn = document.getElementById("addRoundBtn");
+    const undoBtn = document.getElementById("undoBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const quickLandlordWinBtn = document.getElementById("quickLandlordWinBtn");
+    const quickFarmersWinBtn = document.getElementById("quickFarmersWinBtn");
+    const mobileLandlordBtn = document.querySelector('[data-mobile-action="landlord"]');
+    const mobileFarmersBtn = document.querySelector('[data-mobile-action="farmers"]');
+    const mobileFastAddBtn = document.querySelector('[data-mobile-action="add"]');
+    const mobileUndoBtn = document.querySelector('[data-mobile-action="undo"]');
+    const scoreBoard = document.getElementById("scoreBoard");
+    const historyWrap = document.getElementById("historyWrap");
+
+    const STORAGE_KEY = "card_scoreboard_state_v1";
+    let mode = "";
+    let history = [];
+    let totals = [0, 0, 0, 0];
+    let playerSetupCollapsed = false;
+
+    function isMobileView() {
+      return window.matchMedia("(max-width: 900px)").matches;
+    }
+
+    function readState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveState() {
+      const state = {
+        mode,
+        history,
+        totals,
+        players: {
+          p1: player1.value,
+          p2: player2.value,
+          p3: player3.value,
+          p4: player4.value
+        },
+        doudizhu: {
+          landlord: landlordSelect.value || "0",
+          baseScore: baseScore.value,
+          multiplier: multiplier.value
+        },
+        wushik: {
+          scoreP1: scoreP1.value,
+          scoreP2: scoreP2.value,
+          scoreP3: scoreP3.value,
+          scoreP4: scoreP4.value,
+          strictZeroSum: strictZeroSum.checked
+        },
+        ui: {
+          playerSetupCollapsed
+        }
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // ignore storage errors
+      }
+    }
+
+    function restoreState() {
+      const state = readState();
+      if (!state) return "doudizhu";
+
+      if (state.players && typeof state.players === "object") {
+        player1.value = state.players.p1 || player1.value;
+        player2.value = state.players.p2 || player2.value;
+        player3.value = state.players.p3 || player3.value;
+        player4.value = state.players.p4 || player4.value;
+      }
+
+      if (Array.isArray(state.totals)) {
+        totals = [0, 0, 0, 0];
+        state.totals.slice(0, 4).forEach((v, idx) => {
+          totals[idx] = Number(v) || 0;
+        });
+      }
+
+      if (Array.isArray(state.history)) {
+        history = state.history
+          .filter(item => item && typeof item === "object" && Array.isArray(item.delta))
+          .map(item => ({
+            mode: item.mode === "wushik" ? "wushik" : "doudizhu",
+            time: String(item.time || ""),
+            detail: String(item.detail || ""),
+            delta: item.delta.slice(0, 4).map(v => Number(v) || 0),
+            deltaText: String(item.deltaText || "")
+          }));
+      }
+
+      if (state.doudizhu && typeof state.doudizhu === "object") {
+        baseScore.value = String(Math.max(1, Number(state.doudizhu.baseScore) || 1));
+        multiplier.value = String(Math.max(1, Number(state.doudizhu.multiplier) || 1));
+      }
+
+      if (state.wushik && typeof state.wushik === "object") {
+        scoreP1.value = String(Number(state.wushik.scoreP1) || 0);
+        scoreP2.value = String(Number(state.wushik.scoreP2) || 0);
+        scoreP3.value = String(Number(state.wushik.scoreP3) || 0);
+        scoreP4.value = String(Number(state.wushik.scoreP4) || 0);
+        strictZeroSum.checked = state.wushik.strictZeroSum !== false;
+      }
+
+      if (state.ui && typeof state.ui === "object" && typeof state.ui.playerSetupCollapsed === "boolean") {
+        playerSetupCollapsed = state.ui.playerSetupCollapsed;
+      } else {
+        playerSetupCollapsed = isMobileView();
+      }
+
+      rebuildLandlordSelect();
+      if (state.doudizhu && Number(state.doudizhu.landlord) >= 0 && Number(state.doudizhu.landlord) <= 2) {
+        landlordSelect.value = String(Number(state.doudizhu.landlord));
+      }
+
+      return state.mode === "wushik" ? "wushik" : "doudizhu";
+    }
+
+    function safeName(input, fallback) {
+      const v = String(input || "").trim();
+      return v || fallback;
+    }
+
+    function getPlayers() {
+      if (mode === "doudizhu") {
+        return [
+          safeName(player1.value, "玩家A"),
+          safeName(player2.value, "玩家B"),
+          safeName(player3.value, "玩家C")
+        ];
+      }
+      return [
+        safeName(player1.value, "玩家A"),
+        safeName(player2.value, "玩家B"),
+        safeName(player3.value, "玩家C"),
+        safeName(player4.value, "玩家D")
+      ];
+    }
+
+    function renderPlayerSummary() {
+      const players = getPlayers();
+      playerSummary.textContent = `当前玩家：${players.join(" / ")}`;
+    }
+
+    function setPlayerSetupCollapsed(collapsed, shouldSave = true) {
+      playerSetupCollapsed = Boolean(collapsed);
+      playerSetupSection.classList.toggle("collapsed", playerSetupCollapsed);
+      togglePlayerSetupBtn.textContent = playerSetupCollapsed ? "编辑玩家" : "收起玩家设置";
+      if (shouldSave) saveState();
+    }
+
+    function rebuildLandlordSelect() {
+      const players = [
+        safeName(player1.value, "玩家A"),
+        safeName(player2.value, "玩家B"),
+        safeName(player3.value, "玩家C")
+      ];
+      const old = landlordSelect.value;
+      landlordSelect.innerHTML = players
+        .map((name, idx) => `<option value="${idx}">${name}</option>`)
+        .join("");
+      if (old && Number(old) >= 0 && Number(old) <= 2) {
+        landlordSelect.value = old;
+      }
+    }
+
+    function fmtScore(v) {
+      return (v > 0 ? "+" : "") + v;
+    }
+
+    function renderScoreBoard() {
+      const players = getPlayers();
+      scoreBoard.innerHTML = players
+        .map((name, idx) => {
+          const val = totals[idx] || 0;
+          const cls = val > 0 ? "score-pos" : val < 0 ? "score-neg" : "";
+          return `
+            <div class="score-row">
+              <div class="score-name">${escapeHtml(name)}</div>
+              <div class="score-val ${cls}">${fmtScore(val)}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function renderHistory() {
+      if (!history.length) {
+        historyWrap.innerHTML = '<div class="empty">还没有记录，先打一局试试。</div>';
+        return;
+      }
+
+      historyWrap.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>局数</th>
+              <th>时间</th>
+              <th>模式</th>
+              <th>明细</th>
+              <th>本局分数</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${history
+              .map((item, idx) => `
+                <tr>
+                  <td>#${idx + 1}</td>
+                  <td>${escapeHtml(item.time)}</td>
+                  <td>${item.mode === "doudizhu" ? "斗地主" : "五十K"}</td>
+                  <td><pre>${escapeHtml(item.detail)}</pre></td>
+                  <td><pre>${escapeHtml(item.deltaText)}</pre></td>
+                </tr>
+              `)
+              .join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function showZeroWarning() {
+      const vals = [scoreP1, scoreP2, scoreP3, scoreP4].map(input => Number(input.value) || 0);
+      const sum = vals.reduce((a, b) => a + b, 0);
+      sumWarning.classList.toggle("show", sum !== 0);
+    }
+
+    function calcDoudizhuDelta(players, winner) {
+      const landlord = Number(landlordSelect.value);
+      if (Number.isNaN(landlord) || landlord < 0 || landlord > 2) {
+        alert("请选择地主");
+        return null;
+      }
+
+      const base = Math.max(1, Number(baseScore.value) || 1);
+      const multi = Math.max(1, Number(multiplier.value) || 1);
+      const unit = base * multi;
+      const delta = [0, 0, 0];
+
+      const landlordName = players[landlord];
+      if (winner === "landlord") {
+        delta[landlord] += unit * 2;
+        players.forEach((_, idx) => {
+          if (idx !== landlord) delta[idx] -= unit;
+        });
+      } else {
+        delta[landlord] -= unit * 2;
+        players.forEach((_, idx) => {
+          if (idx !== landlord) delta[idx] += unit;
+        });
+      }
+
+      return {
+        delta,
+        detail: `地主: ${landlordName}\n赢家: ${winner === "landlord" ? "地主" : "农民"}\n底分: ${base}，倍数: ${multi}`
+      };
+    }
+
+    function calcWushikDelta(players) {
+      const values = [scoreP1, scoreP2, scoreP3, scoreP4].map(input => Number(input.value) || 0);
+      const sum = values.reduce((a, b) => a + b, 0);
+      if (strictZeroSum.checked && sum !== 0) {
+        alert("四人分数合计不为 0，请先确认后再记录（或取消零和校验）");
+        return null;
+      }
+
+      const delta = values.slice(0, players.length);
+
+      const detail = `手动录分${strictZeroSum.checked ? "（零和校验开启）" : ""}\n本局合计: ${sum}`;
+      return { delta, detail };
+    }
+
+    function applyRound(doudizhuWinner) {
+      const players = getPlayers();
+
+      const calc = mode === "doudizhu"
+        ? calcDoudizhuDelta(players, doudizhuWinner)
+        : calcWushikDelta(players);
+      if (!calc) return;
+
+      calc.delta.forEach((value, idx) => {
+        totals[idx] = (totals[idx] || 0) + (value || 0);
+      });
+
+      const deltaText = players.map((name, idx) => `${name}: ${fmtScore(calc.delta[idx] || 0)}`).join("\n");
+      const now = new Date();
+      const time = now.toLocaleTimeString("zh-CN", { hour12: false });
+      history.push({ mode, time, detail: calc.detail, delta: calc.delta, deltaText });
+      if (navigator.vibrate) {
+        navigator.vibrate(18);
+      }
+
+      if (mode === "wushik") {
+        scoreP1.value = "0";
+        scoreP2.value = "0";
+        scoreP3.value = "0";
+        scoreP4.value = "0";
+        showZeroWarning();
+      }
+
+      renderScoreBoard();
+      renderHistory();
+      saveState();
+    }
+
+    function undoLastRound() {
+      if (!history.length) {
+        alert("还没有可撤销的记录");
+        return;
+      }
+      const last = history.pop();
+      last.delta.forEach((value, idx) => {
+        totals[idx] = (totals[idx] || 0) - (value || 0);
+      });
+      renderScoreBoard();
+      renderHistory();
+      saveState();
+    }
+
+    function resetAll() {
+      if (!confirm("确认清空全部对局记录和累计分数吗？")) return;
+      history = [];
+      totals = [0, 0, 0, 0];
+      renderScoreBoard();
+      renderHistory();
+      saveState();
+    }
+
+    function switchMode(nextMode) {
+      if (nextMode === mode) return;
+      mode = nextMode;
+
+      modeTabs.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
+      });
+
+      if (mode === "doudizhu") {
+        formTitle.textContent = "本局录分（斗地主）";
+        modeHint.textContent = "规则：地主赢时地主 +2x 底分倍数，两个农民各 -1x；农民赢时反向。";
+        doudizhuForm.style.display = "block";
+        wushikForm.style.display = "none";
+        player4Wrap.style.display = "none";
+        if (player34Row) player34Row.classList.add("single-col");
+        addRoundBtn.style.display = "none";
+        if (mobileLandlordBtn) mobileLandlordBtn.style.display = "inline-block";
+        if (mobileFarmersBtn) mobileFarmersBtn.style.display = "inline-block";
+        if (mobileFastAddBtn) mobileFastAddBtn.style.display = "none";
+        if (mobileUndoBtn) mobileUndoBtn.textContent = "撤销";
+      } else {
+        formTitle.textContent = "本局录分（五十K）";
+        modeHint.textContent = "按你们自己的规则录分。默认开启零和校验，防止误录。";
+        doudizhuForm.style.display = "none";
+        wushikForm.style.display = "block";
+        player4Wrap.style.display = "block";
+        if (player34Row) player34Row.classList.remove("single-col");
+        addRoundBtn.style.display = isMobileView() ? "none" : "inline-block";
+        addRoundBtn.textContent = "记录本局";
+        if (mobileLandlordBtn) mobileLandlordBtn.style.display = "none";
+        if (mobileFarmersBtn) mobileFarmersBtn.style.display = "none";
+        if (mobileFastAddBtn) mobileFastAddBtn.style.display = "inline-block";
+        if (mobileUndoBtn) mobileUndoBtn.textContent = "撤销";
+        showZeroWarning();
+      }
+
+      renderPlayerSummary();
+      renderScoreBoard();
+      saveState();
+    }
+
+    [player1, player2, player3].forEach(input => {
+      input.addEventListener("input", () => {
+        rebuildLandlordSelect();
+        renderPlayerSummary();
+        renderScoreBoard();
+        saveState();
+      });
+    });
+    player4.addEventListener("input", () => {
+      renderPlayerSummary();
+      renderScoreBoard();
+      saveState();
+    });
+
+    [scoreP1, scoreP2, scoreP3, scoreP4].forEach(input => {
+      input.addEventListener("input", () => {
+        showZeroWarning();
+        saveState();
+      });
+    });
+
+    strictZeroSum.addEventListener("change", () => {
+      showZeroWarning();
+      saveState();
+    });
+    landlordSelect.addEventListener("change", saveState);
+    baseScore.addEventListener("input", () => {
+      if (Number(baseScore.value) < 1) baseScore.value = "1";
+      saveState();
+    });
+    multiplier.addEventListener("input", () => {
+      if (Number(multiplier.value) < 1) multiplier.value = "1";
+      saveState();
+    });
+
+    addRoundBtn.addEventListener("click", () => {
+      if (mode === "doudizhu") return;
+      applyRound();
+    });
+    undoBtn.addEventListener("click", undoLastRound);
+    resetBtn.addEventListener("click", resetAll);
+    quickLandlordWinBtn.addEventListener("click", () => {
+      applyRound("landlord");
+    });
+    quickFarmersWinBtn.addEventListener("click", () => {
+      applyRound("farmers");
+    });
+
+    document.querySelectorAll(".step-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.getAttribute("data-target");
+        const step = Number(btn.getAttribute("data-step")) || 0;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const current = Number(input.value) || 1;
+        input.value = String(Math.max(1, current + step));
+        saveState();
+      });
+    });
+
+    document.querySelectorAll("[data-multi]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const value = Number(btn.getAttribute("data-multi")) || 1;
+        multiplier.value = String(Math.max(1, value));
+        saveState();
+      });
+    });
+
+    document.querySelectorAll("[data-mobile-action]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const action = btn.getAttribute("data-mobile-action");
+        if (action === "add") {
+          if (mode === "wushik") applyRound();
+        }
+        if (action === "landlord") {
+          if (mode === "doudizhu") applyRound("landlord");
+        }
+        if (action === "farmers") {
+          if (mode === "doudizhu") applyRound("farmers");
+        }
+        if (action === "undo") undoLastRound();
+      });
+    });
+
+    document.querySelectorAll(".score-step-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.getAttribute("data-target");
+        const delta = Number(btn.getAttribute("data-delta")) || 0;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const current = Number(input.value) || 0;
+        input.value = String(current + delta);
+        showZeroWarning();
+        saveState();
+      });
+    });
+
+    modeTabs.addEventListener("click", (event) => {
+      const btn = event.target.closest(".tab-btn");
+      if (!btn) return;
+      switchMode(btn.getAttribute("data-mode"));
+    });
+
+    togglePlayerSetupBtn.addEventListener("click", () => {
+      setPlayerSetupCollapsed(!playerSetupCollapsed);
+    });
+
+    window.addEventListener("resize", () => {
+      switchMode(mode);
+    });
+
+    const initialMode = restoreState();
+    if (initialMode === "doudizhu" && !readState()) {
+      playerSetupCollapsed = isMobileView();
+    }
+    setPlayerSetupCollapsed(playerSetupCollapsed, false);
+    switchMode(initialMode);
+    renderPlayerSummary();
+    renderHistory();
+    showZeroWarning();
+  </script>
+</body>
+</html>

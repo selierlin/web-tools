@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- TDK 优化 (Title, Description, Keywords) -->
-    <title>极简工具箱 - 程序员在线工具合集 (JSON/编码/加解密/时间戳/正则/Cron)</title>
+    <title>极简工具箱 - 在线工具合集 (JSON/编码/加解密/时间戳/正则/Cron)</title>
     <meta name="description"
           content="极简工具箱提供免费、无广告的在线开发工具：文本加工、Base64/URL 编码解码、二维码生成、MD5/SHA/AES 加解密、文本对比、JSON 格式化、时间戳与日期计算、正则可视化、Cron 表达式、UUID 生成、Nacos 服务管理等。">
     <meta name="keywords" content="在线工具,极简工具箱,JSON格式化,编码解码,Base64,加解密,二维码,时间戳,正则表达式,Cron,UUID,Nacos,程序员工具">
@@ -75,6 +75,7 @@
         }
 
         header {
+            position: relative;
             display: flex;
             align-items: center;
             padding: 0 24px;
@@ -83,7 +84,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--nav-border);
-            z-index: 10;
+            z-index: 20;
         }
 
         .header-title {
@@ -283,6 +284,12 @@
             opacity: 1;
         }
 
+        .menu-item a.search-selected:not(.active) {
+            color: var(--text-light);
+            background: rgba(129, 140, 248, 0.18);
+            box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.42);
+        }
+
         .menu-item.hidden {
             display: none;
         }
@@ -375,7 +382,15 @@
             background: rgba(255, 255, 255, 0.06);
         }
 
+        .menu-backdrop {
+            display: none;
+        }
+
         @media (max-width: 768px) {
+            body.menu-open {
+                overflow: hidden;
+            }
+
             .category-filter {
                 display: none;
             }
@@ -410,23 +425,43 @@
             }
 
             .menu-wrapper {
-                position: absolute;
+                position: fixed;
                 top: 64px;
                 left: 0;
-                width: 100%;
-                height: 0;
-                overflow: hidden;
-                background: var(--nav-bg);
-                backdrop-filter: blur(12px);
+                right: 0;
+                width: auto;
+                height: calc(100vh - 64px);
+                max-height: calc(100vh - 64px);
+                overflow-y: auto;
+                background: #0f1422;
                 border-bottom: 1px solid var(--nav-border);
-                transition: height 0.3s ease;
-                z-index: 9;
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(-8px);
+                transition: opacity 0.2s ease, transform 0.2s ease;
+                z-index: 22;
             }
 
             .menu-wrapper.active {
-                height: auto;
-                max-height: calc(100vh - 64px);
-                overflow-y: auto;
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateY(0);
+            }
+
+            .menu-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.45);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+                z-index: 19;
+            }
+
+            .menu-backdrop.active {
+                opacity: 1;
+                pointer-events: auto;
             }
 
             .menu-list {
@@ -436,7 +471,30 @@
             }
 
             .menu-item a {
+                color: #dbe7ff;
                 white-space: normal;
+                background: rgba(255, 255, 255, 0.04);
+            }
+
+            .menu-item a i {
+                opacity: 0.95;
+                color: #c7d7ff;
+            }
+
+            .menu-item a:hover {
+                color: #ffffff;
+                background: rgba(129, 140, 248, 0.24);
+            }
+
+            .menu-item a.active {
+                color: #ffffff;
+                box-shadow: 0 6px 16px rgba(99, 102, 241, 0.45);
+            }
+
+            .menu-item a.search-selected:not(.active) {
+                color: #ffffff;
+                background: rgba(129, 140, 248, 0.3);
+                box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.45);
             }
         }
     </style>
@@ -458,7 +516,7 @@
 </nav>
 
 <header>
-    <button class="menu-toggle" id="menuToggle" aria-label="打开菜单">
+    <button class="menu-toggle" id="menuToggle" aria-label="打开菜单" aria-expanded="false">
         <i class="fas fa-bars"></i>
     </button>
 
@@ -491,6 +549,7 @@
         </ul>
     </nav>
 </header>
+<div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
 
 <main id="content-main">
     <noscript>
@@ -517,7 +576,7 @@
             id: 'text-process',
             name: '文本加工',
             src: '文本加工.html',
-            keywords: '文本 加工 大小写 转换 去重 txt text',
+            keywords: '文本 加工 大小写 转换 去重 txt text wenbenjiagong',
             category: '文本',
             icon: 'fa-file-alt'
         },
@@ -525,7 +584,7 @@
             id: 'codec',
             name: '编码解码',
             src: '编码解码.html',
-            keywords: '编码 解码 base64 url',
+            keywords: '编码 解码 base64 url bianmajiema',
             category: '编码',
             icon: 'fa-terminal'
         },
@@ -541,7 +600,7 @@
             id: 'qrcode',
             name: '二维码',
             src: '二维码生成器.html',
-            keywords: '二维码 qrcode 生成',
+            keywords: '二维码 qrcode 生成 erweima',
             category: '其他',
             icon: 'fa-qrcode'
         },
@@ -549,7 +608,7 @@
             id: 'crypto',
             name: '加密解密',
             src: '加密解密.html',
-            keywords: '加密 解密 md5 aes sha',
+            keywords: '加密 解密 md5 aes sha jiamijiemi',
             category: '编码',
             icon: 'fa-shield-alt'
         },
@@ -557,7 +616,7 @@
             id: 'diff',
             name: '文本对比',
             src: '文本对比.html',
-            keywords: '文本 对比 diff 差异 txt text',
+            keywords: '文本 对比 diff 差异 txt text wenbenduibi',
             category: '文本',
             icon: 'fa-columns'
         },
@@ -573,7 +632,7 @@
             id: 'time',
             name: '时间计算',
             src: '时间计算器.html',
-            keywords: '时间 计算 时间戳',
+            keywords: '时间 计算 时间戳 shijianjisuan',
             category: '时间',
             icon: 'fa-clock'
         },
@@ -581,7 +640,7 @@
             id: 'date',
             name: '日期计算',
             src: '日期计算器.html',
-            keywords: '日期 计算 间隔',
+            keywords: '日期 计算 间隔 riqijisuanqi',
             category: '时间',
             icon: 'fa-calendar-alt'
         },
@@ -589,7 +648,7 @@
             id: 'regex',
             name: '正则可视化',
             src: '正则可视化.html',
-            keywords: '正则 正则表达式 可视化 regex',
+            keywords: '正则 正则表达式 可视化 regex zhengze',
             category: '开发',
             icon: 'fa-project-diagram'
         },
@@ -613,9 +672,17 @@
             id: 'command-dict',
             name: '命令速查',
             src: '命令速查.html',
-            keywords: '命令 查询 字典 linux macos debian docker git kubernetes cmd',
+            keywords: '命令 查询 字典 linux macos debian docker git kubernetes cmd mingling',
             category: '开发',
             icon: 'fa-terminal'
+        },
+        {
+            id: 'card-scoreboard',
+            name: '打牌计分器',
+            src: '打牌计分器.html',
+            keywords: '打牌 计分 斗地主 五十k 过年 聚会 记分 牌局 card dapaijifenqi',
+            category: '其他',
+            icon: 'fa-trophy'
         },
         {
             id: 'uuid',
@@ -629,7 +696,7 @@
             id: 'color-converter',
             name: '颜色转换',
             src: '颜色转换工具.html',
-            keywords: '颜色 转换 hex rgb hsl cmyk hsv 透明度 渐变 对比度',
+            keywords: '颜色 转换 hex rgb hsl cmyk hsv 透明度 渐变 对比度 yansezhuanhuan',
             category: '其他',
             icon: 'fa-palette'
         },
@@ -637,7 +704,7 @@
             id: 'todo',
             name: '待办清单',
             src: 'todo.html?embed=1',
-            keywords: 'todo 待办 清单 任务 task 计划',
+            keywords: 'todo 待办 清单 任务 task 计划 daibanqingdan',
             category: '其他',
             icon: 'fa-list-check'
         },
@@ -645,7 +712,7 @@
             id: 'changelog',
             name: '更新记录',
             src: '更新记录.html',
-            keywords: '更新 记录 git commit 日志 版本',
+            keywords: '更新 记录 git commit 日志 版本 genxinjilu',
             category: '其他',
             icon: 'fa-clock-rotate-left'
         }
@@ -654,6 +721,7 @@
     const contentMain = document.getElementById('content-main');
     const menuToggle = document.getElementById('menuToggle');
     const menuWrapper = document.getElementById('menuWrapper');
+    const menuBackdrop = document.getElementById('menuBackdrop');
     const searchBox = document.getElementById('searchBox');
     const menuList = document.getElementById('menuList');
     const categoryFilter = document.getElementById('categoryFilter');
@@ -753,9 +821,71 @@
         allItems.forEach(item => {
             menuList.appendChild(item);
         });
+        refreshVisibleLinks(true);
     }
 
     let currentCategory = '';
+    let visibleLinksCache = [];
+    let selectedVisibleIndex = -1;
+
+    function getVisibleLinks() {
+        return Array.from(menuList.querySelectorAll('.menu-item:not(.hidden) a'));
+    }
+
+    function applySelectedLinkStyle() {
+        menuList.querySelectorAll('.menu-item a.search-selected').forEach(link => {
+            link.classList.remove('search-selected');
+        });
+        if (selectedVisibleIndex >= 0 && selectedVisibleIndex < visibleLinksCache.length) {
+            visibleLinksCache[selectedVisibleIndex].classList.add('search-selected');
+        }
+    }
+
+    function refreshVisibleLinks(keepSelection = false) {
+        const previousLink = keepSelection && selectedVisibleIndex >= 0 ? visibleLinksCache[selectedVisibleIndex] : null;
+        visibleLinksCache = getVisibleLinks();
+        if (visibleLinksCache.length === 0) {
+            selectedVisibleIndex = -1;
+            applySelectedLinkStyle();
+            return;
+        }
+
+        if (previousLink) {
+            const nextIndex = visibleLinksCache.indexOf(previousLink);
+            if (nextIndex >= 0) {
+                selectedVisibleIndex = nextIndex;
+            } else {
+                selectedVisibleIndex = 0;
+            }
+        } else {
+            selectedVisibleIndex = 0;
+        }
+        applySelectedLinkStyle();
+    }
+
+    function moveSelection(step) {
+        if (!visibleLinksCache.length) return;
+        if (selectedVisibleIndex < 0 || selectedVisibleIndex >= visibleLinksCache.length) {
+            selectedVisibleIndex = 0;
+        } else {
+            selectedVisibleIndex = (selectedVisibleIndex + step + visibleLinksCache.length) % visibleLinksCache.length;
+        }
+        applySelectedLinkStyle();
+        visibleLinksCache[selectedVisibleIndex].scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'nearest'
+        });
+    }
+
+    function setMenuOpen(open) {
+        const mobile = window.innerWidth <= 768;
+        const shouldOpen = Boolean(open && mobile);
+        menuWrapper.classList.toggle('active', shouldOpen);
+        menuBackdrop.classList.toggle('active', shouldOpen);
+        document.body.classList.toggle('menu-open', shouldOpen);
+        menuToggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    }
 
     function updateVisibility() {
         const keyword = searchBox.value.toLowerCase().trim();
@@ -770,6 +900,7 @@
                 item.classList.add('hidden');
             }
         });
+        refreshVisibleLinks(true);
     }
 
     if (categoryFilter) {
@@ -785,9 +916,30 @@
 
     searchBox.addEventListener('input', function () {
         if (this.value.trim() && window.innerWidth <= 768) {
-            menuWrapper.classList.add('active');
+            setMenuOpen(true);
         }
         updateVisibility();
+    });
+
+    searchBox.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            moveSelection(1);
+            return;
+        }
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            moveSelection(-1);
+            return;
+        }
+        if (e.key === 'Enter') {
+            const keyword = this.value.trim();
+            if (!keyword) return;
+            refreshVisibleLinks(true);
+            if (selectedVisibleIndex < 0 || selectedVisibleIndex >= visibleLinksCache.length) return;
+            const selectedLink = visibleLinksCache[selectedVisibleIndex];
+            switchTool(selectedLink.getAttribute('data-id'));
+        }
     });
 
     // 快捷键：Windows Ctrl+K / macOS ⌘+K 聚焦搜索框
@@ -834,7 +986,7 @@
 
         // 移动端点击菜单后自动收起
         if (window.innerWidth <= 768) {
-            menuWrapper.classList.remove('active');
+            setMenuOpen(false);
         }
     }
 
@@ -868,13 +1020,23 @@
 
     // 汉堡菜单点击事件
     menuToggle.addEventListener('click', function () {
-        menuWrapper.classList.toggle('active');
+        setMenuOpen(!menuWrapper.classList.contains('active'));
     });
 
     // 点击菜单外部关闭菜单
     document.addEventListener('click', function (e) {
         if (window.innerWidth <= 768 && !menuToggle.contains(e.target) && !menuWrapper.contains(e.target)) {
-            menuWrapper.classList.remove('active');
+            setMenuOpen(false);
+        }
+    });
+
+    menuBackdrop.addEventListener('click', function () {
+        setMenuOpen(false);
+    });
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 768) {
+            setMenuOpen(false);
         }
     });
 
@@ -884,6 +1046,7 @@
         initFavoriteButtons();
         updateMenuOrder();
         updateVisibility();
+        refreshVisibleLinks(true);
         const hashId = window.location.hash.replace('#', '');
         switchTool(hashId || DEFAULT_TOOL_ID);
     });
