@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL 工具</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #dbe4f0;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(900px 300px at -10% -20%, #dbeafe 0%, transparent 60%),
+        radial-gradient(700px 280px at 120% -10%, #e0e7ff 0%, transparent 60%),
+        var(--bg);
+      font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .container {
+      width: min(1180px, 100% - 24px);
+      margin: 20px auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #eff6ff, #eef2ff);
+    }
+
+    .title {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .desc {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #fbfdff;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #fff;
+      color: #1e293b;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .tab-btn:hover { border-color: #bfdbfe; background: #f8fbff; }
+
+    .tab-btn.active {
+      color: #1d4ed8;
+      border-color: #93c5fd;
+      background: var(--primary-soft);
+      font-weight: 600;
+    }
+
+    .panel {
+      display: none;
+      padding: 14px;
+    }
+
+    .panel.active { display: block; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    select,
+    button {
+      height: 36px;
+      border: 1px solid #cfd9e8;
+      background: #fff;
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    button.primary {
+      border-color: #93c5fd;
+      color: #1d4ed8;
+      background: #eff6ff;
+    }
+
+    button.danger {
+      border-color: #fecaca;
+      color: var(--danger);
+      background: #fff1f2;
+    }
+
+    button:hover { filter: brightness(0.98); }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .block-title {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 380px;
+      border: 1px solid #d1d9e6;
+      border-radius: 12px;
+      padding: 12px;
+      resize: vertical;
+      color: #0f172a;
+      background: #fff;
+      font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .editor-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .editor {
+      position: relative;
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      height: min(58vh, 520px);
+      border: 1px solid #d1d9e6;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .line-numbers {
+      margin: 0;
+      padding: 12px 8px 12px 10px;
+      height: 100%;
+      border-right: 1px solid #e5edf8;
+      background: #f8fbff;
+      color: #94a3b8;
+      text-align: right;
+      user-select: none;
+      overflow: auto;
+      white-space: pre;
+      font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .editor textarea {
+      border: 0;
+      border-radius: 0;
+      height: 100%;
+      min-height: 0;
+      outline: none;
+      overflow: auto;
+      resize: none;
+    }
+
+    .editor-stats {
+      margin: 0;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .editor { height: min(48vh, 420px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">SQL 工具</h1>
+      <p class="desc">SQL 格式化、SQL/Java Bean 互转、多条 INSERT INTO 合并</p>
+    </header>
+
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-panel="format-panel" type="button">SQL 格式化</button>
+      <button class="tab-btn" data-panel="bean-panel" type="button">SQL / Bean 互转</button>
+      <button class="tab-btn" data-panel="insert-panel" type="button">INSERT 合并</button>
+    </div>
+
+    <section class="panel active" id="format-panel">
+      <div class="toolbar">
+        <select id="formatDialect">
+          <option value="mysql">MySQL</option>
+          <option value="postgresql">PostgreSQL</option>
+          <option value="sqlite">SQLite</option>
+          <option value="tsql">SQL Server</option>
+          <option value="plsql">Oracle PLSQL</option>
+        </select>
+        <select id="formatKeywordCase">
+          <option value="upper">关键字大写</option>
+          <option value="lower">关键字小写</option>
+          <option value="preserve">保持原样</option>
+        </select>
+        <button class="primary" type="button" id="btnSqlFormat">格式化</button>
+        <button type="button" id="btnSqlMinify">压缩</button>
+        <button type="button" id="btnSqlCopy">复制结果</button>
+        <button class="danger" type="button" id="btnSqlClear">清空</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <p class="block-title">输入 SQL</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="sqlInputLines" aria-hidden="true">1</pre>
+              <textarea id="sqlInput" placeholder="输入 SQL..."></textarea>
+            </div>
+            <p class="editor-stats" id="sqlInputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+        <div>
+          <p class="block-title">输出</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="sqlOutputLines" aria-hidden="true">1</pre>
+              <textarea id="sqlOutput" readonly placeholder="格式化结果..."></textarea>
+            </div>
+            <p class="editor-stats" id="sqlOutputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+      </div>
+      <p class="hint">提示：格式化依赖浏览器在线加载 sql-formatter（jsdelivr）。</p>
+    </section>
+
+    <section class="panel" id="bean-panel">
+      <div class="toolbar">
+        <button class="primary" type="button" id="btnSqlToBean">SQL 建表 -> Java Bean</button>
+        <button type="button" id="btnBeanToSql">Java Bean -> SQL 建表</button>
+        <button type="button" id="btnBeanCopy">复制结果</button>
+        <button class="danger" type="button" id="btnBeanClear">清空</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <p class="block-title">输入（CREATE TABLE 或 Java 类）</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="beanInputLines" aria-hidden="true">1</pre>
+              <textarea id="beanInput" placeholder="示例1：CREATE TABLE ...\n示例2：public class User {...}"></textarea>
+            </div>
+            <p class="editor-stats" id="beanInputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+        <div>
+          <p class="block-title">输出</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="beanOutputLines" aria-hidden="true">1</pre>
+              <textarea id="beanOutput" readonly placeholder="转换结果..."></textarea>
+            </div>
+            <p class="editor-stats" id="beanOutputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+      </div>
+      <p class="hint">规则：优先支持常见 MySQL DDL 与 Java 字段定义（private Type name;）。</p>
+    </section>
+
+    <section class="panel" id="insert-panel">
+      <div class="toolbar">
+        <button class="primary" type="button" id="btnInsertMerge">合并 INSERT</button>
+        <button type="button" id="btnInsertCopy">复制结果</button>
+        <button class="danger" type="button" id="btnInsertClear">清空</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <p class="block-title">输入多条 INSERT</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="insertInputLines" aria-hidden="true">1</pre>
+              <textarea id="insertInput" placeholder="INSERT INTO t_user (id,name) VALUES (1,'A');\nINSERT INTO t_user (id,name) VALUES (2,'B');"></textarea>
+            </div>
+            <p class="editor-stats" id="insertInputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+        <div>
+          <p class="block-title">输出</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="insertOutputLines" aria-hidden="true">1</pre>
+              <textarea id="insertOutput" readonly placeholder="合并结果..."></textarea>
+            </div>
+            <p class="editor-stats" id="insertOutputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+      </div>
+      <p class="hint">仅合并目标表名与列清单一致的语句；不同结构会分别输出。</p>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sql-formatter@15.6.10/dist/sql-formatter.min.js"></script>
+  <script>
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function copyText(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).catch(function () {});
+    }
+
+    const EDITOR_IDS = ['sqlInput', 'sqlOutput', 'beanInput', 'beanOutput', 'insertInput', 'insertOutput'];
+
+    function getLineCount(value) {
+      if (!value) return 1;
+      return value.split('\n').length;
+    }
+
+    function setLineNumbers(linesEl, count) {
+      let text = '';
+      for (let i = 1; i <= count; i += 1) {
+        text += i + (i === count ? '' : '\n');
+      }
+      linesEl.textContent = text || '1';
+    }
+
+    function getCaretLine(textarea) {
+      const pos = typeof textarea.selectionStart === 'number' ? textarea.selectionStart : 0;
+      return textarea.value.slice(0, pos).split('\n').length;
+    }
+
+    function updateEditorChrome(id) {
+      const textarea = $(id);
+      if (!textarea) return;
+      const value = textarea.value || '';
+      const lines = getLineCount(value);
+      const chars = value.length;
+      const caretLine = getCaretLine(textarea);
+      const linesEl = $(id + 'Lines');
+      const statsEl = $(id + 'Stats');
+      if (linesEl) {
+        setLineNumbers(linesEl, lines);
+        linesEl.scrollTop = textarea.scrollTop;
+      }
+      if (statsEl) {
+        statsEl.textContent = '行号: ' + caretLine + ' | 字符数: ' + chars + ' | 行数: ' + lines;
+      }
+    }
+
+    function setAreaValue(id, value) {
+      const textarea = $(id);
+      if (!textarea) return;
+      textarea.value = value;
+      updateEditorChrome(id);
+    }
+
+    function bindEditorEvents(id) {
+      const textarea = $(id);
+      if (!textarea) return;
+      ['input', 'keyup', 'click', 'scroll', 'select'].forEach(function (eventName) {
+        textarea.addEventListener(eventName, function () {
+          updateEditorChrome(id);
+        });
+      });
+      updateEditorChrome(id);
+    }
+
+    function initEditors() {
+      EDITOR_IDS.forEach(function (id) {
+        bindEditorEvents(id);
+      });
+    }
+
+    function toCamelCase(input) {
+      return String(input || '')
+        .replace(/^[`"]|[`"]$/g, '')
+        .toLowerCase()
+        .replace(/[_\-\s]+([a-z0-9])/g, function (_, c) { return c.toUpperCase(); })
+        .replace(/^[^a-zA-Z_]+/, '');
+    }
+
+    function toSnakeCase(input) {
+      return String(input || '')
+        .replace(/^[A-Z]/, function (c) { return c.toLowerCase(); })
+        .replace(/([A-Z])/g, '_$1')
+        .toLowerCase();
+    }
+
+    function upperCamel(input) {
+      const x = toCamelCase(input);
+      if (!x) return 'Entity';
+      return x.charAt(0).toUpperCase() + x.slice(1);
+    }
+
+    function normalizeSqlType(sqlType) {
+      return String(sqlType || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function sqlTypeToJavaType(sqlType) {
+      const t = normalizeSqlType(sqlType);
+      if (/tinyint\(1\)|\bboolean\b|\bbool\b/.test(t)) return 'Boolean';
+      if (/\bbigint\b/.test(t)) return 'Long';
+      if (/\bint\b|\binteger\b|\bmediumint\b|\bsmallint\b|\btinyint\b/.test(t)) return 'Integer';
+      if (/\bdouble\b/.test(t)) return 'Double';
+      if (/\bfloat\b/.test(t)) return 'Float';
+      if (/\bdecimal\b|\bnumeric\b/.test(t)) return 'BigDecimal';
+      if (/\bdate\b/.test(t) && !/\bdatetime\b/.test(t)) return 'LocalDate';
+      if (/\btime\b/.test(t) && !/\bdatetime\b/.test(t) && !/\btimestamp\b/.test(t)) return 'LocalTime';
+      if (/\bdatetime\b|\btimestamp\b/.test(t)) return 'LocalDateTime';
+      if (/\bchar\b|\btext\b|\bvarchar\b|\benum\b|\bjson\b|\bset\b/.test(t)) return 'String';
+      if (/\bbinary\b|\bblob\b/.test(t)) return 'byte[]';
+      return 'String';
+    }
+
+    function javaTypeToSqlType(javaType) {
+      const t = String(javaType || '').trim();
+      if (/^(Long|long)$/.test(t)) return 'BIGINT';
+      if (/^(Integer|int)$/.test(t)) return 'INT';
+      if (/^(Short|short)$/.test(t)) return 'SMALLINT';
+      if (/^(Byte|byte)$/.test(t)) return 'TINYINT';
+      if (/^(Boolean|boolean)$/.test(t)) return 'TINYINT(1)';
+      if (/^(Double|double)$/.test(t)) return 'DOUBLE';
+      if (/^(Float|float)$/.test(t)) return 'FLOAT';
+      if (/^(BigDecimal)$/.test(t)) return 'DECIMAL(18,2)';
+      if (/^(LocalDateTime|Date|Timestamp)$/.test(t)) return 'DATETIME';
+      if (/^(LocalDate)$/.test(t)) return 'DATE';
+      if (/^(LocalTime)$/.test(t)) return 'TIME';
+      if (/^(byte\[\]|Byte\[\])$/.test(t)) return 'BLOB';
+      return 'VARCHAR(255)';
+    }
+
+    function parseCreateTable(sql) {
+      const text = String(sql || '').trim();
+      const tableMatch = text.match(/create\s+table\s+(if\s+not\s+exists\s+)?([`\w.\"]+)\s*\(([^]+?)\)\s*[^;]*;?\s*$/i);
+      if (!tableMatch) {
+        throw new Error('未识别到 CREATE TABLE 语句');
+      }
+      const tableRaw = tableMatch[2].trim();
+      const tableName = tableRaw.split('.').pop().replace(/[`\"]/g, '');
+      const body = tableMatch[3];
+      const lines = body.split(/\n/);
+      const columns = [];
+
+      for (let i = 0; i < lines.length; i += 1) {
+        const rawLine = lines[i].trim().replace(/,+\s*$/, '');
+        if (!rawLine) continue;
+        if (/^(primary\s+key|unique\s+key|key|index|constraint|foreign\s+key)/i.test(rawLine)) continue;
+        const m = rawLine.match(/^([`\"]?[a-zA-Z_][a-zA-Z0-9_]*[`\"]?)\s+([^\s,]+(?:\s*\([^)]*\))?)/);
+        if (!m) continue;
+
+        const colName = m[1].replace(/[`\"]/g, '');
+        const type = m[2];
+        const nullable = !/\bnot\s+null\b/i.test(rawLine);
+        const commentMatch = rawLine.match(/\bcomment\s+('(?:\\'|''|[^'])*'|\"(?:\\\"|[^\"])*\")/i);
+        const commentRaw = commentMatch ? commentMatch[1] : '';
+        const javaName = toCamelCase(colName);
+        columns.push({
+          columnName: colName,
+          javaName: javaName || colName,
+          javaType: sqlTypeToJavaType(type),
+          nullable: nullable,
+          comment: decodeSqlComment(commentRaw)
+        });
+      }
+
+      if (!columns.length) {
+        throw new Error('CREATE TABLE 中未识别到字段定义');
+      }
+
+      return {
+        tableName: tableName,
+        className: upperCamel(tableName),
+        columns: columns
+      };
+    }
+
+    function decodeSqlComment(raw) {
+      const text = String(raw || '').trim();
+      if (!text) return '';
+      if ((text.startsWith('\'') && text.endsWith('\'')) || (text.startsWith('"') && text.endsWith('"'))) {
+        const body = text.slice(1, -1);
+        return body.replace(/\\'/g, '\'').replace(/\\"/g, '"').replace(/''/g, '\'');
+      }
+      return text;
+    }
+
+    function createTableToBean(sql) {
+      const parsed = parseCreateTable(sql);
+      const imports = new Set();
+      parsed.columns.forEach(function (c) {
+        if (c.javaType === 'BigDecimal') imports.add('import java.math.BigDecimal;');
+        if (c.javaType === 'LocalDate') imports.add('import java.time.LocalDate;');
+        if (c.javaType === 'LocalTime') imports.add('import java.time.LocalTime;');
+        if (c.javaType === 'LocalDateTime') imports.add('import java.time.LocalDateTime;');
+      });
+
+      const lines = [];
+      lines.push('public class ' + parsed.className + ' {');
+      lines.push('');
+      parsed.columns.forEach(function (c) {
+        if (c.comment) {
+          lines.push('    /** ' + c.comment + ' */');
+        }
+        lines.push('    private ' + c.javaType + ' ' + c.javaName + ';');
+        lines.push('');
+      });
+      lines.push('}');
+
+      const importLines = Array.from(imports).sort();
+      if (importLines.length) {
+        return importLines.join('\n') + '\n\n' + lines.join('\n');
+      }
+      return lines.join('\n');
+    }
+
+    function parseJavaFields(javaCode) {
+      const text = String(javaCode || '').trim();
+      if (!text) throw new Error('请输入 Java Bean 代码');
+
+      const classMatch = text.match(/class\s+([A-Za-z_][A-Za-z0-9_]*)/);
+      const className = classMatch ? classMatch[1] : 'Entity';
+      const tableName = toSnakeCase(className);
+
+      const fields = [];
+      const fieldRegex = /(?:private|protected|public)\s+([A-Za-z_][A-Za-z0-9_<>\[\]]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*;/g;
+      let m;
+      while ((m = fieldRegex.exec(text)) !== null) {
+        const type = m[1];
+        const name = m[2];
+        if (/^(serialVersionUID)$/i.test(name)) continue;
+        fields.push({
+          name: name,
+          sqlType: javaTypeToSqlType(type)
+        });
+      }
+
+      if (!fields.length) {
+        throw new Error('未识别到字段，请确认字段格式为 private Type name;');
+      }
+
+      return { className: className, tableName: tableName, fields: fields };
+    }
+
+    function beanToCreateTable(javaCode) {
+      const parsed = parseJavaFields(javaCode);
+      const lines = [];
+      lines.push('CREATE TABLE `' + parsed.tableName + '` (');
+      for (let i = 0; i < parsed.fields.length; i += 1) {
+        const f = parsed.fields[i];
+        const comma = i === parsed.fields.length - 1 ? '' : ',';
+        lines.push('  `' + toSnakeCase(f.name) + '` ' + f.sqlType + ' NULL' + comma);
+      }
+      lines.push(') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;');
+      return lines.join('\n');
+    }
+
+    function splitSqlStatements(sql) {
+      const result = [];
+      let current = '';
+      let inSingle = false;
+      let inDouble = false;
+      let inBacktick = false;
+      let escaped = false;
+
+      for (let i = 0; i < sql.length; i += 1) {
+        const ch = sql[i];
+
+        if (escaped) {
+          current += ch;
+          escaped = false;
+          continue;
+        }
+
+        if (ch === '\\') {
+          current += ch;
+          escaped = true;
+          continue;
+        }
+
+        if (!inDouble && !inBacktick && ch === '\'') {
+          inSingle = !inSingle;
+          current += ch;
+          continue;
+        }
+
+        if (!inSingle && !inBacktick && ch === '"') {
+          inDouble = !inDouble;
+          current += ch;
+          continue;
+        }
+
+        if (!inSingle && !inDouble && ch === '`') {
+          inBacktick = !inBacktick;
+          current += ch;
+          continue;
+        }
+
+        if (!inSingle && !inDouble && !inBacktick && ch === ';') {
+          if (current.trim()) result.push(current.trim());
+          current = '';
+          continue;
+        }
+
+        current += ch;
+      }
+
+      if (current.trim()) result.push(current.trim());
+      return result;
+    }
+
+    function normalizeColumns(cols) {
+      return cols.split(',').map(function (c) {
+        return c.trim().replace(/[`\"]/g, '').toLowerCase();
+      }).join(',');
+    }
+
+    function mergeInsertStatements(sqlText) {
+      const statements = splitSqlStatements(String(sqlText || ''));
+      if (!statements.length) throw new Error('请输入 INSERT 语句');
+
+      const groups = [];
+      const map = new Map();
+
+      for (let i = 0; i < statements.length; i += 1) {
+        const stmt = statements[i].trim();
+        if (!stmt) continue;
+
+        const m = stmt.match(/^insert\s+into\s+([`\w.\"]+)\s*(\(([^)]*)\))?\s*values\s*\(([^]+)\)\s*$/i);
+        if (!m) {
+          throw new Error('第 ' + (i + 1) + ' 条不是可合并的 INSERT INTO ... VALUES(...) 语句');
+        }
+
+        const table = m[1];
+        const columnText = (m[3] || '').trim();
+        const values = '(' + m[4].trim() + ')';
+        const key = table.toLowerCase() + '|' + normalizeColumns(columnText);
+
+        if (!map.has(key)) {
+          const obj = { table: table, columns: columnText, values: [] };
+          map.set(key, obj);
+          groups.push(obj);
+        }
+
+        map.get(key).values.push(values);
+      }
+
+      return groups.map(function (g) {
+        const cols = g.columns ? ' (' + g.columns + ')' : '';
+        return 'INSERT INTO ' + g.table + cols + ' VALUES\n  ' + g.values.join(',\n  ') + ';';
+      }).join('\n\n');
+    }
+
+    function setTab(panelId) {
+      document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.panel === panelId);
+      });
+      document.querySelectorAll('.panel').forEach(function (p) {
+        p.classList.toggle('active', p.id === panelId);
+      });
+    }
+
+    document.getElementById('tabs').addEventListener('click', function (e) {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      setTab(btn.dataset.panel);
+    });
+
+    $('btnSqlFormat').addEventListener('click', function () {
+      const input = $('sqlInput').value.trim();
+      if (!input) {
+        setAreaValue('sqlOutput', '');
+        return;
+      }
+      try {
+        if (!window.sqlFormatter) throw new Error('sql-formatter 未加载成功');
+        setAreaValue('sqlOutput', window.sqlFormatter.format(input, {
+          language: $('formatDialect').value,
+          keywordCase: $('formatKeywordCase').value,
+          tabWidth: 2
+        }));
+      } catch (err) {
+        setAreaValue('sqlOutput', '格式化失败: ' + err.message);
+      }
+    });
+
+    $('btnSqlMinify').addEventListener('click', function () {
+      const input = $('sqlInput').value;
+      setAreaValue('sqlOutput', input.replace(/\s+/g, ' ').trim());
+    });
+
+    $('btnSqlCopy').addEventListener('click', function () {
+      copyText($('sqlOutput').value);
+    });
+
+    $('btnSqlClear').addEventListener('click', function () {
+      setAreaValue('sqlInput', '');
+      setAreaValue('sqlOutput', '');
+    });
+
+    $('btnSqlToBean').addEventListener('click', function () {
+      try {
+        setAreaValue('beanOutput', createTableToBean($('beanInput').value));
+      } catch (err) {
+        setAreaValue('beanOutput', '转换失败: ' + err.message);
+      }
+    });
+
+    $('btnBeanToSql').addEventListener('click', function () {
+      try {
+        setAreaValue('beanOutput', beanToCreateTable($('beanInput').value));
+      } catch (err) {
+        setAreaValue('beanOutput', '转换失败: ' + err.message);
+      }
+    });
+
+    $('btnBeanCopy').addEventListener('click', function () {
+      copyText($('beanOutput').value);
+    });
+
+    $('btnBeanClear').addEventListener('click', function () {
+      setAreaValue('beanInput', '');
+      setAreaValue('beanOutput', '');
+    });
+
+    $('btnInsertMerge').addEventListener('click', function () {
+      try {
+        setAreaValue('insertOutput', mergeInsertStatements($('insertInput').value));
+      } catch (err) {
+        setAreaValue('insertOutput', '合并失败: ' + err.message);
+      }
+    });
+
+    $('btnInsertCopy').addEventListener('click', function () {
+      copyText($('insertOutput').value);
+    });
+
+    $('btnInsertClear').addEventListener('click', function () {
+      setAreaValue('insertInput', '');
+      setAreaValue('insertOutput', '');
+    });
+
+    initEditors();
+  </script>
+</body>
+</html>
