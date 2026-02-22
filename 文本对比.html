@@ -950,6 +950,8 @@
             delete rightText.dataset.originalContent;
             isReplaced.right = false;
         }
+        // 隐藏返回编辑按钮
+        backToEditBtn.style.display = 'none';
         // 重新绑定滚动事件
         bindScrollEvents();
     }
