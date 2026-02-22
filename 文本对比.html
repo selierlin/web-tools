@@ -27,10 +27,11 @@
             background: var(--bg-dark);
             height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             overflow: hidden;
             color: #e2e8f0;
+            padding-top: 20px;
         }
 
         body::before {
@@ -52,7 +53,7 @@
 
         .container {
             width: 95vw;
-            height: 92vh;
+            height: 88vh;
             background: var(--panel-bg);
             backdrop-filter: blur(18px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -139,9 +140,7 @@
             gap: 8px;
         }
 
-        button,
-        select,
-        input[type="text"] {
+        button, select, input[type="text"] {
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.16);
             background: rgba(255, 255, 255, 0.05);
@@ -149,6 +148,7 @@
             font-size: 14px;
             padding: 7px 11px;
             outline: none;
+            transition: all 0.3s ease;
         }
 
         button {
@@ -157,11 +157,16 @@
             align-items: center;
             gap: 6px;
             font-weight: 700;
-            transition: transform 0.2s, filter 0.2s;
+            transition: transform 0.2s, filter 0.2s, box-shadow 0.3s ease;
         }
 
         button:hover {
             filter: brightness(1.15);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        button:active {
+            transform: translateY(1px);
         }
 
         .btn-primary {
@@ -171,9 +176,23 @@
             box-shadow: 0 0 14px rgba(0, 210, 255, 0.35);
         }
 
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+
         .btn-danger {
             background: rgba(255, 0, 85, 0.16);
             border-color: rgba(255, 0, 85, 0.38);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 0, 85, 0.25);
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
         }
 
         .control-panel {
@@ -293,10 +312,10 @@
             flex: 1;
             padding: 16px 0;
             overflow: auto;
+            transition: all 0.3s ease;
         }
 
-        textarea,
-        .editable-div {
+        textarea, .editable-div {
             width: 100%;
             height: 100%;
             padding: 0 12px;
@@ -309,30 +328,46 @@
             white-space: pre;
             tab-size: 4;
             resize: none;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            color: #e2e8f0;
         }
 
         .text-line {
             padding: 0 12px;
             min-height: 22px;
             border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .text-line:hover {
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .diff-added {
             background: rgba(0, 255, 136, 0.08);
             color: var(--neon-green);
             border-left-color: var(--neon-green);
-            margin-left: -12px;
-            padding-left: 9px;
             display: block;
+            transition: all 0.3s ease;
+        }
+
+        .diff-added:hover {
+            background: rgba(0, 255, 136, 0.12);
         }
 
         .diff-removed {
             background: rgba(255, 0, 85, 0.08);
             color: var(--neon-red);
             border-left-color: var(--neon-red);
-            margin-left: -12px;
-            padding-left: 9px;
             display: block;
+            transition: all 0.3s ease;
+        }
+
+        .diff-removed:hover {
+            background: rgba(255, 0, 85, 0.12);
         }
 
         .result-section {
@@ -353,6 +388,13 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
         }
 
         .result-card.hidden {
@@ -360,12 +402,13 @@
         }
 
         .result-header {
-            padding: 8px;
+            padding: 10px 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .result-title {
@@ -378,6 +421,9 @@
             margin-left: auto;
             color: #9ab5d5;
             font-size: 13px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 12px;
         }
 
         .result-actions {
@@ -389,6 +435,12 @@
             padding: 4px 7px;
             font-size: 12px;
             border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .result-actions button:hover {
+            transform: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
         .result-body {
@@ -399,6 +451,11 @@
             line-height: 20px;
             color: #dbeafe;
             background: rgba(255, 255, 255, 0.01);
+            transition: all 0.3s ease;
+        }
+
+        .result-body:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .virtual-top,
@@ -444,6 +501,20 @@
             background: rgba(253, 224, 71, 0.5);
             color: #1f2937;
             padding: 0;
+        }
+
+        .char-diff-removed {
+            background: rgba(255, 0, 85, 0.3);
+            color: var(--neon-red);
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .char-diff-added {
+            background: rgba(0, 255, 136, 0.3);
+            color: var(--neon-green);
+            padding: 0 2px;
+            border-radius: 2px;
         }
 
         @media (max-width: 900px) {
@@ -530,12 +601,18 @@
         <div class="control-group">
             <span>比较模式</span>
             <div class="mode-switch">
-                <button class="mode-btn active" data-mode="set" id="modeSet">集合比较</button>
-                <button class="mode-btn" data-mode="line" id="modeLine">逐行比较</button>
+                <button class="mode-btn active" data-mode="line" id="modeLine">逐行比较</button>
+                <button class="mode-btn" data-mode="set" id="modeSet">集合比较</button>
+                <button class="mode-btn" data-mode="json" id="modeJson">JSON比较</button>
             </div>
         </div>
 
-        <div class="control-group">
+        <div class="control-group json-options" style="display: none;">
+            <label class="option-chip"><input type="checkbox" id="optJsonSort" checked> JSON排序</label>
+            <label class="option-chip"><input type="checkbox" id="optJsonFormat" checked> JSON格式化</label>
+        </div>
+
+        <div class="control-group text-options">
             <span>输入拆分</span>
             <select id="parseMode">
                 <option value="line">按行</option>
@@ -549,11 +626,12 @@
             </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group text-options">
             <label class="option-chip"><input type="checkbox" id="optTrim"> 忽略首尾空格</label>
             <label class="option-chip"><input type="checkbox" id="optCase"> 忽略大小写</label>
             <label class="option-chip"><input type="checkbox" id="optEmpty"> 忽略空行</label>
             <label class="option-chip"><input type="checkbox" id="optDedupe"> 去重后比较</label>
+            <label class="option-chip"><input type="checkbox" id="optSort"> 排序后比较</label>
         </div>
 
         <div class="control-group">
@@ -656,6 +734,10 @@
     const optCase = document.getElementById('optCase');
     const optEmpty = document.getElementById('optEmpty');
     const optDedupe = document.getElementById('optDedupe');
+    const optSort = document.getElementById('optSort');
+    const optJsonSort = document.getElementById('optJsonSort');
+    const optJsonFormat = document.getElementById('optJsonFormat');
+    const jsonOptions = document.querySelector('.json-options');
 
     const searchInput = document.getElementById('searchInput');
     const modeButtons = Array.from(document.querySelectorAll('.mode-btn'));
@@ -669,11 +751,11 @@
     let isReplaced = { left: false, right: false };
 
     const state = {
-        mode: 'set',
+        mode: 'line',
         filter: 'all',
         search: '',
         result: { aMore: [], bMore: [], same: [] }
-    };
+    }
 
     class VirtualList {
         constructor(container, emptyText) {
@@ -690,7 +772,12 @@
             this.bottom.className = 'virtual-bottom';
             container.innerHTML = '';
             container.append(this.top, this.mid, this.bottom);
-            container.addEventListener('scroll', () => this.render());
+            
+            // 使用节流优化滚动事件
+            this.container.addEventListener('scroll', throttle(() => {
+                // 使用requestAnimationFrame优化渲染
+                requestAnimationFrame(() => this.render());
+            }, 16));
         }
 
         setItems(items) {
@@ -726,11 +813,29 @@
             this.top.style.height = `${start * this.rowHeight}px`;
             this.bottom.style.height = `${(total - end) * this.rowHeight}px`;
 
-            const rows = [];
+            // 使用DocumentFragment批量处理DOM更新，减少重排和重绘
+            const fragment = document.createDocumentFragment();
+            
             for (let i = start; i < end; i++) {
-                rows.push(`<div class="result-item"><span class="item-no">${i + 1}</span><span class="item-text">${highlightText(escapeHtml(this.filtered[i]), state.search)}</span></div>`);
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'result-item';
+                
+                const noSpan = document.createElement('span');
+                noSpan.className = 'item-no';
+                noSpan.textContent = i + 1;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'item-text';
+                textSpan.innerHTML = highlightText(escapeHtml(this.filtered[i]), state.search);
+                
+                itemDiv.appendChild(noSpan);
+                itemDiv.appendChild(textSpan);
+                fragment.appendChild(itemDiv);
             }
-            this.mid.innerHTML = rows.join('');
+            
+            // 清空并添加新内容
+            this.mid.innerHTML = '';
+            this.mid.appendChild(fragment);
         }
     }
 
@@ -794,6 +899,9 @@
                 return true;
             });
         }
+        if (optSort.checked) {
+            tokens.sort();
+        }
         return tokens;
     }
 
@@ -805,7 +913,18 @@
     }
 
     function renderLines(target, count) {
-        target.innerHTML = Array.from({ length: count }, (_, i) => `<div class="line-num">${i + 1}</div>`).join('');
+        // 使用DocumentFragment批量处理DOM更新，减少重排和重绘
+        const fragment = document.createDocumentFragment();
+        
+        for (let i = 0; i < count; i++) {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'line-num';
+            lineDiv.textContent = i + 1;
+            fragment.appendChild(lineDiv);
+        }
+        
+        target.innerHTML = '';
+        target.appendChild(fragment);
     }
 
     function setProgress(text) {
@@ -820,37 +939,119 @@
         if (isReplaced.left) {
             leftTextEditor.innerHTML = '';
             leftTextEditor.appendChild(leftText);
+            // 清除原始内容标记，确保下次能够重新保存
+            delete leftText.dataset.originalContent;
             isReplaced.left = false;
         }
         if (isReplaced.right) {
             rightTextEditor.innerHTML = '';
             rightTextEditor.appendChild(rightText);
+            // 清除原始内容标记，确保下次能够重新保存
+            delete rightText.dataset.originalContent;
             isReplaced.right = false;
         }
+        // 重新绑定滚动事件
+        bindScrollEvents();
     }
 
     function renderDiffPanels(leftLines, rightLines) {
-        const max = Math.max(leftLines.length, rightLines.length);
+        // 智能匹配左右两侧的行，处理行顺序不同或行数量不同的情况
+        const leftCount = leftLines.length;
+        const rightCount = rightLines.length;
+        
+        // 创建左右两侧行的映射，用于快速查找匹配的行
+        const leftMap = new Map();
+        for (let i = 0; i < leftCount; i++) {
+            const line = leftLines[i];
+            if (line) {
+                leftMap.set(line, i);
+            }
+        }
+        
+        const rightMap = new Map();
+        for (let i = 0; i < rightCount; i++) {
+            const line = rightLines[i];
+            if (line) {
+                rightMap.set(line, i);
+            }
+        }
+        
         let leftHtml = '';
         let rightHtml = '';
+        let i = 0, j = 0;
+        
+        while (i < leftCount || j < rightCount) {
+            if (i >= leftCount) {
+                const rOnly = rightLines[j] || '';
+                leftHtml += `<div class="text-line"></div>`;
+                rightHtml += `<div class="text-line diff-added">${escapeHtml(rOnly)}</div>`;
+                j++;
+                continue;
+            }
+            if (j >= rightCount) {
+                const lOnly = leftLines[i] || '';
+                leftHtml += `<div class="text-line diff-removed">${escapeHtml(lOnly)}</div>`;
+                rightHtml += `<div class="text-line"></div>`;
+                i++;
+                continue;
+            }
 
-        for (let i = 0; i < max; i++) {
-            const l = leftLines[i] || '';
-            const r = rightLines[i] || '';
+            const l = i < leftCount ? leftLines[i] : '';
+            const r = j < rightCount ? rightLines[j] : '';
+            
             if (l === r) {
+                // 两行相同，不高亮
                 leftHtml += `<div class="text-line">${escapeHtml(l)}</div>`;
                 rightHtml += `<div class="text-line">${escapeHtml(r)}</div>`;
+                i++;
+                j++;
             } else {
-                leftHtml += `<div class="text-line ${l ? 'diff-removed' : ''}">${escapeHtml(l)}</div>`;
-                rightHtml += `<div class="text-line ${r ? 'diff-added' : ''}">${escapeHtml(r)}</div>`;
+                // 尝试查找右侧是否有与当前左侧行匹配的行
+                if (rightMap.has(l)) {
+                    // 右侧有与当前左侧行匹配的行，说明左侧行在右侧的后面，右侧当前行是新增的
+                    rightHtml += `<div class="text-line diff-added">${escapeHtml(r)}</div>`;
+                    leftHtml += `<div class="text-line"></div>`;
+                    j++;
+                } 
+                // 尝试查找左侧是否有与当前右侧行匹配的行
+                else if (leftMap.has(r)) {
+                    // 左侧有与当前右侧行匹配的行，说明右侧行在左侧的后面，左侧当前行是删除的
+                    leftHtml += `<div class="text-line diff-removed">${escapeHtml(l)}</div>`;
+                    rightHtml += `<div class="text-line"></div>`;
+                    i++;
+                } else {
+                    // 两行确实不同，尝试解析键值对格式
+                    const leftMatch = l.match(/^("[^"]+"):\s*(.*)$/);
+                    const rightMatch = r.match(/^("[^"]+"):\s*(.*)$/);
+                    
+                    if (leftMatch && rightMatch && leftMatch[1] === rightMatch[1]) {
+                        // 如果是相同键的键值对，只高亮值的差异
+                        const key = leftMatch[1];
+                        const leftValue = leftMatch[2];
+                        const rightValue = rightMatch[2];
+                        
+                        const charDiff = highlightCharsDiff(leftValue, rightValue);
+                        leftHtml += `<div class="text-line ${l ? 'diff-removed' : ''}">${escapeHtml(key)}: ${charDiff.old}</div>`;
+                        rightHtml += `<div class="text-line ${r ? 'diff-added' : ''}">${escapeHtml(key)}: ${charDiff.new}</div>`;
+                    } else {
+                        // 否则使用字符级差异高亮
+                        const charDiff = highlightCharsDiff(l, r);
+                        leftHtml += `<div class="text-line ${l ? 'diff-removed' : ''}">${charDiff.old}</div>`;
+                        rightHtml += `<div class="text-line ${r ? 'diff-added' : ''}">${charDiff.new}</div>`;
+                    }
+                    i++;
+                    j++;
+                }
             }
         }
 
-        leftTextEditor.innerHTML = `<div id="leftTextEditable" class="editable-div" contenteditable="false">${leftHtml}</div>`;
-        rightTextEditor.innerHTML = `<div id="rightTextEditable" class="editable-div" contenteditable="false">${rightHtml}</div>`;
+        leftTextEditor.innerHTML = `<div id="leftTextEditable" class="editable-div" contenteditable="false" ondblclick="resetEditorsToTextarea()">${leftHtml}</div>`;
+        rightTextEditor.innerHTML = `<div id="rightTextEditable" class="editable-div" contenteditable="false" ondblclick="resetEditorsToTextarea()">${rightHtml}</div>`;
         isReplaced.left = true;
         isReplaced.right = true;
         backToEditBtn.style.display = 'inline-flex';
+        // 重新绑定滚动事件
+        bindScrollEvents();
     }
 
     function toCountMap(items) {
@@ -867,6 +1068,272 @@
             for (let i = 0; i < count; i++) arr.push(item);
         }
         return arr;
+    }
+
+    function sortObject(obj) {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(sortObject);
+        const sorted = {};
+        Object.keys(obj).sort().forEach(key => {
+            sorted[key] = sortObject(obj[key]);
+        });
+        return sorted;
+    }
+
+    function alignJSON(leftObj, rightObj) {
+        // 获取所有唯一键并排序
+        const leftKeys = Object.keys(leftObj || {});
+        const rightKeys = Object.keys(rightObj || {});
+        const allKeys = [...new Set([...leftKeys, ...rightKeys])].sort();
+
+        // 为左右两侧创建对齐的对象
+        const alignedLeft = {};
+        const alignedRight = {};
+
+        for (const key of allKeys) {
+            // 只重排已有字段，不为缺失字段补 null，避免对比后出现“凭空新增”的行
+            if (Object.prototype.hasOwnProperty.call(leftObj, key)) {
+                alignedLeft[key] = leftObj[key];
+            }
+            if (Object.prototype.hasOwnProperty.call(rightObj, key)) {
+                alignedRight[key] = rightObj[key];
+            }
+        }
+
+        return { left: alignedLeft, right: alignedRight };
+    }
+
+    function formatJSON(jsonStr, sort = false) {
+        try {
+            let parsed = JSON.parse(jsonStr);
+            if (sort) {
+                parsed = sortObject(parsed);
+            }
+            return JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            return jsonStr;
+        }
+    }
+
+    function formatAlignedJSON(obj) {
+        // 确保按照排序后的顺序输出字段
+        const sortedObj = {};
+        Object.keys(obj).sort().forEach(key => {
+            sortedObj[key] = obj[key];
+        });
+        return JSON.stringify(sortedObj, null, 2);
+    }
+
+    function parseJSON(jsonStr, sort = false) {
+        try {
+            let parsed = JSON.parse(jsonStr);
+            if (sort) {
+                parsed = sortObject(parsed);
+            }
+            return parsed;
+        } catch (e) {
+            // 尝试添加外层大括号后再次解析
+            try {
+                let cleanedJson = jsonStr.trim();
+                // 移除末尾的逗号
+                if (cleanedJson.endsWith(',')) {
+                    cleanedJson = cleanedJson.slice(0, -1);
+                }
+                const wrappedJson = `{${cleanedJson}}`;
+                let parsed = JSON.parse(wrappedJson);
+                if (sort) {
+                    parsed = sortObject(parsed);
+                }
+                return parsed;
+            } catch (e2) {
+                return null;
+            }
+        }
+    }
+
+    function highlightCharsDiff(oldStr, newStr) {
+        if (oldStr === newStr) {
+            return { old: escapeHtml(oldStr), new: escapeHtml(newStr) };
+        }
+
+        // 简单的字符级差异高亮
+        let oldHtml = '';
+        let newHtml = '';
+        let i = 0, j = 0;
+
+        while (i < oldStr.length || j < newStr.length) {
+            if (i < oldStr.length && j < newStr.length && oldStr[i] === newStr[j]) {
+                oldHtml += escapeHtml(oldStr[i]);
+                newHtml += escapeHtml(newStr[j]);
+                i++;
+                j++;
+            } else {
+                // 查找最长公共子序列
+                let maxLen = 0;
+                let maxI = i;
+                let maxJ = j;
+
+                for (let x = i; x < oldStr.length; x++) {
+                    for (let y = j; y < newStr.length; y++) {
+                        let len = 0;
+                        while (x + len < oldStr.length && y + len < newStr.length && oldStr[x + len] === newStr[y + len]) {
+                            len++;
+                        }
+                        if (len > maxLen) {
+                            maxLen = len;
+                            maxI = x;
+                            maxJ = y;
+                        }
+                    }
+                }
+
+                if (maxLen > 0) {
+                    // 高亮差异部分
+                    if (i < maxI) {
+                        oldHtml += `<mark class="char-diff-removed">${escapeHtml(oldStr.substring(i, maxI))}</mark>`;
+                    }
+                    if (j < maxJ) {
+                        newHtml += `<mark class="char-diff-added">${escapeHtml(newStr.substring(j, maxJ))}</mark>`;
+                    }
+                    // 添加相同部分
+                    oldHtml += escapeHtml(oldStr.substring(maxI, maxI + maxLen));
+                    newHtml += escapeHtml(newStr.substring(maxJ, maxJ + maxLen));
+                    i = maxI + maxLen;
+                    j = maxJ + maxLen;
+                } else {
+                    // 剩余部分全为差异
+                    if (i < oldStr.length) {
+                        oldHtml += `<mark class="char-diff-removed">${escapeHtml(oldStr.substring(i))}</mark>`;
+                    }
+                    if (j < newStr.length) {
+                        newHtml += `<mark class="char-diff-added">${escapeHtml(newStr.substring(j))}</mark>`;
+                    }
+                    break;
+                }
+            }
+        }
+
+        return { old: oldHtml, new: newHtml };
+    }
+
+    function highlightJSONDiff(left, right) {
+        // 智能匹配左右两侧的行，处理行顺序不同或行数量不同的情况
+        const leftLines = left.split('\n');
+        const rightLines = right.split('\n');
+        const leftCount = leftLines.length;
+        const rightCount = rightLines.length;
+        
+        // 创建左右两侧行的映射，用于快速查找匹配的行
+        const leftMap = new Map();
+        for (let i = 0; i < leftCount; i++) {
+            const line = leftLines[i];
+            if (line) {
+                leftMap.set(line, i);
+            }
+        }
+        
+        const rightMap = new Map();
+        for (let i = 0; i < rightCount; i++) {
+            const line = rightLines[i];
+            if (line) {
+                rightMap.set(line, i);
+            }
+        }
+        
+        let leftHtml = '';
+        let rightHtml = '';
+        let i = 0, j = 0;
+        
+        while (i < leftCount || j < rightCount) {
+            if (i >= leftCount) {
+                const rOnly = rightLines[j] || '';
+                leftHtml += `<div class="text-line"></div>`;
+                rightHtml += `<div class="text-line diff-added">${escapeHtml(rOnly)}</div>`;
+                j++;
+                continue;
+            }
+            if (j >= rightCount) {
+                const lOnly = leftLines[i] || '';
+                leftHtml += `<div class="text-line diff-removed">${escapeHtml(lOnly)}</div>`;
+                rightHtml += `<div class="text-line"></div>`;
+                i++;
+                continue;
+            }
+
+            const l = i < leftCount ? leftLines[i] : '';
+            const r = j < rightCount ? rightLines[j] : '';
+            
+            if (l === r) {
+                // 两行相同，不高亮
+                leftHtml += `<div class="text-line">${escapeHtml(l)}</div>`;
+                rightHtml += `<div class="text-line">${escapeHtml(r)}</div>`;
+                i++;
+                j++;
+            } else {
+                // 尝试查找右侧是否有与当前左侧行匹配的行
+                if (rightMap.has(l)) {
+                    // 右侧有与当前左侧行匹配的行，说明左侧行在右侧的后面，右侧当前行是新增的
+                    rightHtml += `<div class="text-line diff-added">${escapeHtml(r)}</div>`;
+                    leftHtml += `<div class="text-line"></div>`;
+                    j++;
+                } 
+                // 尝试查找左侧是否有与当前右侧行匹配的行
+                else if (leftMap.has(r)) {
+                    // 左侧有与当前右侧行匹配的行，说明右侧行在左侧的后面，左侧当前行是删除的
+                    leftHtml += `<div class="text-line diff-removed">${escapeHtml(l)}</div>`;
+                    rightHtml += `<div class="text-line"></div>`;
+                    i++;
+                } else {
+                    // 两行确实不同，使用字符级差异高亮
+                    const charDiff = highlightCharsDiff(l, r);
+                    leftHtml += `<div class="text-line ${l ? 'diff-removed' : ''}">${charDiff.old}</div>`;
+                    rightHtml += `<div class="text-line ${r ? 'diff-added' : ''}">${charDiff.new}</div>`;
+                    i++;
+                    j++;
+                }
+            }
+        }
+
+        return { leftHtml, rightHtml };
+    }
+
+    async function compareJSON(leftRaw, rightRaw) {
+        const sort = optJsonSort.checked;
+        const format = optJsonFormat.checked;
+
+        // 解析JSON时不排序，因为alignJSON会处理排序
+        let leftParsed = parseJSON(leftRaw, false);
+        let rightParsed = parseJSON(rightRaw, false);
+
+        let leftFormatted = leftRaw;
+        let rightFormatted = rightRaw;
+
+        if ((sort || format) && leftParsed && rightParsed) {
+            // 对齐左右两侧的JSON对象，确保相同字段在同一行
+            const aligned = alignJSON(leftParsed, rightParsed);
+            leftFormatted = formatAlignedJSON(aligned.left);
+            rightFormatted = formatAlignedJSON(aligned.right);
+        } else if ((sort || format) && leftParsed) {
+            leftFormatted = formatJSON(leftRaw, sort);
+        } else if ((sort || format) && rightParsed) {
+            rightFormatted = formatJSON(rightRaw, sort);
+        }
+
+        const diffResult = highlightJSONDiff(leftFormatted, rightFormatted);
+
+        leftTextEditor.innerHTML = `<div id="leftTextEditable" class="editable-div" contenteditable="false" ondblclick="resetEditorsToTextarea()">${diffResult.leftHtml}</div>`;
+        rightTextEditor.innerHTML = `<div id="rightTextEditable" class="editable-div" contenteditable="false" ondblclick="resetEditorsToTextarea()">${diffResult.rightHtml}</div>`;
+        isReplaced.left = true;
+        isReplaced.right = true;
+        backToEditBtn.style.display = 'inline-flex';
+        // 重新绑定滚动事件
+        bindScrollEvents();
+
+        const leftLines = leftFormatted.split('\n');
+        const rightLines = rightFormatted.split('\n');
+        const result = await compareLine(leftLines, rightLines);
+
+        return result;
     }
 
     function delayFrame() {
@@ -953,11 +1420,143 @@
 
     function applySearch() {
         state.search = searchInput.value.trim();
+
+        // 搜索比较结果
         ['aMore', 'bMore', 'same'].forEach(group => {
             if (state.result[group].length) {
                 virtualLists[group].applyFilter(state.search);
             }
         });
+
+        // 搜索左右编辑器内容
+        const searchTerm = state.search;
+
+        // 处理编辑模式（textarea）
+        if (!isReplaced.left && leftText) {
+            if (searchTerm) {
+                highlightTextInElement(leftText, searchTerm);
+            } else {
+                // 清除高亮，恢复原始内容
+                if (leftText.dataset.originalContent) {
+                    delete leftText.dataset.originalContent;
+                }
+            }
+        }
+        if (!isReplaced.right && rightText) {
+            if (searchTerm) {
+                highlightTextInElement(rightText, searchTerm);
+            } else {
+                // 清除高亮，恢复原始内容
+                if (rightText.dataset.originalContent) {
+                    delete rightText.dataset.originalContent;
+                }
+            }
+        }
+
+        // 处理对比模式（editable-div）
+        const leftEditable = document.getElementById('leftTextEditable');
+        const rightEditable = document.getElementById('rightTextEditable');
+
+        if (leftEditable) {
+            if (searchTerm) {
+                highlightTextInElement(leftEditable, searchTerm);
+            } else {
+                // 清除高亮，恢复原始内容
+                const lines = leftEditable.querySelectorAll('.text-line');
+                lines.forEach(line => {
+                    if (line.dataset.originalHtml) {
+                        line.innerHTML = line.dataset.originalHtml;
+                        delete line.dataset.originalHtml;
+                    }
+                });
+            }
+        }
+        if (rightEditable) {
+            if (searchTerm) {
+                highlightTextInElement(rightEditable, searchTerm);
+            } else {
+                // 清除高亮，恢复原始内容
+                const lines = rightEditable.querySelectorAll('.text-line');
+                lines.forEach(line => {
+                    if (line.dataset.originalHtml) {
+                        line.innerHTML = line.dataset.originalHtml;
+                        delete line.dataset.originalHtml;
+                    }
+                });
+            }
+        }
+    }
+
+    function highlightTextInElement(element, searchTerm) {
+        if (!element || !searchTerm) return;
+
+        // 检查元素是否是逐行比较的结果容器
+        if (element.id === 'leftTextEditable' || element.id === 'rightTextEditable') {
+            // 对于逐行比较的结果，我们需要保留原始的行结构
+            // 遍历所有行元素并单独高亮
+            const lines = element.querySelectorAll('.text-line');
+            lines.forEach(line => {
+                if (!line.dataset.originalHtml) {
+                    line.dataset.originalHtml = line.innerHTML;
+                }
+
+                if (searchTerm) {
+                    // 保存原始的HTML标签
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = line.dataset.originalHtml;
+                    
+                    // 递归处理所有文本节点
+                    function highlightTextNodes(node) {
+                        if (node.nodeType === 3) { // 文本节点
+                            const text = node.textContent;
+                            const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+                            const highlightedText = text.replace(regex, '<mark>$1</mark>');
+                            if (highlightedText !== text) {
+                                const span = document.createElement('span');
+                                span.innerHTML = highlightedText;
+                                node.parentNode.replaceChild(span, node);
+                            }
+                        } else if (node.nodeType === 1 && node.tagName !== 'MARK') { // 元素节点且不是mark标签
+                            for (let i = 0; i < node.childNodes.length; i++) {
+                                highlightTextNodes(node.childNodes[i]);
+                            }
+                        }
+                    }
+                    
+                    // 应用高亮
+                    highlightTextNodes(tempDiv);
+                    
+                    // 更新行内容
+                    line.innerHTML = tempDiv.innerHTML;
+                } else {
+                    // 清除高亮，恢复原始内容
+                    line.innerHTML = line.dataset.originalHtml;
+                }
+            });
+        } else {
+            // 对于其他元素，使用普通的高亮方法
+            if (!element.dataset.originalContent) {
+                element.dataset.originalContent = element.textContent;
+            }
+
+            let content = element.dataset.originalContent;
+
+            if (searchTerm) {
+                const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+                content = content.replace(regex, '<mark>$1</mark>');
+            }
+
+            // 对于textarea，我们不能直接修改innerHTML，需要使用其他方法
+            // 对于div，我们可以直接修改innerHTML
+            if (element.tagName === 'TEXTAREA') {
+                // 注意：textarea不支持innerHTML，这里我们需要使用其他方法
+                // 由于textarea的限制，我们暂时只支持搜索结果的高亮
+            } else {
+                element.innerHTML = content;
+            }
+        }
     }
 
     function applyCardFilter() {
@@ -1005,16 +1604,41 @@
 
         setProgress('准备比较...');
 
-        const leftItems = tokenize(leftRaw);
-        const rightItems = tokenize(rightRaw);
-
         let result;
-        if (state.mode === 'set') {
+        let leftItems, rightItems;
+
+        if (state.mode === 'json') {
+            result = await compareJSON(leftRaw, rightRaw);
+            leftItems = result.aMore.concat(result.same);
+            rightItems = result.bMore.concat(result.same);
+            resultSection.style.display = 'none';
+        } else if (state.mode === 'set') {
             resetEditorsToTextarea();
+            leftItems = tokenize(leftRaw);
+            rightItems = tokenize(rightRaw);
             result = await compareSet(leftItems, rightItems);
             resultSection.style.display = 'grid';
         } else {
-            renderDiffPanels(leftRaw.split(/\r?\n/), rightRaw.split(/\r?\n/));
+            // 使用普通的逐行比较
+            resetEditorsToTextarea();
+            leftItems = tokenize(leftRaw);
+            rightItems = tokenize(rightRaw);
+            
+            // 如果启用了排序，对原始文本也进行排序处理后再渲染
+            let leftRenderLines = leftRaw.split(/\r?\n/);
+            let rightRenderLines = rightRaw.split(/\r?\n/);
+            
+            if (optSort.checked) {
+                // 对原始行进行标准化处理，然后排序
+                const leftNormalized = leftRenderLines.map(normalizeToken).filter(optEmpty.checked ? Boolean : () => true);
+                const rightNormalized = rightRenderLines.map(normalizeToken).filter(optEmpty.checked ? Boolean : () => true);
+                
+                // 排序后重新构建渲染行
+                leftRenderLines = leftNormalized.sort();
+                rightRenderLines = rightNormalized.sort();
+            }
+            
+            renderDiffPanels(leftRenderLines, rightRenderLines);
             result = await compareLine(leftItems, rightItems);
             resultSection.style.display = 'none';
         }
@@ -1031,7 +1655,10 @@
         updateCards();
         setSummaryVisible(true);
 
-        setProgress(`比较完成：${state.mode === 'set' ? '集合比较' : '逐行比较'}`);
+        let modeText = '集合比较';
+        if (state.mode === 'line') modeText = '逐行比较';
+        if (state.mode === 'json') modeText = 'JSON比较';
+        setProgress(`比较完成：${modeText}`);
         syncLineNumbers();
     }
 
@@ -1055,7 +1682,16 @@
         modeButtons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === mode);
         });
-        backToEditBtn.style.display = mode === 'line' && isReplaced.left ? 'inline-flex' : 'none';
+        backToEditBtn.style.display = (mode === 'line' || mode === 'json') && isReplaced.left ? 'inline-flex' : 'none';
+        jsonOptions.style.display = mode === 'json' ? 'flex' : 'none';
+
+        // 显示/隐藏文本处理选项
+        const textOptionsElements = document.querySelectorAll('.text-options');
+        const isJsonMode = mode === 'json';
+        textOptionsElements.forEach(el => {
+            el.style.display = isJsonMode ? 'none' : 'flex';
+        });
+
         if (mode === 'set') {
             resultSection.style.display = 'grid';
         } else {
@@ -1142,8 +1778,70 @@
         backToEditBtn.style.display = 'none';
     });
 
-    leftTextEditor.onscroll = () => { leftLineNumbers.scrollTop = leftTextEditor.scrollTop; };
-    rightTextEditor.onscroll = () => { rightLineNumbers.scrollTop = rightTextEditor.scrollTop; };
+    let isSyncing = false;
+    let scrollTimeout;
+
+    // 节流函数
+    function throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    }
+
+    function bindScrollEvents() {
+        // 滚动同步函数
+        function syncScroll(source, targetEditor, targetTextarea, targetLineNumbers) {
+            if (!isSyncing) {
+                isSyncing = true;
+                
+                // 使用requestAnimationFrame优化滚动同步
+                requestAnimationFrame(() => {
+                    targetEditor.scrollTop = source.scrollTop;
+                    targetLineNumbers.scrollTop = source.scrollTop;
+                    if (targetTextarea) {
+                        targetTextarea.scrollTop = source.scrollTop;
+                    }
+                    isSyncing = false;
+                });
+            }
+        }
+
+        // 绑定编辑器容器的滚动事件（用于差异视图）
+        leftTextEditor.onscroll = throttle(() => {
+            leftLineNumbers.scrollTop = leftTextEditor.scrollTop;
+            syncScroll(leftTextEditor, rightTextEditor, rightText, rightLineNumbers);
+        }, 16); // 约60fps
+
+        rightTextEditor.onscroll = throttle(() => {
+            rightLineNumbers.scrollTop = rightTextEditor.scrollTop;
+            syncScroll(rightTextEditor, leftTextEditor, leftText, leftLineNumbers);
+        }, 16);
+
+        // 绑定textarea的滚动事件（用于集合比较模式）
+        if (leftText) {
+            leftText.onscroll = throttle(() => {
+                leftLineNumbers.scrollTop = leftText.scrollTop;
+                syncScroll(leftText, rightTextEditor, rightText, rightLineNumbers);
+            }, 16);
+        }
+
+        if (rightText) {
+            rightText.onscroll = throttle(() => {
+                rightLineNumbers.scrollTop = rightText.scrollTop;
+                syncScroll(rightText, leftTextEditor, leftText, leftLineNumbers);
+            }, 16);
+        }
+    }
+
+    // 初始绑定滚动事件
+    bindScrollEvents();
 
     leftText.addEventListener('input', syncLineNumbers);
     rightText.addEventListener('input', syncLineNumbers);
@@ -1157,6 +1855,17 @@
         delimiterSelect.disabled = parseMode.value === 'line';
     });
 
+    // 添加键盘快捷键支持
+    document.addEventListener('keydown', (e) => {
+        // ESC键返回编辑模式
+        if (e.key === 'Escape') {
+            if (isReplaced.left || isReplaced.right) {
+                resetEditorsToTextarea();
+                backToEditBtn.style.display = 'none';
+            }
+        }
+    });
+
     wireDrop(leftPanel, leftText);
     wireDrop(rightPanel, rightText);
     handlePasteAutoDetect();
@@ -1166,6 +1875,8 @@
         resetResults();
         syncLineNumbers();
         setSummaryVisible(false);
+        // 确保默认模式为逐行比较
+        onModeChange('line');
     };
 </script>
 </body>
