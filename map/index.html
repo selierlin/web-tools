@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Time Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-grid"></div>
+    <main class="page-shell">
+      <header class="hero">
+        <p class="kicker">Interactive Atlas</p>
+        <h1>全球时间地图</h1>
+        <p class="subtitle">将鼠标悬停在任意国家，即刻查看该地当前时间</p>
+        <div class="search-wrap">
+          <input
+            id="country-search"
+            class="search-input"
+            type="text"
+            placeholder="搜索国家（中文/English/ISO）"
+            autocomplete="off"
+            aria-label="搜索国家"
+            aria-controls="search-results"
+            aria-expanded="false"
+            aria-autocomplete="list"
+          />
+          <div id="search-results" class="search-results" role="listbox"></div>
+        </div>
+      </header>
+
+      <section class="map-card">
+        <div id="map" aria-label="全球地图"></div>
+        <div id="tooltip" class="tooltip" role="status" aria-live="off">
+          <div class="tooltip-country">将鼠标移到国家上</div>
+          <div class="tooltip-time">--:--:--</div>
+          <div class="tooltip-zone">时区: -</div>
+        </div>
+      </section>
+
+      <section class="compare-card" aria-labelledby="compare-title">
+        <h2 id="compare-title">双城时差</h2>
+        <p class="compare-subtitle">输入两个国家，查看当前时差和工作时段重叠</p>
+        <div class="compare-controls">
+          <div class="compare-input-wrap">
+            <input
+              id="compare-a"
+              class="search-input"
+              type="text"
+              placeholder="国家 A（如 中国 / CHN / China）"
+              autocomplete="off"
+              aria-label="国家 A"
+              aria-controls="compare-results-a"
+              aria-expanded="false"
+              aria-autocomplete="list"
+            />
+            <div id="compare-results-a" class="search-results compare-results" role="listbox"></div>
+          </div>
+          <div class="compare-input-wrap">
+            <input
+              id="compare-b"
+              class="search-input"
+              type="text"
+              placeholder="国家 B（如 美国 / USA / United States）"
+              autocomplete="off"
+              aria-label="国家 B"
+              aria-controls="compare-results-b"
+              aria-expanded="false"
+              aria-autocomplete="list"
+            />
+            <div id="compare-results-b" class="search-results compare-results" role="listbox"></div>
+          </div>
+        </div>
+        <div id="compare-output" class="compare-output">
+          <div>输入两个国家后自动计算</div>
+        </div>
+      </section>
+    </main>
+    <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+      (function loadAppDependencies() {
+        const libs = [
+          {
+            globalName: "d3",
+            urls: [
+              "./vendor/d3.v7.min.js",
+              "https://cdn.bootcdn.net/ajax/libs/d3/7.9.0/d3.min.js",
+              "https://fastly.jsdelivr.net/npm/d3@7/dist/d3.min.js",
+              "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"
+            ]
+          },
+          {
+            globalName: "topojson",
+            urls: [
+              "./vendor/topojson-client.v3.min.js",
+              "https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js",
+              "https://fastly.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js",
+              "https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"
+            ]
+          }
+        ];
+
+        function loadScript(src) {
+          return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = src;
+            script.async = false;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Load failed: " + src));
+            document.body.appendChild(script);
+          });
+        }
+
+        async function ensureLib(lib) {
+          if (window[lib.globalName]) return;
+          let lastError = null;
+          for (const url of lib.urls) {
+            try {
+              await loadScript(url);
+              if (window[lib.globalName]) return;
+            } catch (error) {
+              lastError = error;
+            }
+          }
+          throw lastError || new Error("Failed to load dependency: " + lib.globalName);
+        }
+
+        Promise.all(libs.map(ensureLib))
+          .then(() => loadScript("./script.js"))
+          .catch((error) => {
+            const el = document.querySelector(".tooltip-zone");
+            if (el) {
+              el.textContent = "依赖加载失败: " + (error && error.message ? error.message : "未知错误");
+            }
+          });
+      })();
+    </script>
+  </body>
+</html>
