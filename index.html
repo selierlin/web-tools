@@ -605,6 +605,14 @@
             icon: 'fa-qrcode'
         },
         {
+            id: 'color-converter',
+            name: '颜色转换',
+            src: '颜色转换工具.html',
+            keywords: '颜色 转换 hex rgb hsl cmyk hsv 透明度 渐变 对比度 yansezhuanhuan',
+            category: '其他',
+            icon: 'fa-palette'
+        },
+        {
             id: 'crypto',
             name: '加密解密',
             src: '加密解密.html',
@@ -676,22 +684,7 @@
             category: '开发',
             icon: 'fa-terminal'
         },
-        {
-            id: 'sql-tools',
-            name: 'SQL工具',
-            src: 'SQL 工具.html',
-            keywords: 'sql 格式化 bean java create table insert into 合并 数据库 mysql postgresql sqlite',
-            category: '开发',
-            icon: 'fa-database'
-        },
-        {
-            id: 'card-scoreboard',
-            name: '打牌计分器',
-            src: '打牌计分器.html',
-            keywords: '打牌 计分 斗地主 五十k 过年 聚会 记分 牌局 card dapaijifenqi',
-            category: '其他',
-            icon: 'fa-trophy'
-        },
+
         {
             id: 'uuid',
             name: 'UUID生成',
@@ -701,28 +694,12 @@
             icon: 'fa-fingerprint'
         },
         {
-            id: 'color-converter',
-            name: '颜色转换',
-            src: '颜色转换工具.html',
-            keywords: '颜色 转换 hex rgb hsl cmyk hsv 透明度 渐变 对比度 yansezhuanhuan',
+            id: 'other-tools',
+            name: '其他工具',
+            src: '其他工具.html',
+            keywords: '其他 扩展 工具 二维码 打牌计分器 颜色转换 待办 更新记录 other tools',
             category: '其他',
-            icon: 'fa-palette'
-        },
-        {
-            id: 'todo',
-            name: '待办清单',
-            src: 'todo.html?embed=1',
-            keywords: 'todo 待办 清单 任务 task 计划 daibanqingdan',
-            category: '其他',
-            icon: 'fa-list-check'
-        },
-        {
-            id: 'changelog',
-            name: '更新记录',
-            src: '更新记录.html',
-            keywords: '更新 记录 git commit 日志 版本 genxinjilu',
-            category: '其他',
-            icon: 'fa-clock-rotate-left'
+            icon: 'fa-toolbox'
         }
     ];
 
@@ -1025,6 +1002,62 @@
         const toolId = window.location.hash.replace('#', '');
         if (toolId) switchTool(toolId);
     });
+
+    // 监听来自 iframe 的消息（用于"其他工具"页面内的工具跳转）
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'switchTool') {
+            const { toolId, src } = e.data;
+            if (toolId) {
+                // 先检查该工具是否已在 MENU_ITEMS 中
+                const existingItem = MENU_ITEMS.find(item => item.id === toolId);
+                if (!existingItem) {
+                    // 如果是扩展工具，动态添加到 MENU_ITEMS
+                    const extensionTool = getExtensionToolConfig(toolId);
+                    if (extensionTool) {
+                        MENU_ITEMS.push(extensionTool);
+                        // 重新渲染菜单
+                        renderMenu();
+                        initFavoriteButtons();
+                        updateMenuOrder();
+                        updateVisibility();
+                    }
+                }
+                // 执行工具切换
+                switchTool(toolId);
+            }
+        }
+    });
+
+    // 获取扩展工具配置（用于"其他工具"页面内的工具跳转）
+    function getExtensionToolConfig(toolId) {
+        const extensionTools = [
+            {
+                id: 'card-scoreboard',
+                name: '打牌计分器',
+                src: '打牌计分器.html',
+                keywords: '打牌 计分 斗地主 五十k 过年 聚会 记分 牌局 card dapaijifenqi',
+                category: '其他',
+                icon: 'fa-trophy'
+            },
+            {
+                id: 'todo',
+                name: '待办清单',
+                src: 'todo.html?embed=1',
+                keywords: 'todo 待办 清单 任务 task 计划 daibanqingdan',
+                category: '其他',
+                icon: 'fa-list-check'
+            },
+            {
+                id: 'changelog',
+                name: '更新记录',
+                src: '更新记录.html',
+                keywords: '更新 记录 git commit 日志 版本 genxinjilu',
+                category: '其他',
+                icon: 'fa-clock-rotate-left'
+            }
+        ];
+        return extensionTools.find(tool => tool.id === toolId);
+    }
 
     // 汉堡菜单点击事件
     menuToggle.addEventListener('click', function () {

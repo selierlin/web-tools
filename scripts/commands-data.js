@@ -1366,6 +1366,34 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "Homebrew 检查更新",
+        desc: "检查是否有可用的更新。",
+        command: "brew outdated",
+        tags: ["brew", "homebrew", "macos", "检查更新", "包管理"]
+      },
+      {
+        category: "常用工具",
+        name: "Homebrew 检查软件安装状态",
+        desc: "检查特定软件是否已安装及版本信息。",
+        command: "brew info <formula>",
+        tags: ["brew", "homebrew", "macos", "检查状态", "版本", "包管理"]
+      },
+      {
+        category: "常用工具",
+        name: "Homebrew 健康检查",
+        desc: "检查 Homebrew 安装是否健康，修复常见问题。",
+        command: "brew doctor",
+        tags: ["brew", "homebrew", "macos", "健康检查", "修复", "包管理"]
+      },
+      {
+        category: "常用工具",
+        name: "Homebrew 查看软件版本",
+        desc: "查看已安装软件的版本信息。",
+        command: "brew list --versions",
+        tags: ["brew", "homebrew", "macos", "版本", "列表", "包管理"]
+      },
+      {
+        category: "常用工具",
         name: "NPM 初始化项目",
         desc: "快速生成 package.json。",
         command: "npm init -y",

@@ -1,7 +1,42 @@
 {
-  "generatedAt": "2026-02-18T14:11:50.820Z",
-  "total": 33,
+  "generatedAt": "2026-02-22T05:25:57.453Z",
+  "total": 38,
   "commits": [
+    {
+      "hash": "18ffc7c2519f04ea7a42235e96950cccc9a92784",
+      "shortHash": "18ffc7c",
+      "date": "2026-02-22T13:25:49+08:00",
+      "author": "Selier",
+      "subject": "feat(diff): 增强文本对比功能，新增JSON模式及性能优化"
+    },
+    {
+      "hash": "51ad33b917d2dc5935289f9f0bf9712208eda424",
+      "shortHash": "51ad33b",
+      "date": "2026-02-21T14:46:05+08:00",
+      "author": "Selier",
+      "subject": "style(ui): 优化页面标题及结果显示逻辑"
+    },
+    {
+      "hash": "df3980a991e907eaceb46367c9179ae8ccf1083f",
+      "shortHash": "df3980a",
+      "date": "2026-02-21T14:42:37+08:00",
+      "author": "Selier",
+      "subject": "feat(ui): 优化文本批量加工与文本对比界面和功能"
+    },
+    {
+      "hash": "214348191c6c8f99a66d75e0c3c5400394e01476",
+      "shortHash": "2143481",
+      "date": "2026-02-21T11:06:57+08:00",
+      "author": "Selier",
+      "subject": "feat(scoreboard): 新增打牌计分器功能模块"
+    },
+    {
+      "hash": "72dacc432094d23a2f7d0886cc8f91f0433103a7",
+      "shortHash": "72dacc4",
+      "date": "2026-02-18T22:12:16+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 丰富常用命令数据及搜索标签同义词映射"
+    },
     {
       "hash": "a2ece8e3b503537f205208a7d9fbbebc165697f4",
       "shortHash": "a2ece8e",
