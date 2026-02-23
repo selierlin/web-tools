@@ -1107,6 +1107,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "创建软链接（ln -s）",
+        desc: "为文件或目录创建符号链接，便于统一入口或兼容旧路径。",
+        command: "ln -s /path/to/source /path/to/link\n# 覆盖已有同名链接可用\nln -snf /path/to/new-source /path/to/link",
+        tags: ["linux", "debian", "centos", "macos", "ln", "ln -s", "软链接", "符号链接", "路径映射"]
+      },
+      {
+        category: "常用工具",
         name: "NVM 安装并切换 Node 版本",
         desc: "安装指定 Node 版本并切换到该版本。",
         command: "nvm install 20\nnvm use 20",
