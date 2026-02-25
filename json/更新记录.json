@@ -1,14 +1,7 @@
 {
-  "generatedAt": "2026-02-23T11:02:14.743Z",
-  "total": 41,
+  "generatedAt": "2026-02-22T08:35:20.009Z",
+  "total": 39,
   "commits": [
-    {
-      "hash": "47228f527bfeeadd11471d812f2a4c5a9233d4dc",
-      "shortHash": "47228f5",
-      "date": "2026-02-23T19:01:21+08:00",
-      "author": "Selier",
-      "subject": "Merge remote-tracking branch 'origin/main'"
-    },
     {
       "hash": "a57092986860e4c4abe1adf513a264172b72dbbf",
       "shortHash": "a570929",
@@ -36,13 +29,6 @@
       "date": "2026-02-21T14:42:37+08:00",
       "author": "Selier",
       "subject": "feat(ui): 优化文本批量加工与文本对比界面和功能"
-    },
-    {
-      "hash": "b2006069d340defb640a3281cdc50bf308a013b6",
-      "shortHash": "b200606",
-      "date": "2026-02-21T11:59:22+08:00",
-      "author": "Selier",
-      "subject": "feat(sql-tools): 新增 SQL 工具页面与功能支持"
     },
     {
       "hash": "214348191c6c8f99a66d75e0c3c5400394e01476",

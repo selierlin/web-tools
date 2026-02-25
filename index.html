@@ -581,6 +581,30 @@
             icon: 'fa-file-alt'
         },
         {
+            id: 'diff',
+            name: '文本对比',
+            src: '文本对比.html',
+            keywords: '文本 对比 diff 差异 txt text json wenbenduibi',
+            category: '文本',
+            icon: 'fa-columns'
+        },
+        {
+            id: 'qrcode',
+            name: '二维码',
+            src: '二维码生成器.html',
+            keywords: '二维码 qrcode 生成 erweima',
+            category: '其他',
+            icon: 'fa-qrcode'
+        },
+        {
+            id: 'json',
+            name: 'JSON格式',
+            src: 'JSON 格式化.html',
+            keywords: 'json 格式化 美化',
+            category: '开发',
+            icon: 'fa-code'
+        },
+        {
             id: 'codec',
             name: '编码解码',
             src: '编码解码.html',
@@ -597,44 +621,12 @@
             icon: 'fa-image'
         },
         {
-            id: 'qrcode',
-            name: '二维码',
-            src: '二维码生成器.html',
-            keywords: '二维码 qrcode 生成 erweima',
-            category: '其他',
-            icon: 'fa-qrcode'
-        },
-        {
-            id: 'color-converter',
-            name: '颜色转换',
-            src: '颜色转换工具.html',
-            keywords: '颜色 转换 hex rgb hsl cmyk hsv 透明度 渐变 对比度 yansezhuanhuan',
-            category: '其他',
-            icon: 'fa-palette'
-        },
-        {
             id: 'crypto',
             name: '加密解密',
             src: '加密解密.html',
             keywords: '加密 解密 md5 aes sha jiamijiemi',
             category: '编码',
             icon: 'fa-shield-alt'
-        },
-        {
-            id: 'diff',
-            name: '文本对比',
-            src: '文本对比.html',
-            keywords: '文本 对比 diff 差异 txt text wenbenduibi',
-            category: '文本',
-            icon: 'fa-columns'
-        },
-        {
-            id: 'json',
-            name: 'JSON格式',
-            src: 'JSON 格式化.html',
-            keywords: 'json 格式化 美化',
-            category: '开发',
-            icon: 'fa-code'
         },
         {
             id: 'time',
@@ -651,6 +643,14 @@
             keywords: '日期 计算 间隔 riqijisuanqi',
             category: '时间',
             icon: 'fa-calendar-alt'
+        },
+        {
+            id: 'color-converter',
+            name: '颜色转换',
+            src: '颜色转换工具.html',
+            keywords: '颜色 转换 hex rgb hsl cmyk hsv 透明度 渐变 对比度 yansezhuanhuan',
+            category: '其他',
+            icon: 'fa-palette'
         },
         {
             id: 'regex',
@@ -684,7 +684,6 @@
             category: '开发',
             icon: 'fa-terminal'
         },
-
         {
             id: 'uuid',
             name: 'UUID生成',
@@ -1105,6 +1104,22 @@
         updateVisibility();
         refreshVisibleLinks(true);
         const hashId = window.location.hash.replace('#', '');
+        
+        // 如果 URL hash 是扩展工具，先动态添加到 MENU_ITEMS
+        if (hashId) {
+            const existingItem = MENU_ITEMS.find(item => item.id === hashId);
+            if (!existingItem) {
+                const extensionTool = getExtensionToolConfig(hashId);
+                if (extensionTool) {
+                    MENU_ITEMS.push(extensionTool);
+                    renderMenu();
+                    initFavoriteButtons();
+                    updateMenuOrder();
+                    updateVisibility();
+                }
+            }
+        }
+        
         switchTool(hashId || DEFAULT_TOOL_ID);
     });
 </script>
