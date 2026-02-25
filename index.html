@@ -15,15 +15,7 @@
     <meta property="og:title" content="极简工具箱 | 开发者的在线工具合集">
     <meta property="og:description" content="免费无广告：JSON 格式化、编码解码、加解密、时间戳、正则、Cron、UUID、二维码等在线工具。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://qr.linliang.top">
     <meta property="og:locale" content="zh_CN">
-    <meta property="og:image" content="https://cdn.linliang.top/tool/tool.ico">
-
-    <!-- 规范链接 (避免重复内容) -->
-    <link rel="canonical" href="https://qr.linliang.top">
-
-    <!-- 网站图标 (HTTPS 避免混合内容) -->
-    <link rel="icon" href="https://cdn.linliang.top/tool/tool.ico" type="image/x-icon">
 
     <!-- 国内 CDN：Font Awesome（BootCDN） -->
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -563,7 +555,7 @@
   "@type": "WebApplication",
   "name": "极简工具箱",
   "description": "免费无广告的在线开发工具合集：JSON 格式化、编码解码、加解密、时间戳、正则、Cron、UUID、二维码等。",
-  "url": "https://qr.linliang.top",
+  "url": "",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Any"
 }
@@ -704,7 +696,7 @@
             id: 'other-tools',
             name: '其他工具',
             src: '其他工具.html',
-            keywords: '其他 扩展 工具 二维码 打牌计分器 颜色转换 待办 更新记录 other tools',
+            keywords: '其他 扩展 工具 待办 other tools map 地图',
             category: '其他',
             icon: 'fa-toolbox'
         }
@@ -1039,28 +1031,12 @@
     function getExtensionToolConfig(toolId) {
         const extensionTools = [
             {
-                id: 'card-scoreboard',
-                name: '打牌计分器',
-                src: '打牌计分器.html',
-                keywords: '打牌 计分 斗地主 五十k 过年 聚会 记分 牌局 card dapaijifenqi',
-                category: '其他',
-                icon: 'fa-trophy'
-            },
-            {
                 id: 'todo',
                 name: '待办清单',
                 src: 'todo.html?embed=1',
                 keywords: 'todo 待办 清单 任务 task 计划 daibanqingdan',
                 category: '其他',
                 icon: 'fa-list-check'
-            },
-            {
-                id: 'changelog',
-                name: '更新记录',
-                src: '更新记录.html',
-                keywords: '更新 记录 git commit 日志 版本 genxinjilu',
-                category: '其他',
-                icon: 'fa-clock-rotate-left'
             },
             {
                 id: 'map',
@@ -1123,7 +1099,5 @@
         switchTool(hashId || DEFAULT_TOOL_ID);
     });
 </script>
-<script async src="https://tongji.linliang.top/script.js"
-        data-website-id="b6c7616f-93fa-424e-82b4-358d4bb6fc41"></script>
 </body>
 </html>
