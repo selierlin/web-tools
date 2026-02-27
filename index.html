@@ -64,14 +64,50 @@
 
         body {
             background: var(--bg-dark);
-            background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
-            radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.08), transparent);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.08), transparent);
             min-height: 100vh;
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             color: var(--text-light);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: orbBreathe 6s ease-in-out infinite alternate;
+        }
+        .glow-orb--1 {
+            width: 320px; height: 320px;
+            background: rgba(99, 102, 241, 0.10);
+            top: -80px; left: 10%;
+            animation-delay: 0s;
+        }
+        .glow-orb--2 {
+            width: 260px; height: 260px;
+            background: rgba(139, 92, 246, 0.08);
+            bottom: -60px; right: 8%;
+            animation-delay: -3s;
+        }
+        @keyframes orbBreathe {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.15); }
         }
 
         header {
@@ -83,8 +119,18 @@
             background: var(--nav-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--nav-border);
+            border-bottom: 1px solid transparent;
+            background-clip: padding-box;
             z-index: 20;
+        }
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99,102,241,0.4) 30%, rgba(139,92,246,0.4) 70%, transparent);
         }
 
         .header-title {
@@ -107,6 +153,10 @@
             margin-right: 32px;
             white-space: nowrap;
             letter-spacing: -0.02em;
+            transition: filter 0.3s ease;
+        }
+        .logo:hover {
+            filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.5));
         }
 
         .logo i {
@@ -149,6 +199,28 @@
             color: var(--text-muted);
             pointer-events: none;
             font-size: 0.85rem;
+        }
+
+        .search-kbd {
+            position: absolute;
+            right: 36px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-family: system-ui, sans-serif;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+            line-height: 1.4;
+        }
+        .search-box:focus ~ .search-kbd {
+            opacity: 0;
         }
 
         /* 分类筛选：工具多时缩小范围 */
@@ -260,8 +332,22 @@
             border-radius: var(--radius-sm);
             font-size: 0.9rem;
             font-weight: 500;
-            transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+            transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
             white-space: nowrap;
+            position: relative;
+        }
+
+        .menu-item a::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scaleY(0);
+            width: 3px;
+            height: 60%;
+            border-radius: 0 2px 2px 0;
+            background: var(--primary-hover);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .menu-item a i {
@@ -273,11 +359,24 @@
             color: var(--text-light);
             background: rgba(255, 255, 255, 0.06);
         }
+        .menu-item a:hover::before {
+            transform: translateY(-50%) scaleY(1);
+        }
 
         .menu-item a.active {
             color: #fff;
             background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
             box-shadow: 0 4px 14px var(--primary-glow);
+            animation: menuActivePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .menu-item a.active::before {
+            transform: translateY(-50%) scaleY(0);
+        }
+
+        @keyframes menuActivePop {
+            0% { transform: scale(0.95); }
+            60% { transform: scale(1.03); }
+            100% { transform: scale(1); }
         }
 
         .menu-item a.active i {
@@ -340,6 +439,12 @@
             background: linear-gradient(135deg, #f59e0b, #ef4444);
             border-color: transparent;
             color: #fff;
+            animation: favBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes favBounce {
+            0% { transform: scale(0.5); }
+            60% { transform: scale(1.25); }
+            100% { transform: scale(1); }
         }
 
         #content-main {
@@ -348,7 +453,7 @@
             background: #fafafa;
             border-radius: var(--radius) var(--radius) 0 0;
             overflow: hidden;
-            box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.04);
         }
 
         .tool-iframe {
@@ -359,10 +464,12 @@
             height: 100%;
             border: none;
             display: none;
+            opacity: 0;
+            transition: opacity 0.35s ease;
         }
 
         .tool-iframe.active {
-            display: block;
+            opacity: 1;
         }
 
         .menu-toggle {
@@ -500,6 +607,8 @@
     </style>
 </head>
 <body>
+<div class="glow-orb glow-orb--1" aria-hidden="true"></div>
+<div class="glow-orb glow-orb--2" aria-hidden="true"></div>
 
 <!-- 对搜索引擎友好的补充说明（与首屏内容一致，便于抓取） -->
 <nav class="seo-hidden" aria-label="本站工具列表">
@@ -530,6 +639,7 @@
     <!-- 搜索框 -->
     <div class="search-container">
         <input type="text" class="search-box" id="searchBox" placeholder="搜索工具...">
+        <kbd class="search-kbd">⌘K</kbd>
         <i class="fas fa-search search-icon"></i>
     </div>
 
@@ -957,7 +1067,10 @@
         targetLink.classList.add('active');
 
         const allIframes = document.querySelectorAll('.tool-iframe');
-        allIframes.forEach(iframe => iframe.classList.remove('active'));
+        allIframes.forEach(iframe => {
+            iframe.classList.remove('active');
+            iframe.style.display = 'none';
+        });
 
         let targetIframe = document.querySelector(`.tool-iframe[data-id="${toolId}"]`);
 
@@ -970,7 +1083,12 @@
             contentMain.appendChild(targetIframe);
         }
 
-        targetIframe.classList.add('active');
+        targetIframe.style.display = 'block';
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                targetIframe.classList.add('active');
+            });
+        });
 
         if (window.location.hash !== '#' + toolId) {
             history.pushState(null, null, '#' + toolId);

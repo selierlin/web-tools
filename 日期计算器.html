@@ -73,7 +73,7 @@
             width: 46px; height: 46px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; color: #94a3b8; border-left: 1px solid var(--border);
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .calendar-btn:active { background: rgba(255,255,255,0.1); color: var(--primary); }
@@ -103,6 +103,11 @@
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         small { color: #64748b; font-size: 0.75rem; display: block; margin-top: 5px; }
+
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,0.5); }
 
     </style>
 </head>

@@ -8,6 +8,7 @@
         :root {
             --primary-color: #4361ee;
             --primary-hover: #3a56d4;
+            --primary-glow: rgba(67, 97, 238, 0.15);
             --success-color: #2ec4b6;
             --warning-color: #f77f00;
             --danger-color: #d62828;
@@ -17,8 +18,8 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border-color: #e2e8f0;
-            --radius: 10px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 14px;
+            --shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 8px 20px -8px rgba(0, 0, 0, 0.06);
         }
 
         * {
@@ -29,7 +30,7 @@
         }
 
         body {
-            background-color: var(--bg-color);
+            background: linear-gradient(145deg, #f0f4ff 0%, var(--bg-color) 40%, #f1f0ff 100%);
             color: var(--text-main);
             padding: 16px;
             min-height: 100vh;
@@ -46,32 +47,46 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            animation: containerReveal 0.4s ease;
+        }
+        @keyframes containerReveal {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* 顶部导航 */
         .tool-header {
-            background-color: #1e293b;
+            background: linear-gradient(135deg, #1e293b 0%, #2d3a5c 60%, #3730a3 100%);
             color: #ffffff;
             padding: 18px 24px;
             font-size: 20px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
+            border-radius: var(--radius) var(--radius) 0 0;
         }
 
         .tool-header::before {
             content: "{ }";
             margin-right: 12px;
             color: var(--success-color);
-            font-family: monospace;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: 22px;
+            font-weight: 800;
+            animation: bracketPulse 2.5s ease-in-out infinite;
+            text-shadow: 0 0 12px rgba(46, 196, 182, 0.4);
+        }
+        @keyframes bracketPulse {
+            0%, 100% { opacity: 0.85; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
         }
 
         /* 控制栏优化 */
         .tool-controls {
             padding: 16px 24px;
-            background-color: #ffffff;
+            background: linear-gradient(180deg, #fafbff 0%, #ffffff 100%);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             flex-wrap: wrap;
@@ -93,22 +108,60 @@
             white-space: nowrap;
         }
 
-        .btn:active { transform: scale(0.96); }
+        .btn:active { transform: scale(0.96) translateY(0) !important; }
 
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-primary {
+            background-color: var(--primary-color); color: white;
+            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.25);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            box-shadow: 0 4px 14px rgba(67, 97, 238, 0.35);
+            transform: translateY(-1px);
+        }
 
-        .btn-success { background-color: var(--success-color); color: white; }
-        .btn-success:hover { opacity: 0.9; }
+        .btn-success {
+            background-color: var(--success-color); color: white;
+            box-shadow: 0 2px 8px rgba(46, 196, 182, 0.25);
+        }
+        .btn-success:hover {
+            box-shadow: 0 4px 14px rgba(46, 196, 182, 0.35);
+            transform: translateY(-1px);
+        }
 
-        .btn-warning { background-color: var(--warning-color); color: white; }
-        .btn-warning:hover { opacity: 0.9; }
+        .btn-warning {
+            background-color: var(--warning-color); color: white;
+            box-shadow: 0 2px 8px rgba(247, 127, 0, 0.25);
+        }
+        .btn-warning:hover {
+            box-shadow: 0 4px 14px rgba(247, 127, 0, 0.35);
+            transform: translateY(-1px);
+        }
 
-        .btn-danger { background-color: var(--danger-color); color: white; }
-        .btn-danger:hover { opacity: 0.9; }
+        .btn-danger {
+            background-color: var(--danger-color); color: white;
+            box-shadow: 0 2px 8px rgba(214, 40, 40, 0.2);
+        }
+        .btn-danger:hover {
+            box-shadow: 0 4px 14px rgba(214, 40, 40, 0.3);
+            transform: translateY(-1px);
+            animation: btnShake 0.4s ease;
+        }
+        @keyframes btnShake {
+            0%, 100% { transform: translateY(-1px) rotate(0); }
+            25% { transform: translateY(-1px) rotate(-1.5deg); }
+            75% { transform: translateY(-1px) rotate(1.5deg); }
+        }
 
-        .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-secondary:hover { background-color: #e2e8f0; }
+        .btn-secondary {
+            background-color: #f1f5f9; color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
 
         /* 内容区响应式布局 */
         .tool-content {
@@ -136,13 +189,14 @@
         }
 
         .label {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-muted);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         textarea {
@@ -157,15 +211,21 @@
             background-color: #f8fafc;
             color: #334155;
             font-family: "Cascadia Code", "Consolas", monospace;
-            transition: border-color 0.2s;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
         }
 
         textarea:focus {
             outline: none;
             border-color: var(--primary-color);
             background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02), 0 0 0 4px var(--primary-glow);
         }
+
+        textarea::-webkit-scrollbar { width: 7px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        textarea::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* 树形输出区美化 */
         .json-output-tree {
@@ -182,36 +242,46 @@
         }
 
         /* 滚动条美化 */
-        .json-output-tree::-webkit-scrollbar { width: 8px; height: 8px; }
+        .json-output-tree::-webkit-scrollbar { width: 7px; height: 7px; }
+        .json-output-tree::-webkit-scrollbar-track { background: transparent; }
         .json-output-tree::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .json-output-tree::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* FEHelper 语法高亮细节 */
+        /* 语法高亮 */
         .fe-key { color: #2563eb; font-weight: 500; }
         .fe-string { color: #059669; }
-        .fe-number { color: #d97706; }
-        .fe-boolean { color: #7c3aed; }
+        .fe-number { color: #d97706; font-weight: 500; }
+        .fe-boolean { color: #7c3aed; font-weight: 600; }
         .fe-null { color: #94a3b8; font-style: italic; }
         .fe-bracket { color: #64748b; }
-        .fe-highlight { background-color: #f1f5f9; border-radius: 4px; }
+        .fe-highlight { background-color: rgba(67, 97, 238, 0.05); border-radius: 4px; transition: background-color 0.15s ease; }
 
         .fe-toggle {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             margin-right: 6px;
-            font-size: 12px;
+            font-size: 10px;
             background: #f1f5f9;
             border-radius: 4px;
             cursor: pointer;
             color: #64748b;
             user-select: none;
             border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
         }
 
-        .fe-toggle:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .fe-toggle:hover {
+            background: var(--primary-color); color: white; border-color: var(--primary-color);
+            box-shadow: 0 2px 6px rgba(67, 97, 238, 0.3);
+        }
+
+        .fe-tree-children {
+            border-left: 1px solid rgba(67, 97, 238, 0.1);
+            margin-left: 8px;
+        }
 
         /* 输出区子控制栏 */
         .output-sub-controls {
@@ -229,13 +299,18 @@
             font-weight: 500;
             background-color: #ffffff;
             color: var(--text-muted);
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .sub-btn:hover {
             color: var(--primary-color);
             border-color: var(--primary-color);
             background-color: #f0f7ff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(67, 97, 238, 0.12);
+        }
+        .sub-btn:active {
+            transform: translateY(0);
         }
 
         .result-tip {
@@ -243,6 +318,14 @@
             color: var(--text-muted);
             margin-top: 4px;
             padding-left: 4px;
+            transition: color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+        }
+        .result-tip.tip-animate {
+            animation: tipSlideIn 0.3s ease;
+        }
+        @keyframes tipSlideIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* 手机端适配 */
@@ -349,8 +432,12 @@
     const resultTip = document.getElementById('resultTip');
 
     function showTip(message, isError = false) {
-        resultTip.textContent = message;
-        resultTip.style.color = isError ? 'var(--danger-color)' : 'var(--text-muted)';
+        const icon = isError ? '⚠ ' : '✓ ';
+        resultTip.textContent = icon + message;
+        resultTip.style.color = isError ? 'var(--danger-color)' : 'var(--success-color)';
+        resultTip.classList.remove('tip-animate');
+        void resultTip.offsetWidth;
+        resultTip.classList.add('tip-animate');
         setTimeout(() => {
             if (!isError) resultTip.style.color = 'var(--text-muted)';
         }, 3000);
@@ -428,7 +515,7 @@
             if (Array.isArray(obj)) {
                 const count = obj.length;
                 html += `<span class="fe-bracket">[</span> `;
-                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">⊖</span>`;
+                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">▼</span>`;
                 html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 项)</span>`;
                 html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
 
@@ -445,7 +532,7 @@
                 const keys = Object.keys(obj);
                 const count = keys.length;
                 html += `<span class="fe-bracket">{</span> `;
-                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">⊖</span>`;
+                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">▼</span>`;
                 html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 属性)</span>`;
                 html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
 
@@ -484,8 +571,8 @@
                 const children = document.querySelector(`.fe-tree-children[data-path="${path}"]`);
                 const note = document.querySelector(`.fe-collapse-note[data-path="${path}"]`);
                 if (children && note) {
-                    const isExpanded = this.textContent === '⊖';
-                    this.textContent = isExpanded ? '⊕' : '⊖';
+                    const isExpanded = this.textContent === '▼';
+                    this.textContent = isExpanded ? '▶' : '▼';
                     children.style.display = isExpanded ? 'none' : 'block';
                     note.style.display = isExpanded ? 'inline' : 'none';
                 }
@@ -495,7 +582,7 @@
 
     function expandAllNodes() {
         document.querySelectorAll('.fe-toggle').forEach(toggle => {
-            toggle.textContent = '⊖';
+            toggle.textContent = '▼';
             const path = toggle.getAttribute('data-path');
             document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'block');
             document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'none');
@@ -505,7 +592,7 @@
 
     function collapseAllNodes() {
         document.querySelectorAll('.fe-toggle').forEach(toggle => {
-            toggle.textContent = '⊕';
+            toggle.textContent = '▶';
             const path = toggle.getAttribute('data-path');
             document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'none');
             document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'inline');
