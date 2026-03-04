@@ -83,6 +83,60 @@
                 opacity: 0;
                 transition: opacity 0.2s ease-in-out;
             }
+            .json-tree-panel {
+                border-top: 1px solid #E5E6EB;
+                background: #FAFBFF;
+            }
+            .json-tree {
+                font-family: "Cascadia Code", "Consolas", monospace;
+                font-size: 13px;
+                line-height: 1.7;
+                color: #334155;
+                max-height: 280px;
+                overflow: auto;
+            }
+            .json-tree .fe-key { color: #2563eb; font-weight: 500; }
+            .json-tree .fe-string { color: #059669; }
+            .json-tree .fe-number { color: #d97706; font-weight: 500; }
+            .json-tree .fe-boolean { color: #7c3aed; font-weight: 600; }
+            .json-tree .fe-null { color: #94a3b8; font-style: italic; }
+            .json-tree .fe-bracket { color: #64748b; }
+            .json-tree .fe-highlight { background-color: rgba(67, 97, 238, 0.05); border-radius: 4px; }
+            .json-tree .fe-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                height: 18px;
+                margin-right: 6px;
+                font-size: 10px;
+                background: #f1f5f9;
+                border-radius: 4px;
+                cursor: pointer;
+                color: #64748b;
+                user-select: none;
+                border: 1px solid #E2E8F0;
+                transition: all 0.2s ease;
+            }
+            .json-tree .fe-toggle:hover {
+                background: #165DFF;
+                color: #fff;
+                border-color: #165DFF;
+            }
+            .json-tree .fe-tree-children {
+                border-left: 1px solid rgba(67, 97, 238, 0.12);
+                margin-left: 8px;
+            }
+            /* 关闭悬浮位移动效，避免鼠标移入时元素跳动 */
+            .card-hover:hover,
+            .btn-primary-hover:hover,
+            .btn-secondary-hover:hover,
+            .func-btn:hover,
+            #copySingleBtn:hover,
+            #expandJsonBtn:hover,
+            #collapseJsonBtn:hover {
+                transform: none !important;
+            }
         }
     </style>
 </head>
@@ -177,6 +231,9 @@
                         <button data-func="gzipCompress" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-primary transition-colors font-bold italic text-blue-600">Gzip压缩</span>
                         </button>
+                        <button data-func="gb2312Encode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-primary-light border border-transparent hover:border-primary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                            <span class="block text-gray-600 group-hover:text-primary transition-colors">GB2312编码</span>
+                        </button>
                     </div>
 
                     <!-- 解密列表 -->
@@ -211,6 +268,9 @@
                         <button data-func="gzipDecompress" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
                             <span class="block text-gray-600 group-hover:text-secondary transition-colors font-bold italic">Gzip解压</span>
                         </button>
+                        <button data-func="gb2312Decode" class="func-btn group p-2.5 text-xs md:text-sm bg-gray-50 hover:bg-secondary/10 border border-transparent hover:border-secondary/20 rounded-xl transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+                            <span class="block text-gray-600 group-hover:text-secondary transition-colors">GB2312解码</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -230,6 +290,16 @@
                         id="resultText"
                         class="flex-grow w-full p-4 text-sm md:text-base font-mono border-none focus:ring-0 resize-none bg-transparent custom-scrollbar input-focus"
                         placeholder="此处显示处理后的结果..." readonly></textarea>
+                <div id="resultJsonPanel" class="json-tree-panel hidden">
+                    <div class="px-4 py-2 flex items-center justify-between">
+                        <span class="text-xs text-gray-500">JSON树视图</span>
+                        <div class="flex items-center gap-2">
+                            <button id="expandJsonBtn" class="px-2 py-1 text-xs border border-gray-200 rounded-md text-gray-600 hover:text-primary hover:border-primary/40 transition-colors">全部展开</button>
+                            <button id="collapseJsonBtn" class="px-2 py-1 text-xs border border-gray-200 rounded-md text-gray-600 hover:text-primary hover:border-primary/40 transition-colors">全部折叠</button>
+                        </div>
+                    </div>
+                    <div id="resultJsonTree" class="json-tree px-4 pb-4 custom-scrollbar"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -260,6 +330,10 @@
     const copySingleBtn = document.getElementById('copySingleBtn');
     const funcBtns = document.querySelectorAll('.func-btn');
     const inputCharCount = document.getElementById('inputCharCount');
+    const resultJsonPanel = document.getElementById('resultJsonPanel');
+    const resultJsonTree = document.getElementById('resultJsonTree');
+    const expandJsonBtn = document.getElementById('expandJsonBtn');
+    const collapseJsonBtn = document.getElementById('collapseJsonBtn');
 
     // 输入字数统计 (新增辅助)
     inputText.addEventListener('input', () => {
@@ -306,28 +380,134 @@
         setTimeout(() => resultStatus.classList.remove('animate-pulse'), 500);
     });
 
+    const setResultDisplayMode = (mode) => {
+        if (mode === 'tree') {
+            resultText.classList.add('hidden');
+            resultJsonPanel.classList.remove('hidden');
+            return;
+        }
+        resultText.classList.remove('hidden');
+        resultJsonPanel.classList.add('hidden');
+    };
+
     clearBtn.addEventListener('click', () => {
         inputText.value = '';
         resultText.value = '';
         inputCharCount.textContent = '0 chars';
+        setResultDisplayMode('text');
+        resultJsonTree.innerHTML = '';
         resultStatus.textContent = "内容已清空";
         inputText.focus();
     });
 
-    const copyToClipboard = () => {
-        if (!resultText.value) {
+    const copyToClipboard = async () => {
+        const value = resultText.value;
+        if (!value) {
             resultStatus.textContent = "无内容复制";
             return;
         }
-        resultText.select();
-        document.execCommand('copy');
-        const originalText = resultStatus.textContent;
-        resultStatus.textContent = "✓ 已成功复制到剪贴板";
-        setTimeout(() => { resultStatus.textContent = originalText; }, 2000);
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(value);
+            } else {
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = value;
+                tempTextArea.setAttribute('readonly', '');
+                tempTextArea.style.position = 'fixed';
+                tempTextArea.style.left = '-9999px';
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextArea);
+            }
+            const originalText = resultStatus.textContent;
+            resultStatus.textContent = "✓ 已成功复制到剪贴板";
+            setTimeout(() => { resultStatus.textContent = originalText; }, 2000);
+        } catch (e) {
+            resultStatus.textContent = "复制失败";
+        }
     };
 
     copyResultBtn.addEventListener('click', copyToClipboard);
     copySingleBtn.addEventListener('click', copyToClipboard);
+
+    const gb2312Codec = (() => {
+        let decoder = null;
+        let charToHex = null;
+        let initError = '';
+
+        const init = () => {
+            if (charToHex) return true;
+            try {
+                decoder = new TextDecoder('gb2312', { fatal: true });
+            } catch (e) {
+                initError = '当前浏览器不支持GB2312编码';
+                return false;
+            }
+            charToHex = new Map();
+
+            // ASCII 与 GB2312 一致，直接映射。
+            for (let byte = 0x00; byte <= 0x7F; byte++) {
+                charToHex.set(String.fromCharCode(byte), byte.toString(16).padStart(2, '0').toUpperCase());
+            }
+
+            // 构建 GB2312 双字节区反向表（A1-F7, A1-FE）。
+            for (let lead = 0xA1; lead <= 0xF7; lead++) {
+                for (let trail = 0xA1; trail <= 0xFE; trail++) {
+                    try {
+                        const decoded = decoder.decode(new Uint8Array([lead, trail]));
+                        if (decoded && decoded.length === 1 && decoded !== '\uFFFD' && !charToHex.has(decoded)) {
+                            charToHex.set(
+                                decoded,
+                                `${lead.toString(16).padStart(2, '0')}${trail.toString(16).padStart(2, '0')}`.toUpperCase()
+                            );
+                        }
+                    } catch (e) {
+                        // fatal 模式下非法字节会抛错，直接跳过即可。
+                    }
+                }
+            }
+            return true;
+        };
+
+        const parseHexBytes = (str) => {
+            const compact = str.replace(/\s+/g, '');
+            if (/^(%[0-9a-fA-F]{2})+$/.test(compact)) {
+                return compact.match(/[0-9a-fA-F]{2}/g).map((hex) => parseInt(hex, 16));
+            }
+            const normalized = str.replace(/0x/gi, '').replace(/[%\s,]+/g, '');
+            if (!/^[0-9a-fA-F]+$/.test(normalized) || normalized.length % 2 !== 0) {
+                throw new Error('请输入合法十六进制字节（如 B2E2CAD4 / B2 E2 CA D4 / %B2%E2%CA%D4）');
+            }
+            const bytes = [];
+            for (let i = 0; i < normalized.length; i += 2) {
+                bytes.push(parseInt(normalized.slice(i, i + 2), 16));
+            }
+            return bytes;
+        };
+
+        return {
+            encode: (str) => {
+                if (!init()) return initError;
+                const bytes = [];
+                for (const ch of str) {
+                    const hex = charToHex.get(ch);
+                    if (!hex) return `GB2312编码失败：包含不支持字符 "${ch}"`;
+                    bytes.push(hex);
+                }
+                return bytes.join(' ');
+            },
+            decode: (str) => {
+                if (!init()) return initError;
+                try {
+                    const bytes = parseHexBytes(str);
+                    return decoder.decode(new Uint8Array(bytes));
+                } catch (e) {
+                    return `GB2312解码失败：${e.message}`;
+                }
+            }
+        };
+    })();
 
     const codecFunctions = {
         unicodeEncode: (str) => str.split('').map(char => {
@@ -414,8 +594,148 @@
                 for (let i = 0; i < binary.length; i++) uint8Array[i] = binary.charCodeAt(i);
                 return pako.ungzip(uint8Array, { to: 'string' });
             } catch (e) { return "Gzip解压失败"; }
+        },
+        gb2312Encode: (str) => gb2312Codec.encode(str),
+        gb2312Decode: (str) => gb2312Codec.decode(str)
+    };
+
+    const decodeFunctionNames = new Set([
+        'unicodeDecode',
+        'urlDecode',
+        'utf16Decode',
+        'base64Decode',
+        'hexDecode',
+        'htmlEntityDecode',
+        'urlParamsParse',
+        'jwtDecode',
+        'cookieFormat',
+        'gzipDecompress',
+        'gb2312Decode'
+    ]);
+
+    const formatJsonIfNeeded = (result, funcName) => {
+        if (!decodeFunctionNames.has(funcName) || typeof result !== 'string') return result;
+        const trimmed = result.trim();
+        if (!trimmed) return result;
+        try {
+            const parsed = JSON.parse(trimmed);
+            return JSON.stringify(parsed, null, 4);
+        } catch (e) {
+            // 非 JSON 保持原样
+        }
+        return result;
+    };
+
+    const escapeHtml = (text) => String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const formatPrimitive = (value) => {
+        if (typeof value === 'string') return `<span class="fe-string">"${escapeHtml(value)}"</span>`;
+        if (typeof value === 'number') return `<span class="fe-number">${value}</span>`;
+        if (typeof value === 'boolean') return `<span class="fe-boolean">${value}</span>`;
+        if (value === null) return `<span class="fe-null">null</span>`;
+        return '';
+    };
+
+    const buildTreeHtml = (obj, parentPath = []) => {
+        let html = '';
+        const currentPath = parentPath.join('.');
+        if (Array.isArray(obj)) {
+            const count = obj.length;
+            html += `<span class="fe-bracket">[</span> `;
+            html += `<span class="fe-toggle" data-path="${currentPath}">▼</span>`;
+            html += `<span class="fe-collapse-note text-gray-400 text-xs" data-path="${currentPath}" style="display:none">(${count} 项)</span>`;
+            html += `<div class="fe-tree-children" data-path="${currentPath}" style="display:block;">`;
+            obj.forEach((item, index) => {
+                const path = [...parentPath, `arr_${index}`];
+                html += `<div style="padding-left: 20px;">`;
+                html += `<span class="fe-key">[${index}]</span>: `;
+                html += typeof item === 'object' && item !== null ? buildTreeHtml(item, path) : formatPrimitive(item);
+                html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
+                html += `</div>`;
+            });
+            html += `</div><span class="fe-bracket">]</span>`;
+            return html;
+        }
+
+        if (typeof obj === 'object' && obj !== null) {
+            const keys = Object.keys(obj);
+            const count = keys.length;
+            html += `<span class="fe-bracket">{</span> `;
+            html += `<span class="fe-toggle" data-path="${currentPath}">▼</span>`;
+            html += `<span class="fe-collapse-note text-gray-400 text-xs" data-path="${currentPath}" style="display:none">(${count} 属性)</span>`;
+            html += `<div class="fe-tree-children" data-path="${currentPath}" style="display:block;">`;
+            keys.forEach((key, index) => {
+                const value = obj[key];
+                const path = [...parentPath, key.replace(/\W/g, '_')];
+                html += `<div style="padding-left: 20px;">`;
+                html += `<span class="fe-key">"${escapeHtml(key)}"</span>: `;
+                html += typeof value === 'object' && value !== null ? buildTreeHtml(value, path) : formatPrimitive(value);
+                html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
+                html += `</div>`;
+            });
+            html += `</div><span class="fe-bracket">}</span>`;
+            return html;
+        }
+
+        return formatPrimitive(obj);
+    };
+
+    const bindTreeToggleEvents = () => {
+        resultJsonTree.querySelectorAll('.fe-toggle').forEach((toggle) => {
+            toggle.onclick = function () {
+                const path = this.getAttribute('data-path');
+                const children = resultJsonTree.querySelector(`.fe-tree-children[data-path="${path}"]`);
+                const note = resultJsonTree.querySelector(`.fe-collapse-note[data-path="${path}"]`);
+                if (!children || !note) return;
+                const isExpanded = this.textContent === '▼';
+                this.textContent = isExpanded ? '▶' : '▼';
+                children.style.display = isExpanded ? 'none' : 'block';
+                note.style.display = isExpanded ? 'inline' : 'none';
+            };
+        });
+    };
+
+    const renderResultJsonTree = (jsonText, funcName) => {
+        if (!decodeFunctionNames.has(funcName)) {
+            setResultDisplayMode('text');
+            resultJsonTree.innerHTML = '';
+            return;
+        }
+        try {
+            const parsed = JSON.parse(jsonText);
+            if (typeof parsed !== 'object' || parsed === null) {
+                setResultDisplayMode('text');
+                resultJsonTree.innerHTML = '';
+                return;
+            }
+            resultJsonTree.innerHTML = buildTreeHtml(parsed);
+            bindTreeToggleEvents();
+            setResultDisplayMode('tree');
+        } catch (e) {
+            setResultDisplayMode('text');
+            resultJsonTree.innerHTML = '';
         }
     };
+
+    const setAllTreeNodes = (expanded) => {
+        resultJsonTree.querySelectorAll('.fe-toggle').forEach((toggle) => {
+            const path = toggle.getAttribute('data-path');
+            const children = resultJsonTree.querySelector(`.fe-tree-children[data-path="${path}"]`);
+            const note = resultJsonTree.querySelector(`.fe-collapse-note[data-path="${path}"]`);
+            if (!children || !note) return;
+            toggle.textContent = expanded ? '▼' : '▶';
+            children.style.display = expanded ? 'block' : 'none';
+            note.style.display = expanded ? 'none' : 'inline';
+        });
+    };
+
+    expandJsonBtn.addEventListener('click', () => setAllTreeNodes(true));
+    collapseJsonBtn.addEventListener('click', () => setAllTreeNodes(false));
 
     funcBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -433,10 +753,13 @@
                 resultStatus.classList.add('text-warning', 'animate-pulse');
                 setTimeout(() => resultStatus.classList.remove('text-warning', 'animate-pulse'), 1000);
                 resultText.value = '';
+                setResultDisplayMode('text');
+                resultJsonTree.innerHTML = '';
                 return;
             }
 
             // 添加加载状态
+            setResultDisplayMode('text');
             resultStatus.textContent = "处理中...";
             resultStatus.classList.add('animate-pulse', 'text-primary');
             resultText.value = "正在处理，请稍候...";
@@ -444,12 +767,13 @@
             // 模拟处理延迟，使动画更明显
             setTimeout(() => {
                 try {
-                    const result = func(inputValue);
+                    const result = formatJsonIfNeeded(func(inputValue), funcName);
                     
                     // 结果淡入效果
                     resultText.classList.add('opacity-0');
                     setTimeout(() => {
                         resultText.value = result;
+                        renderResultJsonTree(result, funcName);
                         resultText.classList.remove('opacity-0');
                     }, 100);
                     
@@ -459,6 +783,8 @@
                     setTimeout(() => resultStatus.classList.remove('text-success'), 1500);
                 } catch (e) {
                     resultText.value = `执行出错: ${e.message}`;
+                    setResultDisplayMode('text');
+                    resultJsonTree.innerHTML = '';
                     resultStatus.textContent = "执行出错";
                     resultStatus.classList.remove('animate-pulse');
                     resultStatus.classList.add('text-danger');
