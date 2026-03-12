@@ -1818,5 +1818,103 @@ window.COMMANDS_DATA = [
         desc: "查看通过 brew 管理的服务状态。",
         command: "brew services list",
         tags: ["homebrew", "brew", "services", "macos", "服务管理"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 查看帮助",
+        desc: "查看 openclaw 可用命令与参数。",
+        command: "openclaw --help    # 查看完整命令与参数说明",
+        tags: ["openclaw", "help", "命令速查", "cli", "工具"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 初始化向导",
+        desc: "执行初始化、引导与配置流程。",
+        command: "openclaw setup    # 初始化本地运行环境\nopenclaw onboard    # 执行首次引导配置\nopenclaw configure    # 进入配置向导调整参数",
+        tags: ["openclaw", "初始化", "setup", "onboard", "configure"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 配置管理",
+        desc: "读取、设置、删除配置项。",
+        command: "openclaw config get <key>    # 读取指定配置项\nopenclaw config set <key> <value>    # 写入配置项\nopenclaw config unset <key>    # 删除指定配置项",
+        tags: ["openclaw", "config", "配置", "set", "get", "unset"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 网关控制",
+        desc: "管理 gateway 的启停、重启与健康状态。",
+        command: "openclaw gateway start    # 启动 gateway\nopenclaw gateway stop    # 停止 gateway\nopenclaw gateway restart    # 重启 gateway\nopenclaw gateway status    # 查看 gateway 状态\nopenclaw gateway health    # 执行 gateway 健康检查\nopenclaw gateway --verbose    # 以详细日志模式运行/排查 gateway",
+        tags: ["openclaw", "gateway", "start", "stop", "restart", "status", "health"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 运行状态与诊断",
+        desc: "查看状态、健康检查与日志跟踪。",
+        command: "openclaw status    # 查看整体运行状态\nopenclaw health    # 执行健康检查\nopenclaw logs --follow    # 持续跟踪日志输出\nopenclaw doctor    # 运行诊断并给出修复建议",
+        tags: ["openclaw", "状态", "诊断", "logs", "doctor", "health"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 模型管理",
+        desc: "列出、切换并扫描可用模型。",
+        command: "openclaw models list    # 列出可用模型\nopenclaw models set <model>    # 设置当前默认模型\nopenclaw models status    # 查看当前模型状态\nopenclaw models scan    # 扫描并刷新可用模型",
+        tags: ["openclaw", "models", "模型", "list", "set", "scan"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 消息与会话",
+        desc: "发送消息并查看会话记录。",
+        command: "openclaw message    # 发送一条消息给当前会话\nopenclaw sessions    # 查看本地会话列表与历史",
+        tags: ["openclaw", "message", "sessions", "会话", "消息"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 技能与插件",
+        desc: "查看技能与插件信息。",
+        command: "openclaw skills list    # 列出已安装技能\nopenclaw skills info <name>    # 查看某个技能详情\nopenclaw skills check    # 检查技能可用性与依赖\nopenclaw plugins list    # 列出插件\nopenclaw plugins info <name>    # 查看插件详情\nnpx clawhub@latest install \"Tavily Web Search\"    # 通过 clawhub 安装 Tavily Web Search 技能/插件",
+        tags: ["openclaw", "skills", "plugins", "能力", "扩展"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 通道管理",
+        desc: "列出、添加、移除并登录/登出通道。",
+        command: "openclaw channels list    # 列出已配置通道\nopenclaw channels add <name>    # 新增通道配置\nopenclaw channels remove <name>    # 删除通道配置\nopenclaw channels login <name>    # 登录指定通道\nopenclaw channels logout <name>    # 退出指定通道\npnpm openclaw pairing approve telegram QXMRKA4F    # 审批 Telegram 配对码并完成绑定",
+        tags: ["openclaw", "channels", "login", "logout", "接入通道"]
+      },
+      {
+        category: "常用工具",
+        name: "OpenClaw 常用全局参数",
+        desc: "查看版本、JSON 输出与 profile 切换。",
+        command: "openclaw -V    # 查看版本号\nopenclaw status --json    # 以 JSON 输出状态（便于脚本处理）\nopenclaw --dev --profile <name>    # 使用开发模式与指定 profile",
+        tags: ["openclaw", "version", "json", "profile", "dev", "全局参数"]
+      },
+      {
+        category: "OpenClaw",
+        name: "生成/查看 Gateway Token",
+        desc: "生成并配置 Gateway 访问令牌。",
+        command: "openclaw doctor --generate-gateway-token    # 生成并配置 Gateway token",
+        tags: ["openclaw", "token", "gateway", "generate", "认证"]
+      },
+      {
+        category: "OpenClaw",
+        name: "重置 Gateway Token",
+        desc: "重置 Gateway 访问令牌。",
+        command: "openclaw config set gateway.auth.token <new-token>    # 设置新的 Gateway token",
+        tags: ["openclaw", "token", "gateway", "reset", "认证"]
+      },
+      {
+        category: "OpenClaw",
+        name: "打开 TUI (终端界面)",
+        desc: "打开终端用户界面，连接到 OpenClaw Gateway。",
+        command: "openclaw tui    # 打开终端界面",
+        tags: ["openclaw", "tui", "终端", "界面"]
+      },
+      {
+        category: "OpenClaw",
+        name: "打开 WebUI (控制面板)",
+        desc: "打开 Web 控制面板，默认在浏览器中打开。",
+        command: "openclaw dashboard    # 打开 Web 控制面板\nopenclaw dashboard --no-open    # 只获取 URL 不打开浏览器",
+        tags: ["openclaw", "dashboard", "webui", "控制面板", "浏览器"]
       }
     ];
