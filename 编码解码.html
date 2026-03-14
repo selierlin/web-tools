@@ -334,6 +334,9 @@
     const resultJsonTree = document.getElementById('resultJsonTree');
     const expandJsonBtn = document.getElementById('expandJsonBtn');
     const collapseJsonBtn = document.getElementById('collapseJsonBtn');
+    const LAST_FUNC_STORAGE_KEY = 'codec-last-func';
+    let lastSelectedFunc = localStorage.getItem(LAST_FUNC_STORAGE_KEY) || '';
+    let autoRunTimer = null;
 
     // 输入字数统计 (新增辅助)
     inputText.addEventListener('input', () => {
@@ -737,62 +740,96 @@
     expandJsonBtn.addEventListener('click', () => setAllTreeNodes(true));
     collapseJsonBtn.addEventListener('click', () => setAllTreeNodes(false));
 
-    funcBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const funcName = btn.getAttribute('data-func');
-            const inputValue = inputText.value.trim();
-            const func = codecFunctions[funcName];
+    const applyBtnActiveStyle = (activeBtn) => {
+        funcBtns.forEach(b => b.classList.remove('bg-primary-light', 'border-primary/20', 'scale-95'));
+        if (!activeBtn) return;
+        activeBtn.classList.add('bg-primary-light', 'border-primary/20', 'scale-95');
+        setTimeout(() => activeBtn.classList.remove('scale-95'), 200);
+    };
 
-            // UI 状态 - 添加点击动画
-            funcBtns.forEach(b => b.classList.remove('bg-primary-light', 'border-primary/20', 'scale-95'));
-            btn.classList.add('bg-primary-light', 'border-primary/20', 'scale-95');
-            setTimeout(() => btn.classList.remove('scale-95'), 200);
+    const runCodec = (funcName, options = {}) => {
+        const { fromInput = false } = options;
+        const targetBtn = document.querySelector(`.func-btn[data-func="${funcName}"]`);
+        const func = codecFunctions[funcName];
+        if (!targetBtn || typeof func !== 'function') return;
 
-            if (!inputValue) {
-                resultStatus.textContent = "⚠ 请输入内容";
-                resultStatus.classList.add('text-warning', 'animate-pulse');
-                setTimeout(() => resultStatus.classList.remove('text-warning', 'animate-pulse'), 1000);
+        const inputValue = inputText.value.trim();
+        applyBtnActiveStyle(targetBtn);
+
+        if (!inputValue) {
+            if (fromInput) {
                 resultText.value = '';
                 setResultDisplayMode('text');
                 resultJsonTree.innerHTML = '';
+                resultStatus.textContent = "等待输入...";
                 return;
             }
-
-            // 添加加载状态
+            resultStatus.textContent = "⚠ 请输入内容";
+            resultStatus.classList.add('text-warning', 'animate-pulse');
+            setTimeout(() => resultStatus.classList.remove('text-warning', 'animate-pulse'), 1000);
+            resultText.value = '';
             setResultDisplayMode('text');
-            resultStatus.textContent = "处理中...";
-            resultStatus.classList.add('animate-pulse', 'text-primary');
-            resultText.value = "正在处理，请稍候...";
+            resultJsonTree.innerHTML = '';
+            return;
+        }
 
-            // 模拟处理延迟，使动画更明显
-            setTimeout(() => {
-                try {
-                    const result = formatJsonIfNeeded(func(inputValue), funcName);
-                    
-                    // 结果淡入效果
-                    resultText.classList.add('opacity-0');
-                    setTimeout(() => {
-                        resultText.value = result;
-                        renderResultJsonTree(result, funcName);
-                        resultText.classList.remove('opacity-0');
-                    }, 100);
-                    
-                    resultStatus.textContent = `成功: ${btn.textContent.trim()}`;
-                    resultStatus.classList.remove('animate-pulse');
-                    resultStatus.classList.add('text-success');
-                    setTimeout(() => resultStatus.classList.remove('text-success'), 1500);
-                } catch (e) {
-                    resultText.value = `执行出错: ${e.message}`;
-                    setResultDisplayMode('text');
-                    resultJsonTree.innerHTML = '';
-                    resultStatus.textContent = "执行出错";
-                    resultStatus.classList.remove('animate-pulse');
-                    resultStatus.classList.add('text-danger');
-                    setTimeout(() => resultStatus.classList.remove('text-danger'), 1500);
-                }
-            }, 300);
+        setResultDisplayMode('text');
+        resultStatus.textContent = "处理中...";
+        resultStatus.classList.add('animate-pulse', 'text-primary');
+        resultText.value = "正在处理，请稍候...";
+
+        setTimeout(() => {
+            try {
+                const result = formatJsonIfNeeded(func(inputValue), funcName);
+                resultText.classList.add('opacity-0');
+                setTimeout(() => {
+                    resultText.value = result;
+                    renderResultJsonTree(result, funcName);
+                    resultText.classList.remove('opacity-0');
+                }, 100);
+
+                resultStatus.textContent = `成功: ${targetBtn.textContent.trim()}`;
+                resultStatus.classList.remove('animate-pulse');
+                resultStatus.classList.add('text-success');
+                setTimeout(() => resultStatus.classList.remove('text-success'), 1500);
+            } catch (e) {
+                resultText.value = `执行出错: ${e.message}`;
+                setResultDisplayMode('text');
+                resultJsonTree.innerHTML = '';
+                resultStatus.textContent = "执行出错";
+                resultStatus.classList.remove('animate-pulse');
+                resultStatus.classList.add('text-danger');
+                setTimeout(() => resultStatus.classList.remove('text-danger'), 1500);
+            }
+        }, 300);
+    };
+
+    funcBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const funcName = btn.getAttribute('data-func');
+            lastSelectedFunc = funcName;
+            localStorage.setItem(LAST_FUNC_STORAGE_KEY, funcName);
+            runCodec(funcName);
         });
     });
+
+    inputText.addEventListener('input', () => {
+        if (!lastSelectedFunc) return;
+        if (autoRunTimer) clearTimeout(autoRunTimer);
+        autoRunTimer = setTimeout(() => {
+            runCodec(lastSelectedFunc, { fromInput: true });
+        }, 250);
+    });
+
+    if (lastSelectedFunc && codecFunctions[lastSelectedFunc]) {
+        const decodeSet = decodeFunctionNames;
+        if (decodeSet.has(lastSelectedFunc)) {
+            decryptTab.click();
+        } else {
+            encryptTab.click();
+        }
+        applyBtnActiveStyle(document.querySelector(`.func-btn[data-func="${lastSelectedFunc}"]`));
+    }
 </script>
 </body>
 </html>
