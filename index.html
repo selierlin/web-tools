@@ -446,20 +446,30 @@
             align-items: center;
             gap: 6px;
             padding: 8px 14px;
-            background: transparent;
-            border: 1px dashed rgba(167, 139, 250, 0.4);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(139, 92, 246, 0.12) 100%);
+            border: 1px solid rgba(129, 140, 248, 0.55);
             border-radius: var(--radius-sm);
-            color: var(--primary-hover);
+            color: #c4b5fd;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
         }
 
         .more-btn:hover {
-            background: rgba(167, 139, 250, 0.1);
-            border-color: rgba(167, 139, 250, 0.6);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.32) 0%, rgba(139, 92, 246, 0.24) 100%);
+            border-color: rgba(167, 139, 250, 0.85);
+            color: #e2d9ff;
+            box-shadow: 0 0 12px rgba(129, 140, 248, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .more-btn[aria-expanded="true"] {
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 14px var(--primary-glow);
         }
 
         .more-arrow {
@@ -472,14 +482,18 @@
         }
 
         .more-badge {
-            background: var(--primary);
+            background: rgba(255, 255, 255, 0.22);
             color: #fff;
-            font-size: 0.7rem;
-            padding: 1px 6px;
+            font-size: 0.72rem;
+            padding: 1px 7px;
             border-radius: 10px;
-            font-weight: 600;
-            min-width: 18px;
+            font-weight: 700;
+            min-width: 20px;
             text-align: center;
+        }
+
+        .more-btn[aria-expanded="true"] .more-badge {
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .more-dropdown {
@@ -704,7 +718,8 @@
     <div class="more-wrapper" id="moreWrapper">
         <button type="button" class="more-btn" id="moreBtn"
                 aria-expanded="false" aria-haspopup="true" aria-controls="moreDropdown">
-            更多 <span class="more-arrow">▾</span>
+            <i class="fas fa-th-large" style="font-size:0.8em;opacity:0.9"></i>
+            更多工具 <span class="more-arrow">▾</span>
             <span class="more-badge" id="moreBadge">0</span>
         </button>
         <div class="more-dropdown" id="moreDropdown" role="menu">
@@ -820,6 +835,14 @@
             icon: 'fa-palette'
         },
         {
+            id: 'coord-converter',
+            name: '坐标转换',
+            src: '坐标转换工具.html',
+            keywords: '坐标 转换 WGS84 GCJ02 BD09 CGCS2000 高德 百度 GPS 经纬度 度分秒 zuobiaozhuhuan',
+            category: '其他',
+            icon: 'fa-earth-asia'
+        },
+        {
             id: 'regex',
             name: '正则可视化',
             src: '正则可视化.html',
@@ -887,22 +910,73 @@
     // 收藏工具数据（使用 localStorage 记录）
     const FAVORITES_KEY = 'tool-favorites';
 
-    const DEFAULT_HEADER_COUNT = 6;
+    // 最近工具数据
+    const RECENT_KEY = 'tool-recent';
+    const RECENT_MAX = 10;
+
+    function getRecent() {
+        const data = localStorage.getItem(RECENT_KEY);
+        return data ? JSON.parse(data) : [];
+    }
+
+    function addRecent(toolId) {
+        const favorites = getFavorites();
+        if (favorites.includes(toolId)) return; // A1：收藏工具不进最近列表
+        let recent = getRecent();
+        recent = recent.filter(id => id !== toolId); // 去重，移到最前
+        recent.unshift(toolId);
+        if (recent.length > RECENT_MAX) recent = recent.slice(0, RECENT_MAX);
+        localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+    }
+
+    // 动态计算 header 可容纳的最大 tab 数
+    function calcMaxTabs() {
+        const header = document.querySelector('header');
+        if (!header) return 6;
+        const headerWidth = header.clientWidth;
+        const logo = document.querySelector('.header-title');
+        const searchContainer = document.querySelector('.search-container');
+        const moreWrapper = document.getElementById('moreWrapper');
+        const logoW = logo ? logo.offsetWidth + 32 : 180; // 32 = margin-right
+        const searchW = searchContainer ? searchContainer.offsetWidth + 24 : 240; // 24 = margin-right
+        const moreW = moreWrapper && moreWrapper.style.display !== 'none' ? moreWrapper.offsetWidth + 8 : 0;
+        const available = headerWidth - logoW - searchW - moreW - 16; // 16 padding buffer
+        const tabW = 130; // 估算单个 tab 宽度（含 icon + 文字 + padding）
+        const count = Math.max(1, Math.min(RECENT_MAX, Math.floor(available / tabW)));
+        return count;
+    }
 
     function getHeaderTools() {
         const favorites = getFavorites();
-        if (favorites.length > 0) {
-            const favTools = MENU_ITEMS.filter(item => favorites.includes(item.id));
-            if (favTools.length < DEFAULT_HEADER_COUNT) {
-                const favIds = new Set(favorites);
-                const backfill = MENU_ITEMS
-                    .filter(item => !favIds.has(item.id))
-                    .slice(0, DEFAULT_HEADER_COUNT - favTools.length);
-                return [...favTools, ...backfill];
+        const favTools = MENU_ITEMS.filter(item => favorites.includes(item.id));
+        const maxTabs = calcMaxTabs();
+
+        // 1. 先放收藏工具
+        const result = [...favTools];
+        const usedIds = new Set(favTools.map(t => t.id));
+
+        // 2. 剩余位置用最近工具填充
+        if (result.length < maxTabs) {
+            const recent = getRecent();
+            for (const id of recent) {
+                if (result.length >= maxTabs) break;
+                if (usedIds.has(id)) continue;
+                const tool = MENU_ITEMS.find(item => item.id === id);
+                if (tool) { result.push(tool); usedIds.add(id); }
             }
-            return favTools;
         }
-        return MENU_ITEMS.slice(0, DEFAULT_HEADER_COUNT);
+
+        // 3. 兜底：还有空位则用默认前 N 个填充
+        if (result.length < maxTabs) {
+            for (const item of MENU_ITEMS) {
+                if (result.length >= maxTabs) break;
+                if (usedIds.has(item.id)) continue;
+                result.push(item);
+                usedIds.add(item.id);
+            }
+        }
+
+        return result;
     }
 
     function getDropdownTools() {
@@ -1191,10 +1265,14 @@
 
         if (headerTabs.scrollWidth <= headerTabs.clientWidth) return;
 
-        for (let i = tabs.length - 1; i >= 0; i--) {
+        const favorites = getFavorites();
+        // 从左侧（最旧的）开始移除，跳过收藏工具
+        for (let i = 0; i < tabs.length; i++) {
             if (headerTabs.scrollWidth <= headerTabs.clientWidth) break;
+            const id = tabs[i].querySelector('a').getAttribute('data-id');
+            if (favorites.includes(id)) continue; // 收藏工具不移除
             tabs[i].style.display = 'none';
-            overflowIds.push(tabs[i].querySelector('a').getAttribute('data-id'));
+            overflowIds.push(id);
         }
 
         if (overflowIds.length > 0) { renderDropdown(); }
@@ -1318,6 +1396,14 @@
         if (!item) return;
 
         const src = item.src;
+
+        // 记录最近工具，并在 headerTabs 中不存在时重建菜单（带出效果）
+        const wasInHeader = !!document.querySelector(`#headerTabs .tab-item a[data-id="${toolId}"]`);
+        addRecent(toolId);
+        if (!wasInHeader) {
+            rebuildAllMenus();
+        }
+
         syncActiveState(toolId);
 
         const allIframes = document.querySelectorAll('.tool-iframe');

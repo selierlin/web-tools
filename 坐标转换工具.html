@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>坐标转换工具</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.2);
+            --bg-page: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-input: #f8fafc;
+            --border: #e2e8f0;
+            --text-light: #1e293b;
+            --text-muted: #94a3b8;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            background: var(--bg-page);
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(79, 70, 229, 0.05) 0%, transparent 30%),
+                radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 30%);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 24px 20px 40px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(79, 70, 229, 0.08);
+            color: var(--primary);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 12px;
+            margin: 4px 3px;
+            vertical-align: middle;
+        }
+
+        .container {
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-light);
+            padding: 10px 12px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: #fff;
+        }
+
+        .form-group input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            line-height: 1.6;
+        }
+
+        .hint code {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 11px;
+            color: #475569;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-ghost {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: #f1f5f9;
+            color: var(--text-light);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                flex-direction: column;
+            }
+        }
+
+        .result-item {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            position: relative;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .result-item:hover {
+            border-color: #a5b4fc;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.08);
+        }
+
+        .result-item.active-source {
+            border-color: #a5b4fc;
+            background: rgba(79, 70, 229, 0.04);
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-label .sys-name {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 13px;
+        }
+
+        .result-label .sys-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .result-value {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.7;
+            word-break: break-all;
+        }
+
+        .result-value .coord-dd {
+            color: #1e293b;
+        }
+
+        .result-value .coord-dms {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+            opacity: 0;
+        }
+
+        .result-item:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: rgba(79, 70, 229, 0.08);
+            color: var(--primary);
+        }
+
+        .copy-btn.copied {
+            color: var(--success);
+            opacity: 1;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 32px 0;
+            font-size: 14px;
+        }
+
+        .empty-state i {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+            opacity: 0.35;
+        }
+
+        .error-msg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-sm);
+            color: #dc2626;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .tag-source {
+            display: inline-block;
+            background: rgba(79,70,229,0.1);
+            color: var(--primary);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        .format-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .format-table th {
+            text-align: left;
+            color: #64748b;
+            font-weight: 500;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .format-table td {
+            padding: 7px 8px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+        }
+
+        .format-table td code {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .toggle-formats {
+            font-size: 12px;
+            color: var(--primary);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .toggle-formats:hover {
+            opacity: 0.7;
+        }
+
+        #formatTable {
+            display: none;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fa-solid fa-earth-asia" style="color:#6366f1;margin-right:8px;"></i>坐标转换工具</h1>
+        <p>
+            <span class="badge">WGS84</span>
+            <span class="badge">GCJ02</span>
+            <span class="badge">BD09</span>
+            <span class="badge">CGCS2000</span>
+            <span class="badge">度分秒 ↔ 十进制</span>
+        </p>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fa-solid fa-location-crosshairs"></i> 输入坐标
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex:0 0 180px;">
+                <label>源坐标系</label>
+                <select id="sourceSystem">
+                    <option value="WGS84">WGS84（国际通用/GPS）</option>
+                    <option value="GCJ02">GCJ02（高德/QQ地图）</option>
+                    <option value="BD09">BD09（百度地图）</option>
+                    <option value="CGCS2000">CGCS2000（国家大地坐标）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>经度（Longitude）</label>
+                <input type="text" id="inputLng" placeholder="例：116.3975° 或 116°23′51″">
+            </div>
+            <div class="form-group">
+                <label>纬度（Latitude）</label>
+                <input type="text" id="inputLat" placeholder="例：39.9087° 或 39°54′31.3″">
+            </div>
+        </div>
+
+        <div class="hint">
+            支持格式：十进制度（<code>116.3975</code>）、度分秒（<code>116°23'55.1"</code> / <code>116d23m55.1s</code>）、NMEA（<code>11912.860539E</code>）<br>
+            整体粘贴到经度框可自动拆分：<code>119.212859,26.044489</code> / <code>2602.721557N 11912.860539E</code>
+            <br>
+            <button class="toggle-formats" onclick="toggleFormats()">
+                <i class="fa-solid fa-chevron-right" id="toggleIcon"></i> 查看全部支持格式
+            </button>
+        </div>
+
+        <div id="formatTable">
+            <table class="format-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>格式描述</th>
+                        <th>示例</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>十进制度（标准）</td><td><code>116.3975</code></td></tr>
+                    <tr><td>2</td><td>度分秒（标准符号）</td><td><code>116°23'55.12"</code></td></tr>
+                    <tr><td>3</td><td>度分秒（中文/全角标点）</td><td><code>116°23′55.12″</code></td></tr>
+                    <tr><td>4</td><td>度分秒（字母缩写）</td><td><code>116d23m55.12s</code></td></tr>
+                    <tr><td>5</td><td>度分秒（空格分隔）</td><td><code>116 23 55.12</code></td></tr>
+                    <tr><td>6</td><td>度分秒（连字符分隔）</td><td><code>116-23-55.12</code></td></tr>
+                    <tr><td>7</td><td>带方向标识（后缀）</td><td><code>116°23'55.12"E</code> / <code>39°54'31"N</code></td></tr>
+                    <tr><td>8</td><td>带方向标识（前缀）</td><td><code>E116°23'55.12"</code></td></tr>
+                    <tr><td>9</td><td>仅度分（无秒）</td><td><code>116°23.919'</code> / <code>116d23.919m</code></td></tr>
+                    <tr><td>10</td><td>NMEA DDMM.mmmm（单值）</td><td><code>11912.860539E</code> / <code>2602.721557N</code></td></tr>
+                    <tr><td>11</td><td>逗号分隔十进制对（粘贴到经度框自动拆分）</td><td><code>119.212859,26.044489</code></td></tr>
+                    <tr><td>12</td><td>NMEA 坐标对，空格或逗号分隔（粘贴到经度框自动拆分）</td><td><code>2602.721557N 11912.860539E</code> / <code>2602.721557N,11912.860539E</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="errorMsg" class="error-msg"></div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="doConvert()">
+                <i class="fa-solid fa-rotate"></i> 全部转换
+            </button>
+            <button class="btn btn-ghost" onclick="clearAll()">
+                <i class="fa-solid fa-xmark"></i> 清空
+            </button>
+        </div>
+    </div>
+
+    <!-- 结果区 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fa-solid fa-table-cells-large"></i> 转换结果
+        </div>
+        <div id="resultsArea">
+            <div class="empty-state">
+                <i class="fa-solid fa-map-location-dot"></i>
+                请输入坐标后点击「全部转换」
+            </div>
+        </div>
+    </div>
+
+    <!-- 距离计算卡片 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fa-solid fa-ruler-combined"></i> 两点距离计算
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>点 A 经度</label>
+                <input type="text" id="distLng1" placeholder="例：116.3975 或 116°23′51″">
+            </div>
+            <div class="form-group">
+                <label>点 A 纬度</label>
+                <input type="text" id="distLat1" placeholder="例：39.9087">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>点 B 经度</label>
+                <input type="text" id="distLng2" placeholder="例：121.4737 或 11912.860539E">
+            </div>
+            <div class="form-group">
+                <label>点 B 纬度</label>
+                <input type="text" id="distLat2" placeholder="例：31.2304">
+            </div>
+        </div>
+        <div class="hint" style="margin-bottom:4px;">
+            支持所有坐标格式；两个经度框均支持整体粘贴自动拆分（如 <code>119.212859,26.044489</code>）
+        </div>
+        <div id="distErrorMsg" class="error-msg"></div>
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="calcDistance()">
+                <i class="fa-solid fa-calculator"></i> 计算距离
+            </button>
+            <button class="btn btn-ghost" onclick="clearDist()">
+                <i class="fa-solid fa-xmark"></i> 清空
+            </button>
+            <div id="distResult" style="display:none;margin-left:8px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// =====================================================================
+// 常量
+// =====================================================================
+const PI = Math.PI;
+const SEMI_MAJOR = 6378245.0;     // WGS84 / GCJ02 长半轴
+const EE = 0.00669342162296594323; // 第一偏心率平方
+
+const COORD_SYSTEMS = {
+    WGS84:    { label: 'WGS84',    desc: '国际通用 / GPS' },
+    GCJ02:    { label: 'GCJ02',    desc: '高德、QQ 地图' },
+    BD09:     { label: 'BD09',     desc: '百度地图' },
+    CGCS2000: { label: 'CGCS2000', desc: '国家大地坐标系' },
+};
+
+// =====================================================================
+// DMS 解析
+// =====================================================================
+/**
+ * 将各种 DMS 字符串解析为十进制度（DD）
+ * 支持格式见页面说明表格
+ * @param {string} str
+ * @returns {number|null}
+ */
+/**
+ * 解析单个含方向标识的 NMEA DDMM.mmmm 字符串
+ * 例：2602.721557N → { value: 26.045359..., axis: 'lat' }
+ *     11912.860539E → { value: 119.214342..., axis: 'lng' }
+ * @param {string} s
+ * @returns {{ value: number, axis: 'lat'|'lng' }|null}
+ */
+function parseNMEA(s) {
+    s = s.trim();
+    // 格式：数字 + 方向字母（N/S/E/W），方向在后
+    const m = s.match(/^(\d{2,3})(\d{2}\.\d+)([NSEWnsew])$/);
+    if (!m) return null;
+    const deg = parseInt(m[1], 10);
+    const min = parseFloat(m[2]);
+    const dir = m[3].toUpperCase();
+    const sign = (dir === 'S' || dir === 'W') ? -1 : 1;
+    const axis = (dir === 'N' || dir === 'S') ? 'lat' : 'lng';
+    return { value: sign * (deg + min / 60), axis };
+}
+
+function parseDMS(str) {
+    if (str === null || str === undefined) return null;
+    str = str.toString().trim();
+
+    // NMEA DDMM.mmmm + 方向（单个值，如 11912.860539E）
+    const nmeaSingle = parseNMEA(str);
+    if (nmeaSingle) return nmeaSingle.value;
+
+    // 处理负号 / 方向标识
+    let sign = 1;
+    // 前缀方向
+    if (/^[SsWw]/.test(str)) { sign = -1; str = str.slice(1).trim(); }
+    else if (/^[NnEe]/.test(str)) { str = str.slice(1).trim(); }
+    // 后缀方向
+    if (/[SsWw]$/.test(str)) { sign = -1; str = str.slice(0, -1).trim(); }
+    else if (/[NnEe]$/.test(str)) { str = str.slice(0, -1).trim(); }
+    // 显式负号
+    if (str.startsWith('-')) { sign = -1; str = str.slice(1).trim(); }
+
+    // 纯数字（十进制度）
+    if (/^[\d.]+$/.test(str)) {
+        const v = parseFloat(str);
+        return isNaN(v) ? null : sign * v;
+    }
+
+    // 度分秒（字母格式）: 116d23m55.12s 或 116d23.919m
+    const letterFull = str.match(/^(\d+(?:\.\d+)?)d(\d+(?:\.\d+)?)m(\d+(?:\.\d+)?)s$/i);
+    if (letterFull) {
+        return sign * dmsToDD(+letterFull[1], +letterFull[2], +letterFull[3]);
+    }
+    const letterDM = str.match(/^(\d+(?:\.\d+)?)d(\d+(?:\.\d+)?)m$/i);
+    if (letterDM) {
+        return sign * dmsToDD(+letterDM[1], +letterDM[2], 0);
+    }
+
+    // 度分秒（符号格式）: 支持 °''" ′″ 等
+    // 全角/半角 度分秒符号统一
+    const normalized = str
+        .replace(/°/g, '°')
+        .replace(/[′']/g, "'")
+        .replace(/[″"]/g, '"');
+
+    // 度°分'秒"
+    const symFull = normalized.match(/^(\d+(?:\.\d+)?)°(\d+(?:\.\d+)?)'(\d+(?:\.\d+)?)"?$/);
+    if (symFull) {
+        return sign * dmsToDD(+symFull[1], +symFull[2], +symFull[3]);
+    }
+    // 度°分'（无秒）
+    const symDM = normalized.match(/^(\d+(?:\.\d+)?)°(\d+(?:\.\d+)?)'?$/);
+    if (symDM) {
+        return sign * dmsToDD(+symDM[1], +symDM[2], 0);
+    }
+    // 仅度°
+    const symD = normalized.match(/^(\d+(?:\.\d+)?)°$/);
+    if (symD) {
+        return sign * parseFloat(symD[1]);
+    }
+
+    // 空格或连字符分隔
+    const parts = str.split(/[\s\-]+/).filter(Boolean);
+    if (parts.length === 3) {
+        const d = parseFloat(parts[0]), m = parseFloat(parts[1]), s = parseFloat(parts[2]);
+        if (!isNaN(d) && !isNaN(m) && !isNaN(s)) return sign * dmsToDD(d, m, s);
+    }
+    if (parts.length === 2) {
+        const d = parseFloat(parts[0]), m = parseFloat(parts[1]);
+        if (!isNaN(d) && !isNaN(m)) return sign * dmsToDD(d, m, 0);
+    }
+
+    return null;
+}
+
+function dmsToDD(deg, min, sec) {
+    return deg + min / 60 + sec / 3600;
+}
+
+/**
+ * 十进制度转度分秒字符串
+ * @param {number} dd
+ * @param {'lng'|'lat'} axis
+ * @returns {string}
+ */
+function ddToDMS(dd, axis) {
+    const abs = Math.abs(dd);
+    const deg = Math.floor(abs);
+    const minFull = (abs - deg) * 60;
+    const min = Math.floor(minFull);
+    const sec = ((minFull - min) * 60).toFixed(4).replace(/\.?0+$/, '');
+
+    let dir = '';
+    if (axis === 'lng') dir = dd >= 0 ? 'E' : 'W';
+    else dir = dd >= 0 ? 'N' : 'S';
+
+    return `${deg}°${String(min).padStart(2,'0')}′${String(sec).padStart(2,'0')}″${dir}`;
+}
+
+// =====================================================================
+// 坐标转换核心
+// =====================================================================
+
+function isOutOfChina(lng, lat) {
+    return lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271;
+}
+
+function transformLat(x, y) {
+    let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+    ret += (20.0 * Math.sin(6.0 * x * PI) + 20.0 * Math.sin(2.0 * x * PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(y * PI) + 40.0 * Math.sin(y / 3.0 * PI)) * 2.0 / 3.0;
+    ret += (160.0 * Math.sin(y / 12.0 * PI) + 320 * Math.sin(y * PI / 30.0)) * 2.0 / 3.0;
+    return ret;
+}
+
+function transformLng(x, y) {
+    let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+    ret += (20.0 * Math.sin(6.0 * x * PI) + 20.0 * Math.sin(2.0 * x * PI)) * 2.0 / 3.0;
+    ret += (20.0 * Math.sin(x * PI) + 40.0 * Math.sin(x / 3.0 * PI)) * 2.0 / 3.0;
+    ret += (150.0 * Math.sin(x / 12.0 * PI) + 300.0 * Math.sin(x / 30.0 * PI)) * 2.0 / 3.0;
+    return ret;
+}
+
+/**
+ * WGS84 → GCJ02
+ */
+function wgs84ToGcj02(lng, lat) {
+    if (isOutOfChina(lng, lat)) return [lng, lat];
+    let dLat = transformLat(lng - 105.0, lat - 35.0);
+    let dLng = transformLng(lng - 105.0, lat - 35.0);
+    const radLat = lat / 180.0 * PI;
+    let magic = Math.sin(radLat);
+    magic = 1 - EE * magic * magic;
+    const sqrtMagic = Math.sqrt(magic);
+    dLat = (dLat * 180.0) / ((SEMI_MAJOR * (1 - EE)) / (magic * sqrtMagic) * PI);
+    dLng = (dLng * 180.0) / (SEMI_MAJOR / sqrtMagic * Math.cos(radLat) * PI);
+    return [lng + dLng, lat + dLat];
+}
+
+/**
+ * GCJ02 → WGS84（迭代法，精度优于 0.1m）
+ */
+function gcj02ToWgs84(lng, lat) {
+    if (isOutOfChina(lng, lat)) return [lng, lat];
+    let wLng = lng, wLat = lat;
+    for (let i = 0; i < 10; i++) {
+        const [gLng, gLat] = wgs84ToGcj02(wLng, wLat);
+        wLng -= gLng - lng;
+        wLat -= gLat - lat;
+    }
+    return [wLng, wLat];
+}
+
+/**
+ * GCJ02 → BD09
+ */
+function gcj02ToBd09(lng, lat) {
+    const z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * PI * 3000.0 / 180.0);
+    const theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * PI * 3000.0 / 180.0);
+    return [z * Math.cos(theta) + 0.0065, z * Math.sin(theta) + 0.006];
+}
+
+/**
+ * BD09 → GCJ02
+ */
+function bd09ToGcj02(lng, lat) {
+    const x = lng - 0.0065, y = lat - 0.006;
+    const z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * PI * 3000.0 / 180.0);
+    const theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * PI * 3000.0 / 180.0);
+    return [z * Math.cos(theta), z * Math.sin(theta)];
+}
+
+/**
+ * WGS84 → BD09
+ */
+function wgs84ToBd09(lng, lat) {
+    return gcj02ToBd09(...wgs84ToGcj02(lng, lat));
+}
+
+/**
+ * BD09 → WGS84
+ */
+function bd09ToWgs84(lng, lat) {
+    return gcj02ToWgs84(...bd09ToGcj02(lng, lat));
+}
+
+// CGCS2000 与 WGS84 差异 < 0.1m，工程上视为等同
+// 如需严格转换需七参数旋转，但参数因地区而异，此处统一说明
+const cgcs2000ToWgs84 = (lng, lat) => [lng, lat];
+const wgs84ToCgcs2000 = (lng, lat) => [lng, lat];
+
+// =====================================================================
+// 转换调度
+// =====================================================================
+const CONVERTERS = {
+    WGS84: {
+        GCJ02:    wgs84ToGcj02,
+        BD09:     wgs84ToBd09,
+        CGCS2000: wgs84ToCgcs2000,
+    },
+    GCJ02: {
+        WGS84:    gcj02ToWgs84,
+        BD09:     gcj02ToBd09,
+        CGCS2000: (lng, lat) => gcj02ToWgs84(lng, lat), // GCJ02→WGS84≈CGCS2000
+    },
+    BD09: {
+        WGS84:    bd09ToWgs84,
+        GCJ02:    bd09ToGcj02,
+        CGCS2000: (lng, lat) => bd09ToWgs84(lng, lat),
+    },
+    CGCS2000: {
+        WGS84:    cgcs2000ToWgs84,
+        GCJ02:    (lng, lat) => wgs84ToGcj02(lng, lat),
+        BD09:     (lng, lat) => wgs84ToBd09(lng, lat),
+    },
+};
+
+// =====================================================================
+// UI 逻辑
+// =====================================================================
+
+function toggleFormats() {
+    const el = document.getElementById('formatTable');
+    const icon = document.getElementById('toggleIcon');
+    const visible = el.style.display === 'table';
+    el.style.display = visible ? 'none' : 'table';
+    icon.className = visible ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down';
+}
+
+function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+}
+
+function clearError() {
+    document.getElementById('errorMsg').classList.remove('show');
+}
+
+function clearAll() {
+    document.getElementById('inputLng').value = '';
+    document.getElementById('inputLat').value = '';
+    clearError();
+    document.getElementById('resultsArea').innerHTML = `
+        <div class="empty-state">
+            <i class="fa-solid fa-map-location-dot"></i>
+            请输入坐标后点击「全部转换」
+        </div>`;
+}
+
+function doConvert() {
+    clearError();
+
+    const srcSys = document.getElementById('sourceSystem').value;
+    const lngInput = document.getElementById('inputLng');
+    const latInput = document.getElementById('inputLat');
+    let lngStr = lngInput.value.trim();
+    let latStr = latInput.value.trim();
+
+    // 尝试从经度框解析整体坐标（用户可能直接输入而非粘贴）
+    if (lngStr && !latStr) {
+        // 格式1：逗号分隔的十进制对，如 "119.212859,26.044489"
+        const ddPair = lngStr.match(/^(-?[\d.]+)\s*,\s*(-?[\d.]+)$/);
+        if (ddPair) {
+            lngStr = ddPair[1];
+            latStr = ddPair[2];
+            lngInput.value = lngStr;
+            latInput.value = latStr;
+        } else {
+            // 格式2/3：NMEA 对，如 "2602.721557N 11912.860539E" 或 "2602.721557N,11912.860539E"
+            const nmeaParts = lngStr.split(/[\s,]+/).filter(Boolean);
+            if (nmeaParts.length === 2) {
+                const a = parseNMEA(nmeaParts[0]);
+                const b = parseNMEA(nmeaParts[1]);
+                if (a && b && a.axis !== b.axis) {
+                    const lngVal = (a.axis === 'lng' ? a : b).value;
+                    const latVal = (a.axis === 'lat' ? a : b).value;
+                    lngStr = lngVal.toFixed(8);
+                    latStr = latVal.toFixed(8);
+                    lngInput.value = lngStr;
+                    latInput.value = latStr;
+                }
+            }
+        }
+    }
+
+    if (!lngStr || !latStr) {
+        showError('请输入经度和纬度。');
+        return;
+    }
+
+    const lng = parseDMS(lngStr);
+    const lat = parseDMS(latStr);
+
+    if (lng === null || isNaN(lng)) { showError(`无法识别经度格式："${lngStr}"，请参考上方支持格式。`); return; }
+    if (lat === null || isNaN(lat)) { showError(`无法识别纬度格式："${latStr}"，请参考上方支持格式。`); return; }
+    if (lng < -180 || lng > 180) { showError(`经度范围应在 -180 ~ 180，当前值：${lng}`); return; }
+    if (lat < -90  || lat > 90)  { showError(`纬度范围应在 -90 ~ 90，当前值：${lat}`); return; }
+
+    const results = [];
+
+    // 源坐标系本身（不转换，直接展示）
+    results.push({ sys: srcSys, lng, lat, isSource: true });
+
+    // 转换到其他坐标系
+    const converterMap = CONVERTERS[srcSys];
+    for (const [targetSys] of Object.entries(converterMap)) {
+        const [tLng, tLat] = converterMap[targetSys](lng, lat);
+        results.push({ sys: targetSys, lng: tLng, lat: tLat, isSource: false });
+    }
+
+    // 按固定顺序排列
+    const order = ['WGS84', 'GCJ02', 'BD09', 'CGCS2000'];
+    results.sort((a, b) => order.indexOf(a.sys) - order.indexOf(b.sys));
+
+    renderResults(results, srcSys);
+}
+
+function renderResults(results, srcSys) {
+    const area = document.getElementById('resultsArea');
+    const grid = document.createElement('div');
+    grid.className = 'results-grid';
+
+    for (const r of results) {
+        const info = COORD_SYSTEMS[r.sys];
+        const ddLng = r.lng.toFixed(16).replace(/\.?0+$/, '');
+        const ddLat = r.lat.toFixed(16).replace(/\.?0+$/, '');
+        const dmsLng = ddToDMS(r.lng, 'lng');
+        const dmsLat = ddToDMS(r.lat, 'lat');
+
+        const copyText = `${ddLng}, ${ddLat}`;
+
+        const item = document.createElement('div');
+        item.className = 'result-item' + (r.isSource ? ' active-source' : '');
+        item.innerHTML = `
+            <div class="result-label">
+                <div>
+                    <span class="sys-name">${info.label}</span>
+                    ${r.isSource ? '<span class="tag-source">源</span>' : ''}
+                    <br>
+                    <span class="sys-desc">${info.desc}</span>
+                </div>
+            </div>
+            <div class="result-value">
+                <div class="coord-dd">
+                    <span style="color:var(--text-muted);font-size:11px;">LNG</span> ${ddLng}<br>
+                    <span style="color:var(--text-muted);font-size:11px;">LAT</span> ${ddLat}
+                </div>
+                <div style="margin-top:6px;" class="coord-dms">
+                    ${dmsLng}<br>
+                    ${dmsLat}
+                </div>
+            </div>
+            <button class="copy-btn" title="复制十进制坐标" onclick="copyCoord(this, '${copyText}')">
+                <i class="fa-regular fa-copy"></i>
+            </button>
+        `;
+
+        // CGCS2000 加备注
+        if (r.sys === 'CGCS2000' || (r.isSource && srcSys === 'CGCS2000')) {
+            const note = document.createElement('div');
+            note.style.cssText = 'font-size:11px;color:var(--text-muted);margin-top:8px;padding-top:6px;border-top:1px solid var(--border);';
+            note.textContent = '注：CGCS2000 与 WGS84 差异 < 0.1m，工程上视为等同';
+            item.querySelector('.result-value').after(note);
+        }
+
+        grid.appendChild(item);
+    }
+
+    area.innerHTML = '';
+    area.appendChild(grid);
+}
+
+function copyCoord(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+            btn.classList.remove('copied');
+        }, 1500);
+    }).catch(() => {
+        // 降级方案
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+            btn.classList.remove('copied');
+        }, 1500);
+    });
+}
+
+// Enter 键触发转换
+document.getElementById('inputLng').addEventListener('keydown', e => { if (e.key === 'Enter') doConvert(); });
+document.getElementById('inputLat').addEventListener('keydown', e => { if (e.key === 'Enter') doConvert(); });
+
+// 经度框粘贴时，尝试自动拆分多种整体格式
+document.getElementById('inputLng').addEventListener('paste', function(e) {
+    const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+
+    // 格式1：逗号分隔的十进制经纬度对，如 "119.212859,26.044489"
+    const ddPair = text.match(/^(-?[\d.]+)\s*,\s*(-?[\d.]+)$/);
+    if (ddPair) {
+        e.preventDefault();
+        document.getElementById('inputLng').value = ddPair[1];
+        document.getElementById('inputLat').value = ddPair[2];
+        return;
+    }
+
+    // 格式2/3：NMEA 对，如 "2602.721557N 11912.860539E" 或 "2602.721557N,11912.860539E"
+    // 用空格或逗号分隔，每段含方向字母
+    const nmeaParts = text.split(/[\s,]+/).filter(Boolean);
+    if (nmeaParts.length === 2) {
+        const a = parseNMEA(nmeaParts[0]);
+        const b = parseNMEA(nmeaParts[1]);
+        if (a && b && a.axis !== b.axis) {
+            e.preventDefault();
+            const lngVal = (a.axis === 'lng' ? a : b).value;
+            const latVal = (a.axis === 'lat' ? a : b).value;
+            document.getElementById('inputLng').value = lngVal.toFixed(8);
+            document.getElementById('inputLat').value = latVal.toFixed(8);
+            return;
+        }
+    }
+});
+// =====================================================================
+// 距离计算（Haversine）
+// =====================================================================
+
+/** 地球平均半径（米） */
+const EARTH_RADIUS = 6371000;
+
+function haversine(lng1, lat1, lng2, lat2) {
+    const toRad = d => d * PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2
+            + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 2 * EARTH_RADIUS * Math.asin(Math.sqrt(a));
+}
+
+function tryParsePair(lngInput, latInput) {
+    let lngStr = lngInput.value.trim();
+    let latStr = latInput.value.trim();
+
+    // 整体坐标粘贴到经度框时的兜底解析（同 doConvert 逻辑）
+    if (lngStr && !latStr) {
+        const ddPair = lngStr.match(/^(-?[\d.]+)\s*,\s*(-?[\d.]+)$/);
+        if (ddPair) {
+            lngStr = ddPair[1]; latStr = ddPair[2];
+            lngInput.value = lngStr; latInput.value = latStr;
+        } else {
+            const parts = lngStr.split(/[\s,]+/).filter(Boolean);
+            if (parts.length === 2) {
+                const a = parseNMEA(parts[0]), b = parseNMEA(parts[1]);
+                if (a && b && a.axis !== b.axis) {
+                    lngStr = (a.axis === 'lng' ? a : b).value.toFixed(8);
+                    latStr = (a.axis === 'lat' ? a : b).value.toFixed(8);
+                    lngInput.value = lngStr; latInput.value = latStr;
+                }
+            }
+        }
+    }
+    return { lngStr, latStr };
+}
+
+function calcDistance() {
+    const errEl = document.getElementById('distErrorMsg');
+    errEl.classList.remove('show');
+    document.getElementById('distResult').style.display = 'none';
+
+    const { lngStr: ls1, latStr: la1 } = tryParsePair(
+        document.getElementById('distLng1'), document.getElementById('distLat1'));
+    const { lngStr: ls2, latStr: la2 } = tryParsePair(
+        document.getElementById('distLng2'), document.getElementById('distLat2'));
+
+    if (!ls1 || !la1 || !ls2 || !la2) {
+        errEl.textContent = '请填写两点的经度和纬度。';
+        errEl.classList.add('show');
+        return;
+    }
+
+    const lng1 = parseDMS(ls1), lat1 = parseDMS(la1);
+    const lng2 = parseDMS(ls2), lat2 = parseDMS(la2);
+
+    const invalid = [['点A经度', lng1], ['点A纬度', lat1], ['点B经度', lng2], ['点B纬度', lat2]]
+        .find(([, v]) => v === null || isNaN(v));
+    if (invalid) {
+        errEl.textContent = `无法识别 ${invalid[0]} 的格式，请参考上方支持格式。`;
+        errEl.classList.add('show');
+        return;
+    }
+
+    const distM = haversine(lng1, lat1, lng2, lat2);
+    const distKm = distM / 1000;
+
+    let display;
+    if (distM < 1000) {
+        display = `<strong style="font-size:22px;color:var(--primary-hover)">${distM.toFixed(2)}</strong> <span style="color:var(--text-muted)">米</span>`;
+    } else {
+        display = `<strong style="font-size:22px;color:var(--primary-hover)">${distKm.toFixed(4)}</strong> <span style="color:var(--text-muted)">千米</span>`
+                + `<span style="color:var(--text-muted);font-size:13px;margin-left:10px;">(${distM.toFixed(1)} 米)</span>`;
+    }
+
+    const el = document.getElementById('distResult');
+    el.innerHTML = `<i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--primary-hover);margin-right:6px;"></i>${display}`;
+    el.style.display = 'inline-flex';
+    el.style.alignItems = 'center';
+}
+
+function clearDist() {
+    ['distLng1','distLat1','distLng2','distLat2'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('distErrorMsg').classList.remove('show');
+    document.getElementById('distResult').style.display = 'none';
+}
+
+// 距离卡片两个经度框的粘贴自动拆分
+['distLng1','distLng2'].forEach(lngId => {
+    const latId = lngId === 'distLng1' ? 'distLat1' : 'distLat2';
+    document.getElementById(lngId).addEventListener('paste', function(e) {
+        const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+        const ddPair = text.match(/^(-?[\d.]+)\s*,\s*(-?[\d.]+)$/);
+        if (ddPair) {
+            e.preventDefault();
+            document.getElementById(lngId).value = ddPair[1];
+            document.getElementById(latId).value = ddPair[2];
+            return;
+        }
+        const parts = text.split(/[\s,]+/).filter(Boolean);
+        if (parts.length === 2) {
+            const a = parseNMEA(parts[0]), b = parseNMEA(parts[1]);
+            if (a && b && a.axis !== b.axis) {
+                e.preventDefault();
+                document.getElementById(lngId).value = (a.axis === 'lng' ? a : b).value.toFixed(8);
+                document.getElementById(latId).value = (a.axis === 'lat' ? a : b).value.toFixed(8);
+            }
+        }
+    });
+    document.getElementById(lngId).addEventListener('keydown', e => { if (e.key === 'Enter') calcDistance(); });
+});
+['distLat1','distLat2'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') calcDistance(); });
+});
+
+</script>
+</body>
+</html>
