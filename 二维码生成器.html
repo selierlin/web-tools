@@ -708,6 +708,21 @@
             font-weight: 600;
         }
 
+        /* 弹窗中二维码图片样式 */
+        .modal .modal-qr-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .modal .modal-qr-img {
+            max-width: 320px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
         .modal .full-content {
             font-size: 14px;
             color: var(--text-main);
@@ -908,7 +923,10 @@
     <!-- 完整内容弹窗（保留原有，归属生成功能） -->
     <div id="contentModal" class="modal">
         <div class="modal-content">
-            <h3>二维码完整原始内容</h3>
+            <h3>查看详情</h3>
+            <div class="modal-qr-wrapper">
+                <img id="modalQrImg" class="modal-qr-img" src="" alt="二维码">
+            </div>
             <div id="fullContent" class="full-content"></div>
             <div id="copyTip" class="copy-tip">复制成功！内容已存入剪贴板</div>
             <button class="copy-btn" onclick="copyFullContent()">复制完整内容</button>
@@ -1289,8 +1307,9 @@
         }
 
         // ********** 完整内容弹窗相关方法 **********
-        function openModal(content) {
+        function openModal(content, base64Url) {
             fullContent.innerText = unescape(content);
+            document.getElementById('modalQrImg').src = base64Url || '';
             contentModal.style.display = 'flex';
             copyTip.style.display = 'none';
         }
@@ -1364,7 +1383,7 @@
                     <img class="qrcode-img" src="${record.base64Url}" alt="第${record.index}个二维码">
                     <div class="qrcode-desc">${isHtmlContent ? displayContent : displayContent}</div>
                     <div class="qrcode-time">生成时间：${record.createTime}</div>
-                    <div class="qrcode-full-desc" onclick="openModal('${escape(record.content)}')">查看完整内容</div>
+                    <div class="qrcode-full-desc" onclick="openModal('${escape(record.content)}', '${record.base64Url}')">查看详情</div>
                 `;
                 
                 // 如果是HTML内容，需要设置innerHTML
