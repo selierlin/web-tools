@@ -213,6 +213,15 @@
             transform: translateY(-1px);
         }
 
+        .editor-wrapper.previewing {
+            border-style: dashed;
+            border-color: rgba(255, 138, 61, 0.6);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 14px 24px rgba(2, 8, 22, 0.22),
+                0 0 0 2px rgba(255, 138, 61, 0.15);
+        }
+
         .line-numbers {
             width: 54px;
             padding: 1rem 0.6rem 1rem 0;
@@ -581,10 +590,80 @@
 
     const trimStr = (str) => str.replace(/^\s+|\s+$/g, '');
 
+    // --- 预览功能 ---
+    let savedOutputValue = '';
+    let savedTipInfo = '';
+    let isPreviewing = false;
+    const PREVIEW_MAX_LINES = 10;
+    const PREVIEW_MAX_CHARS = 500;
+
+    const getPreviewInput = (text) => {
+        const lines = text.split(/\r?\n/);
+        if (lines.length <= PREVIEW_MAX_LINES && text.length <= PREVIEW_MAX_CHARS) {
+            return { preview: text, truncated: false };
+        }
+        const previewLines = lines.slice(0, PREVIEW_MAX_LINES);
+        let preview = previewLines.join('\n');
+        if (preview.length > PREVIEW_MAX_CHARS) {
+            preview = preview.substring(0, PREVIEW_MAX_CHARS);
+        }
+        return { preview, truncated: true };
+    };
+
+    const getActionFnForBtn = (btnId) => {
+        switch(btnId) {
+            case 'btn1': return batchProcessText.multiToSingle;
+            case 'btn2': {
+                const quote = document.getElementById('quoteType').value === 'single' ? "'" : '"';
+                return (t) => batchProcessText.multiToSingleWithQuote(t, quote);
+            }
+            case 'btn3': return batchProcessText.singleToMulti;
+            case 'btn4': return batchProcessText.singleQuotedToMultiUnquoted;
+            default: return (t) => t;
+        }
+    };
+
+    const showPreview = (btnId) => {
+        const inputVal = trimStr(inputText.value);
+        if (!inputVal) return;
+        savedOutputValue = outputText.value;
+        savedTipInfo = tipInfo.innerText;
+        isPreviewing = true;
+
+        const actionFn = getActionFnForBtn(btnId);
+        const { preview, truncated } = getPreviewInput(inputText.value);
+        const previewResult = applySelectedOptions(actionFn(preview));
+
+        outputText.value = previewResult;
+        outputText.closest('.editor-wrapper').classList.add('previewing');
+        updateLineNumbers(outputText, outputLineNums);
+        updateStats();
+        tipInfo.innerText = truncated
+            ? '⚡ 预览模式 — 仅使用前 10 行数据，点击按钮查看完整结果'
+            : '⚡ 预览模式 — 点击按钮执行操作';
+    };
+
+    const hidePreview = () => {
+        if (!isPreviewing) return;
+        isPreviewing = false;
+        outputText.value = savedOutputValue;
+        outputText.closest('.editor-wrapper').classList.remove('previewing');
+        updateLineNumbers(outputText, outputLineNums);
+        updateStats();
+        savedOutputValue = '';
+        tipInfo.innerText = savedTipInfo;
+    };
+
+    // --- 执行操作 ---
     const processAction = (actionFn = currentActionFn) => {
+        if (isPreviewing) {
+            isPreviewing = false;
+            outputText.closest('.editor-wrapper').classList.remove('previewing');
+        }
         currentActionFn = actionFn;
         const val = applySelectedOptions(currentActionFn(inputText.value));
         outputText.value = val;
+        savedOutputValue = '';
         updateLineNumbers(outputText, outputLineNums);
         updateStats();
         outputText.scrollTop = 0;
@@ -661,6 +740,13 @@
     });
     document.getElementById('btn3').addEventListener('click', () => processAction(batchProcessText.singleToMulti));
     document.getElementById('btn4').addEventListener('click', () => processAction(batchProcessText.singleQuotedToMultiUnquoted));
+
+    // 预览事件绑定
+    ['btn1', 'btn2', 'btn3', 'btn4'].forEach(id => {
+        const btn = document.getElementById(id);
+        btn.addEventListener('mouseenter', () => showPreview(id));
+        btn.addEventListener('mouseleave', hidePreview);
+    });
     sortMode.addEventListener('change', () => processAction());
     dedupeOption.addEventListener('change', () => processAction());
 
