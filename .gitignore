@@ -1,2 +1,6 @@
 .idea
 .superpowers/
+deploy-private.sh
+.venv
+.DS_Store
+.claude/settings.local.json
