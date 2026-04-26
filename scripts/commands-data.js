@@ -1401,6 +1401,20 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "Homebrew 自动移除无用依赖",
+        desc: "自动移除不再需要的依赖包，释放磁盘空间。",
+        command: "brew autoremove",
+        tags: ["brew", "homebrew", "macos", "清理", "依赖", "包管理"]
+      },
+      {
+        category: "常用工具",
+        name: "Homebrew 清理旧版本缓存",
+        desc: "清理旧版本软件包和下载缓存，释放磁盘空间。",
+        command: "brew cleanup",
+        tags: ["brew", "homebrew", "macos", "清理", "缓存", "包管理"]
+      },
+      {
+        category: "常用工具",
         name: "NPM 初始化项目",
         desc: "快速生成 package.json。",
         command: "npm init -y",
