@@ -330,6 +330,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "Docker",
+        name: "查看容器最近日志",
+        desc: "查看容器最近 200 行日志。",
+        command: "docker logs --tail 200 -f <container_name_or_id>",
+        tags: ["docker", "日志", "log", "排查", "tail"]
+      },
+      {
+        category: "Docker",
         name: "在主机与容器间复制文件",
         desc: "支持主机到容器、容器到主机双向复制。",
         command: "docker cp ./local-file.txt <container_name_or_id>:/tmp/local-file.txt\ndocker cp <container_name_or_id>:/var/log/app.log ./app.log",
@@ -1477,6 +1484,104 @@ window.COMMANDS_DATA = [
         tags: ["pip", "python", "requirements", "安装依赖", "包管理"]
       },
       {
+        category: "uv",
+        name: "uv 初始化项目",
+        desc: "在当前目录初始化一个新的 Python 项目（生成 pyproject.toml）。",
+        command: "uv init",
+        tags: ["uv", "python", "初始化", "项目", "pyproject"]
+      },
+      {
+        category: "uv",
+        name: "uv 添加依赖",
+        desc: "添加依赖并自动更新 pyproject.toml 和锁文件。",
+        command: "uv add <package_name>\n# 指定版本\nuv add \"requests>=2.28\"\n# 添加开发依赖\nuv add --dev pytest",
+        tags: ["uv", "python", "依赖", "添加", "包管理"]
+      },
+      {
+        category: "uv",
+        name: "uv 移除依赖",
+        desc: "从项目中移除依赖并更新配置。",
+        command: "uv remove <package_name>",
+        tags: ["uv", "python", "依赖", "移除", "包管理"]
+      },
+      {
+        category: "uv",
+        name: "uv 同步环境",
+        desc: "根据锁文件同步安装所有依赖到虚拟环境。",
+        command: "uv sync",
+        tags: ["uv", "python", "同步", "安装依赖", "虚拟环境"]
+      },
+      {
+        category: "uv",
+        name: "uv 锁定依赖",
+        desc: "生成或更新 uv.lock 锁文件，不执行安装。",
+        command: "uv lock",
+        tags: ["uv", "python", "锁文件", "lock", "依赖管理"]
+      },
+      {
+        category: "uv",
+        name: "uv 运行脚本",
+        desc: "在项目虚拟环境中运行 Python 脚本或命令。",
+        command: "uv run main.py\n# 运行带额外依赖的脚本\nuv run --with rich script.py\n# 指定 Python 版本运行\nuv run --python 3.11 script.py",
+        tags: ["uv", "python", "运行", "脚本", "虚拟环境"]
+      },
+      {
+        category: "uv",
+        name: "uv 创建虚拟环境",
+        desc: "在当前目录创建独立 Python 虚拟环境。",
+        command: "uv venv\n# 指定 Python 版本\nuv venv --python 3.12",
+        tags: ["uv", "python", "venv", "虚拟环境", "环境隔离"]
+      },
+      {
+        category: "uv",
+        name: "uv 安装 Python 版本",
+        desc: "安装指定版本的 Python 解释器。",
+        command: "uv python install 3.12\n# 安装多个版本\nuv python install 3.11 3.12 3.13\n# 查看可用版本\nuv python list",
+        tags: ["uv", "python", "安装", "版本管理", "python"]
+      },
+      {
+        category: "uv",
+        name: "uv pip 兼容安装",
+        desc: "以 pip 兼容模式安装包（不管理项目）。",
+        command: "uv pip install <package_name>\n# 从 requirements 安装\nuv pip install -r requirements.txt\n# 安装到虚拟环境\nuv pip install --python .venv requests",
+        tags: ["uv", "pip", "python", "安装", "包管理", "兼容"]
+      },
+      {
+        category: "uv",
+        name: "uv 全局安装工具",
+        desc: "全局安装 Python CLI 工具（类似 pipx）。",
+        command: "uv tool install ruff\n# 安装指定版本\nuv tool install ruff@0.5.0\n# 查看已安装工具\nuv tool list",
+        tags: ["uv", "tool", "python", "全局安装", "CLI 工具"]
+      },
+      {
+        category: "uv",
+        name: "uvx 临时运行工具",
+        desc: "不安装直接运行 Python CLI 工具（uv tool run 的别名）。",
+        command: "uvx ruff check .\n# 指定版本\nuvx ruff@0.3.0 check\n# 带额外依赖\nuvx --with mkdocs-material mkdocs serve",
+        tags: ["uv", "uvx", "python", "临时运行", "CLI 工具"]
+      },
+      {
+        category: "uv",
+        name: "uv 查看依赖树",
+        desc: "以树形结构展示项目依赖关系。",
+        command: "uv tree",
+        tags: ["uv", "python", "依赖树", "tree", "排查"]
+      },
+      {
+        category: "uv",
+        name: "uv 清理缓存",
+        desc: "清理 uv 下载缓存释放磁盘空间。",
+        command: "uv cache clean\n# 查看缓存大小\nuv cache dir",
+        tags: ["uv", "python", "缓存", "清理", "磁盘"]
+      },
+      {
+        category: "uv",
+        name: "uv 构建与发布",
+        desc: "构建 Python 包并发布到 PyPI。",
+        command: "uv build\n# 发布到 PyPI\nuv publish",
+        tags: ["uv", "python", "构建", "发布", "pypi", "打包"]
+      },
+      {
         category: "常用工具",
         name: "NPX 临时执行包",
         desc: "不全局安装，直接执行 npm 包命令。",
@@ -1608,6 +1713,13 @@ window.COMMANDS_DATA = [
         desc: "持续跟踪指定服务日志输出。",
         command: "docker compose logs -f <service_name>",
         tags: ["docker", "compose", "日志", "排查", "服务"]
+      },
+      {
+        category: "Docker Compose",
+        name: "查看 compose 服务最近日志",
+        desc: "查看 compose 服务最近 200 行日志。",
+        command: "docker compose logs --tail 200 -f <service_name>",
+        tags: ["docker", "compose", "日志", "排查", "服务", "tail"]
       },
       {
         category: "Docker Compose",
