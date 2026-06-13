@@ -655,7 +655,30 @@
     };
 
     // --- 执行操作 ---
-    const processAction = (actionFn = currentActionFn) => {
+    const copyToClipboard = async (text) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (e) {
+            // 降级方案
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                return true;
+            } catch (err) {
+                document.body.removeChild(textarea);
+                return false;
+            }
+        }
+    };
+
+    const processAction = (actionFn = currentActionFn, autoCopy = false) => {
         if (isPreviewing) {
             isPreviewing = false;
             outputText.closest('.editor-wrapper').classList.remove('previewing');
@@ -668,6 +691,20 @@
         updateStats();
         outputText.scrollTop = 0;
         outputLineNums.scrollTop = 0;
+
+        // 如果启用自动复制
+        if (autoCopy && val) {
+            copyToClipboard(val).then(success => {
+                if (success) {
+                    tipInfo.innerText = '已转换并复制到剪贴板！';
+                } else {
+                    tipInfo.innerText = '已转换，但自动复制失败';
+                }
+                setTimeout(() => {
+                    tipInfo.innerText = '温馨提示：输入文本后，自动显示功能按钮';
+                }, 2000);
+            });
+        }
     };
 
     const batchProcessText = {
@@ -733,13 +770,13 @@
         }
     };
 
-    document.getElementById('btn1').addEventListener('click', () => processAction(batchProcessText.multiToSingle));
+    document.getElementById('btn1').addEventListener('click', () => processAction(batchProcessText.multiToSingle, true));
     document.getElementById('btn2').addEventListener('click', () => {
         const quote = document.getElementById('quoteType').value === 'single' ? "'" : '"';
-        processAction((t) => batchProcessText.multiToSingleWithQuote(t, quote));
+        processAction((t) => batchProcessText.multiToSingleWithQuote(t, quote), true);
     });
-    document.getElementById('btn3').addEventListener('click', () => processAction(batchProcessText.singleToMulti));
-    document.getElementById('btn4').addEventListener('click', () => processAction(batchProcessText.singleQuotedToMultiUnquoted));
+    document.getElementById('btn3').addEventListener('click', () => processAction(batchProcessText.singleToMulti, true));
+    document.getElementById('btn4').addEventListener('click', () => processAction(batchProcessText.singleQuotedToMultiUnquoted, true));
 
     // 预览事件绑定
     ['btn1', 'btn2', 'btn3', 'btn4'].forEach(id => {
@@ -762,13 +799,16 @@
     });
 
     document.getElementById('copyBtn').addEventListener('click', async () => {
-        try {
-            await navigator.clipboard.writeText(outputText.value);
+        if (!outputText.value) return;
+        const success = await copyToClipboard(outputText.value);
+        if (success) {
             tipInfo.innerText = '复制成功！';
-        } catch (e) {
-            outputText.select();
-            document.execCommand('copy');
-            tipInfo.innerText = '复制成功！';
+            setTimeout(() => {
+                // 只有在提示还是"复制成功"时才恢复，避免覆盖其他提示
+                if (tipInfo.innerText === '复制成功！') {
+                    tipInfo.innerText = '温馨提示：输入文本后，自动显示功能按钮';
+                }
+            }, 2000);
         }
     });
 
