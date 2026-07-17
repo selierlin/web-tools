@@ -32,7 +32,7 @@ window.COMMANDS_DATA = [
         name: "排序查看大文件",
         desc: "找出当前目录下最大的文件。",
         command: "find . -type f -exec du -h {} + | sort -rh | head -n 20",
-        tags: ["linux", "debian", "centos", "macos", "大文件", "排查", "磁盘满"]
+        tags: ["linux", "debian", "centos", "macos", "大文件", "排查", "磁盘满", "large files", "disk usage"]
       },
       {
         category: "Linux 进程",

@@ -2,22 +2,42 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文本批量加工处理</title>
     <link rel="stylesheet" href="https://jsd.onmicrosoft.cn/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         :root {
-            --bg-1: #0f1724;
-            --bg-2: #1f273b;
-            --bg-3: #112634;
-            --card: rgba(255, 255, 255, 0.09);
-            --card-border: rgba(255, 255, 255, 0.18);
-            --text-main: #f3f6fc;
-            --text-soft: #b8c3d4;
-            --accent-a: #ff8a3d;
-            --accent-b: #2ec4b6;
-            --accent-c: #4ba3ff;
-            --editor-bg: rgba(7, 16, 30, 0.58);
+            /* 深色基底 */
+            --bg-1: #0a1120;
+            --bg-2: #15203a;
+            --bg-3: #0c1a2b;
+
+            /* 玻璃卡片 */
+            --card: rgba(255, 255, 255, 0.055);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --card-border-strong: rgba(255, 255, 255, 0.22);
+
+            /* 文字 */
+            --text-main: #eef4ff;
+            --text-soft: #a6b6ce;
+            --text-dim: #6f8198;
+
+            /* 主色系 · 青蓝收敛 */
+            --primary: #38bdf8;
+            --primary-2: #22d3ee;
+            --primary-glow: rgba(56, 189, 248, 0.35);
+            --primary-soft: rgba(56, 189, 248, 0.14);
+
+            /* 次色 · 蓝紫点缀 */
+            --secondary: #818cf8;
+
+            /* 编辑器 */
+            --editor-bg: rgba(6, 14, 26, 0.55);
+            --line-num-bg: rgba(9, 20, 38, 0.6);
+
+            /* 圆角节奏 */
+            --r-lg: 18px;
+            --r-md: 12px;
         }
 
         * {
@@ -32,126 +52,162 @@
             inset: 0;
             z-index: 0;
             background:
-                radial-gradient(circle at 10% 10%, rgba(255, 138, 61, 0.22), transparent 32%),
-                radial-gradient(circle at 85% 15%, rgba(75, 163, 255, 0.22), transparent 36%),
+                radial-gradient(circle at 12% 8%, rgba(56, 189, 248, 0.18), transparent 34%),
+                radial-gradient(circle at 88% 12%, rgba(129, 140, 248, 0.16), transparent 38%),
                 linear-gradient(140deg, var(--bg-1), var(--bg-2) 48%, var(--bg-3));
         }
 
         body {
-            padding: 2.2rem;
+            padding: 2rem 1.5rem;
             position: relative;
             min-height: 100vh;
             color: var(--text-main);
-            font-family: "JetBrains Mono", "SFMono-Regular", "Consolas", "Source Han Sans SC", "Microsoft YaHei", monospace;
+            font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", monospace;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            max-width: 1240px;
+            max-width: 1180px;
             margin: 0 auto;
-            padding: 2.4rem;
+            padding: 2.2rem;
             background: var(--card);
             border: 1px solid var(--card-border);
             border-radius: 24px;
-            box-shadow: 0 28px 56px rgba(3, 8, 20, 0.45);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 24px 60px rgba(3, 8, 20, 0.5);
+            backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
             position: relative;
             z-index: 1;
-            animation: reveal 520ms ease;
+            animation: reveal 520ms cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         @keyframes reveal {
-            from { opacity: 0; transform: translateY(8px) scale(0.985); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        h1 {
+        /* —— 标题区 —— */
+        .page-head {
             text-align: center;
-            margin-bottom: 2rem;
-            font-size: clamp(1.8rem, 3.4vw, 2.6rem);
-            letter-spacing: 0.6px;
-            font-weight: 750;
+            margin-bottom: 1.8rem;
+        }
+        h1 {
+            font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+            letter-spacing: 0.5px;
+            font-weight: 700;
             font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
-            color: #f8fbff;
-            text-shadow: 0 6px 20px rgba(75, 163, 255, 0.22);
+            background: linear-gradient(120deg, #ffffff, #bfe3ff 55%, #8ab8ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-head .sub {
+            margin-top: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
         }
 
-        .quote-select {
+        /* —— 工具栏 —— */
+        .toolbar {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.8rem;
             flex-wrap: wrap;
-            margin-bottom: 1.4rem;
-            color: var(--text-soft);
-            font-size: 0.95rem;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
         }
-        .quote-main {
+        .chip {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.3rem 0.55rem;
+            height: 38px;
+            padding: 0 0.95rem;
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            background: rgba(9, 22, 40, 0.38);
+            border: 1px solid var(--card-border);
+            background: rgba(10, 22, 42, 0.5);
+            color: var(--text-soft);
+            font-size: 0.85rem;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
         }
-        .quote-main label {
+        .chip .chip-label {
+            color: #cfe0f5;
             white-space: nowrap;
-            color: #d7e7fb;
-            font-size: 0.9rem;
+            font-size: 0.82rem;
+        }
+        .chip:hover { border-color: var(--card-border-strong); }
+        .chip:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
         }
 
-        .quote-main select,
-        .sort-control select {
-            padding: 0.25rem 1rem 0.25rem 0.2rem;
+        /* 自定义 select */
+        .chip select {
+            appearance: none;
+            -webkit-appearance: none;
             border: none;
             background: transparent;
-            color: #f7fbff;
+            color: #f3f8ff;
+            font-size: 0.84rem;
+            font-family: inherit;
+            padding-right: 1.1rem;
+            cursor: pointer;
             outline: none;
-            font-size: 0.86rem;
-            min-height: 28px;
-            border-radius: 0;
-            box-shadow: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3.2l4 4 4-4' fill='none' stroke='%239fb0c8' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right center;
         }
-        .quote-main:focus-within,
-        .sort-control:focus-within {
-            border-color: var(--accent-c);
-            box-shadow: 0 0 0 2px rgba(75, 163, 255, 0.18);
+        .chip select option {
+            background: #0f1a2e;
+            color: #eef4ff;
         }
-        .inline-options {
-            display: flex;
-            align-items: center;
-            gap: 0.65rem;
-            margin-left: 0.2rem;
-        }
-        .sort-control, .check-control {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.3rem 0.55rem;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            background: rgba(9, 22, 40, 0.38);
-            color: #d7e7fb;
-            font-size: 0.9rem;
-        }
-        .check-control {
+
+        /* 去重 checkbox */
+        .chip.check {
             cursor: pointer;
             user-select: none;
         }
-        .sort-control .control-label {
-            white-space: nowrap;
-        }
-        .inline-options input[type="checkbox"] {
+        .chip.check input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
             width: 16px;
             height: 16px;
-            accent-color: #4ba3ff;
+            border-radius: 5px;
+            border: 1.5px solid var(--card-border-strong);
+            background: rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            display: inline-grid;
+            place-content: center;
+            transition: background .15s ease, border-color .15s ease;
+            margin: 0;
         }
+        .chip.check input[type="checkbox"]::before {
+            content: "";
+            width: 9px;
+            height: 9px;
+            transform: scale(0);
+            transition: transform .15s ease-in-out;
+            background: #fff;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+        }
+        .chip.check input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            border-color: transparent;
+        }
+        .chip.check input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+        .chip.check:has(input:checked) {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+        }
+        .chip.check:has(input:checked) .chip-label { color: #eaf6ff; }
 
+        /* —— 双栏编辑器 —— */
         .text-area-group {
             display: flex;
-            gap: 1.25rem;
-            margin-bottom: 1.7rem;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
             align-items: stretch;
         }
 
@@ -161,80 +217,69 @@
         }
 
         .panel-label {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
             margin-bottom: 0.55rem;
-            color: #d5e4f7;
-            font-size: 0.8rem;
-            letter-spacing: 1.2px;
+            color: #c4d6ee;
+            font-size: 0.78rem;
+            letter-spacing: 1.4px;
             text-transform: uppercase;
+        }
+        .panel-label .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+        .text-box.output .panel-label .dot {
+            background: var(--secondary);
+            box-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
         }
 
         .editor-wrapper {
             display: flex;
-            height: 360px;
+            height: 340px;
             overflow: hidden;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 24px rgba(2, 8, 22, 0.22);
+            border-radius: var(--r-lg);
+            border: 1px solid var(--card-border);
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 24px rgba(2, 8, 22, 0.25);
             position: relative;
-            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-        }
-
-        .editor-wrapper::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
-            pointer-events: none;
-        }
-
-        .editor-wrapper::after {
-            content: "";
-            position: absolute;
-            right: -28px;
-            top: -28px;
-            width: 86px;
-            height: 86px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 70%);
-            pointer-events: none;
+            transition: border-color .2s ease, box-shadow .2s ease;
         }
 
         .editor-wrapper:focus-within {
-            border-color: rgba(75, 163, 255, 0.45);
+            border-color: rgba(56, 189, 248, 0.5);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 14px 24px rgba(2, 8, 22, 0.22),
-                0 0 0 3px rgba(75, 163, 255, 0.16);
-            transform: translateY(-1px);
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 12px 24px rgba(2, 8, 22, 0.25),
+                0 0 0 3px var(--primary-soft);
         }
 
         .editor-wrapper.previewing {
             border-style: dashed;
-            border-color: rgba(255, 138, 61, 0.6);
+            border-color: rgba(34, 211, 238, 0.6);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                0 14px 24px rgba(2, 8, 22, 0.22),
-                0 0 0 2px rgba(255, 138, 61, 0.15);
+                inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 12px 24px rgba(2, 8, 22, 0.25),
+                0 0 0 2px rgba(34, 211, 238, 0.15);
         }
 
         .line-numbers {
-            width: 54px;
+            width: 50px;
             padding: 1rem 0.6rem 1rem 0;
             text-align: right;
             white-space: pre;
             user-select: none;
             overflow: hidden;
             pointer-events: none;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #6f8196;
-            background: rgba(10, 24, 44, 0.62);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            line-height: 1.65;
+            color: #5d7187;
+            background: var(--line-num-bg);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         textarea {
@@ -245,44 +290,51 @@
             outline: none;
             overflow: auto;
             white-space: pre;
+            font-family: inherit;
             font-size: 14px;
-            line-height: 1.6;
-            color: #f1f5fc;
+            line-height: 1.65;
+            color: #e8f1ff;
             background: var(--editor-bg);
         }
 
         textarea::placeholder {
-            color: #7d8da4;
+            color: #5d7187;
         }
 
         textarea::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+            width: 9px;
+            height: 9px;
         }
 
         textarea::-webkit-scrollbar-thumb {
             border-radius: 999px;
-            background: rgba(148, 170, 201, 0.45);
+            background: rgba(120, 150, 190, 0.4);
             border: 2px solid transparent;
             background-clip: padding-box;
         }
 
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: rgba(120, 150, 190, 0.6);
+            background-clip: padding-box;
+        }
+
         textarea::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.03);
+            background: transparent;
         }
 
         .editor-meta {
             margin-top: 0.5rem;
-            color: #9fb1c8;
+            color: var(--text-dim);
             font-size: 12px;
             letter-spacing: 0.3px;
         }
 
         .editor-meta strong {
-            color: #d7e7fb;
+            color: #cfe0f5;
             font-weight: 600;
         }
 
+        /* —— 回传按钮 —— */
         .transfer-btn-wrap {
             display: flex;
             align-items: center;
@@ -291,203 +343,204 @@
         }
 
         .transfer-btn {
-            width: 42px;
-            height: 106px;
-            border-radius: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: linear-gradient(180deg, rgba(46, 196, 182, 0.35), rgba(75, 163, 255, 0.3));
-            color: #dffeff;
+            width: 40px;
+            height: 96px;
+            border-radius: 20px;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            background: linear-gradient(180deg, rgba(56, 189, 248, 0.28), rgba(129, 140, 248, 0.22));
+            color: #dff3ff;
             cursor: pointer;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
             justify-content: center;
             align-items: center;
-            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
-            box-shadow: 0 10px 20px rgba(12, 79, 91, 0.35);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, filter .2s ease;
+            box-shadow: 0 8px 18px rgba(8, 60, 90, 0.3);
         }
 
         .transfer-btn:hover {
             transform: translateY(-2px);
             filter: brightness(1.08);
-            box-shadow: 0 16px 26px rgba(20, 109, 123, 0.48);
+            border-color: var(--primary);
+            box-shadow: 0 14px 24px rgba(14, 90, 130, 0.42);
+        }
+
+        .transfer-btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        .transfer-btn i {
+            font-size: 13px;
         }
 
         .transfer-btn::after {
             content: "回传";
             font-size: 10px;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             writing-mode: vertical-lr;
+            color: #cfe8ff;
         }
 
+        /* —— 按钮组 —— */
         .btn-group {
             display: flex;
             justify-content: center;
-            gap: 0.9rem;
+            gap: 0.7rem;
             flex-wrap: wrap;
-            margin-bottom: 1.35rem;
+            margin-bottom: 1.2rem;
+            min-height: 44px;
         }
 
         button {
-            display: none;
-            padding: 0.68rem 1.2rem;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-family: inherit;
+            border: none;
             color: #fff;
             cursor: pointer;
             font-weight: 600;
-            letter-spacing: 0.2px;
-            transition: transform .15s ease, filter .15s ease;
-            background: rgba(70, 86, 112, 0.4);
+            font-size: 0.86rem;
+            letter-spacing: 0.3px;
+            padding: 0.68rem 1.25rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
         }
 
         button:hover {
-            filter: brightness(1.05);
+            filter: brightness(1.08);
             transform: translateY(-1px);
         }
 
         button:active {
-            transform: translateY(0) scale(0.98);
+            transform: translateY(0) scale(0.97);
         }
 
-        button.active {
-            display: block;
+        button:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
         }
 
-        button#btn1.active { background: linear-gradient(120deg, #3d8dff, #2768c8); }
-        button#btn2.active { background: linear-gradient(120deg, #2ec4b6, #1f9b8f); }
-        button#btn3.active { background: linear-gradient(120deg, #f59e3f, #d97706); }
-        button#btn4.active { background: linear-gradient(120deg, #ff6f61, #d1493f); }
+        /* 功能按钮：默认隐藏，输入后按需显示 */
+        .fn-btn { display: none; }
+        .fn-btn.active {
+            display: inline-flex;
+            animation: pop 220ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes pop {
+            from { opacity: 0; transform: translateY(6px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
+        /* 4 个功能按钮 · 青→蓝紫色相递进 */
+        button#btn1.active { background: linear-gradient(120deg, #22d3ee, #06b6d4); box-shadow: 0 6px 16px rgba(34, 211, 238, 0.3); }
+        button#btn2.active { background: linear-gradient(120deg, #38bdf8, #0ea5e9); box-shadow: 0 6px 16px rgba(56, 189, 248, 0.3); }
+        button#btn3.active { background: linear-gradient(120deg, #60a5fa, #3b82f6); box-shadow: 0 6px 16px rgba(96, 165, 250, 0.3); }
+        button#btn4.active { background: linear-gradient(120deg, #818cf8, #6366f1); box-shadow: 0 6px 16px rgba(129, 140, 248, 0.3); }
+
+        /* 复制按钮 · 主操作，始终显示 */
         .copy-btn {
-            display: block !important;
-            background: linear-gradient(120deg, #5f7cf8, #3e5ad7);
+            display: inline-flex;
+            background: linear-gradient(120deg, #34d3ee, #38bdf8 55%, #6366f1);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.35);
+            padding: 0.68rem 1.5rem;
         }
 
+        .copy-btn:hover {
+            box-shadow: 0 12px 26px rgba(56, 189, 248, 0.45);
+        }
+
+        /* —— 提示条 —— */
         .tip {
             text-align: center;
             color: var(--text-soft);
-            padding: 0.9rem 1rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(7, 16, 30, 0.45);
+            padding: 0.85rem 1rem;
+            border-radius: var(--r-md);
+            border: 1px solid var(--card-border);
+            background: rgba(8, 18, 34, 0.5);
+            font-size: 0.84rem;
         }
 
         @media (max-width: 768px) {
             body { padding: 14px; }
-            .container { padding: 1rem; border-radius: 16px; }
-            h1 { margin-bottom: 1.2rem; }
-            .quote-select {
-                justify-content: space-between;
-                align-items: center;
-                font-size: 0.85rem;
-                gap: 0.45rem;
-            }
-            .quote-main { width: auto; gap: 0.3rem; padding: 0.24rem 0.45rem; }
-            .quote-main label { min-width: auto; white-space: nowrap; font-size: 0.82rem; }
-            .quote-main select {
-                min-width: 108px;
-                padding: 0.2rem 0.8rem 0.2rem 0.1rem;
-                font-size: 0.82rem;
-            }
-            .inline-options {
-                width: auto;
-                justify-content: flex-end;
-                margin-left: 0;
-                gap: 0.5rem;
-            }
-            .sort-control, .check-control {
-                min-height: 32px;
-                padding: 0.2rem 0.44rem;
-                font-size: 0.82rem;
-            }
-            .sort-control select {
-                padding: 0.2rem 0.8rem 0.2rem 0.1rem;
-                font-size: 0.82rem;
-            }
-            .inline-options input[type="checkbox"] {
-                width: 18px;
-                height: 18px;
-            }
+            .container { padding: 1.1rem; border-radius: 18px; }
+            .page-head { margin-bottom: 1.2rem; }
+            .toolbar { gap: 0.45rem; margin-bottom: 1.1rem; }
+            .chip { height: 34px; padding: 0 0.7rem; font-size: 0.8rem; }
+            .chip .chip-label { font-size: 0.78rem; }
+
             .text-area-group { flex-direction: column; gap: 0.55rem; }
-            .editor-wrapper { height: 220px; border-radius: 12px; }
-            .line-numbers { width: 48px; font-size: 13px; }
+            .editor-wrapper { height: 220px; border-radius: 14px; }
+            .line-numbers { width: 44px; font-size: 12px; }
             .editor-meta { font-size: 11px; margin-top: 0.35rem; }
 
-            .transfer-btn-wrap { padding: 8px 0; }
+            .transfer-btn-wrap { padding: 6px 0; }
             .transfer-btn {
                 width: 100%;
-                height: 38px;
-                border-radius: 10px;
+                height: 40px;
+                border-radius: 12px;
                 flex-direction: row;
+                gap: 0.5rem;
             }
-
+            .transfer-btn i { transform: rotate(90deg); font-size: 12px; }
             .transfer-btn::after {
-                content: "点击将结果回传到输入框";
+                content: "将结果回传到输入框";
                 font-size: 12px;
                 letter-spacing: 0;
                 writing-mode: horizontal-tb;
             }
 
-            .transfer-btn i { transform: rotate(90deg); }
-            .btn-group { gap: 0.55rem; margin-bottom: 1rem; }
-            button { font-size: 13px; padding: 0.56rem 0.9rem; }
-            .tip { font-size: 13px; }
-        }
-
-        @media (max-width: 420px) {
-            .quote-select {
-                justify-content: flex-start;
-                gap: 0.4rem;
-            }
-            .quote-main {
-                width: 100%;
-                justify-content: space-between;
-            }
-            .inline-options {
-                width: 100%;
-                justify-content: space-between;
-            }
-            .quote-main select {
-                min-width: 98px;
-            }
+            .btn-group { gap: 0.5rem; margin-bottom: 1rem; }
+            button { font-size: 12.5px; padding: 0.58rem 0.95rem; }
+            .tip { font-size: 12.5px; }
         }
 
         ::-webkit-scrollbar { width: 7px; height: 7px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(128, 140, 160, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(128, 140, 160, 0.5); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .container, .fn-btn.active { animation: none; }
+            *, *::before, *::after { transition-duration: 0.01ms !important; }
+        }
     </style>
 </head>
 <body>
 <div id="particles-js"></div>
 
 <div class="container">
-    <h1>文本批量加工处理</h1>
+    <header class="page-head">
+        <h1>文本批量加工处理</h1>
+        <div class="sub">多行 · 逗号 · 引号 &nbsp;批量互转</div>
+    </header>
 
-    <div class="quote-select">
-        <div class="quote-main">
-            <label>引号类型：</label>
+    <div class="toolbar">
+        <label class="chip">
+            <span class="chip-label">引号</span>
             <select id="quoteType">
                 <option value="single">单引号 (')</option>
                 <option value="double">双引号 (")</option>
             </select>
-        </div>
-        <div class="inline-options">
-            <label class="sort-control"> <span class="control-label">排序</span>
-                <select id="sortMode">
-                    <option value="none">不排序</option>
-                    <option value="asc">升序</option>
-                    <option value="desc">降序</option>
-                </select>
-            </label>
-            <label class="check-control"><input type="checkbox" id="dedupeOption"> 去重</label>
-        </div>
+        </label>
+        <label class="chip">
+            <span class="chip-label">排序</span>
+            <select id="sortMode">
+                <option value="none">不排序</option>
+                <option value="asc">升序</option>
+                <option value="desc">降序</option>
+            </select>
+        </label>
+        <label class="chip check">
+            <input type="checkbox" id="dedupeOption">
+            <span class="chip-label">去重</span>
+        </label>
     </div>
 
     <div class="text-area-group">
         <div class="text-box">
-            <label class="panel-label">输入文本</label>
+            <label class="panel-label"><span class="dot"></span>输入文本</label>
             <div class="editor-wrapper">
                 <div class="line-numbers" id="inputLineNums">1</div>
                 <textarea id="inputText" placeholder="请粘贴需要处理的文本..." spellcheck="false"></textarea>
@@ -495,15 +548,14 @@
             <div class="editor-meta"><strong>输入统计</strong>：<span id="inputStats">1 行 · 0 字</span></div>
         </div>
 
-        <!-- 优化后的回传区域 -->
         <div class="transfer-btn-wrap">
-            <button class="transfer-btn" id="transferBtn" title="将结果回传到输入框">
+            <button class="transfer-btn" id="transferBtn" title="将结果回传到输入框" aria-label="将结果回传到输入框">
                 <i class="fa fa-chevron-left"></i>
             </button>
         </div>
 
-        <div class="text-box">
-            <label class="panel-label">输出结果</label>
+        <div class="text-box output">
+            <label class="panel-label"><span class="dot"></span>输出结果</label>
             <div class="editor-wrapper">
                 <div class="line-numbers" id="outputLineNums">1</div>
                 <textarea id="outputText" placeholder="结果显示区域..." readonly spellcheck="false"></textarea>
@@ -513,11 +565,11 @@
     </div>
 
     <div class="btn-group">
-        <button id="btn1">多行 → 逗号拼接</button>
-        <button id="btn2">多行 → 引号逗号</button>
-        <button id="btn3">逗号 → 多行</button>
-        <button id="btn4">引号 → 无引多行</button>
-        <button class="copy-btn" id="copyBtn">复制结果</button>
+        <button id="btn1" class="fn-btn">多行 → 逗号拼接</button>
+        <button id="btn2" class="fn-btn">多行 → 引号逗号</button>
+        <button id="btn3" class="fn-btn">逗号 → 多行</button>
+        <button id="btn4" class="fn-btn">引号 → 无引多行</button>
+        <button class="copy-btn" id="copyBtn"><i class="fa fa-copy"></i> 复制结果</button>
     </div>
 
     <div class="tip" id="tipInfo">温馨提示：输入文本后，自动显示功能按钮</div>
