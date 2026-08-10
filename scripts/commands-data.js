@@ -1394,6 +1394,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "Homebrew 安装 GUI 应用",
+        desc: "用 cask 安装图形界面应用（macOS）。",
+        command: "brew install --cask <app_name>\n# 搜索可用的 cask 应用\nbrew search --cask <keyword>",
+        tags: ["brew", "homebrew", "cask", "macos", "安装", "GUI", "应用"]
+      },
+      {
+        category: "常用工具",
         name: "Homebrew 搜索软件",
         desc: "搜索可安装的 formula 或 cask。",
         command: "brew search <keyword>",
@@ -2049,6 +2056,13 @@ window.COMMANDS_DATA = [
         desc: "查看通过 brew 管理的服务状态。",
         command: "brew services list",
         tags: ["homebrew", "brew", "services", "macos", "服务管理"]
+      },
+      {
+        category: "常用工具",
+        name: "启动/停止/重启 Homebrew 服务",
+        desc: "用 brew services 管理后台服务（macOS）。",
+        command: "brew services start redis\n# 停止服务\nbrew services stop redis\n# 重启服务\nbrew services restart redis",
+        tags: ["homebrew", "brew", "services", "start", "stop", "restart", "macos", "服务管理"]
       },
       {
         category: "常用工具",
