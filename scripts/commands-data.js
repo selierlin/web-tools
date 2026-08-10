@@ -421,6 +421,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "Git",
+        name: "Git 设置 HTTP/HTTPS 代理",
+        desc: "clone/pull 时走本地代理（按需替换端口），适用于 GitHub 等访问受限仓库。",
+        command: "# 全局生效\ngit config --global http.proxy http://127.0.0.1:7890\ngit config --global https.proxy http://127.0.0.1:7890\n# 取消代理\ngit config --global --unset http.proxy\ngit config --global --unset https.proxy",
+        tags: ["git", "代理", "proxy", "clone", "pull", "拉取", "github", "网络"]
+      },
+      {
+        category: "Git",
         name: "提交代码",
         desc: "把暂存区改动提交到本地仓库。",
         command: "git add . && git commit -m \"feat: update\"",
