@@ -91,6 +91,13 @@ window.COMMANDS_DATA = [
         tags: ["linux", "debian", "centos", "macos", "下载", "curl", "wget", "网络"]
       },
       {
+        category: "Linux 网络",
+        name: "发送 HTTP 请求（curl）",
+        desc: "向接口发送 GET/POST 请求并显示响应结果。",
+        command: "curl https://api.example.com/users\n# POST 提交 JSON\ncurl -X POST https://api.example.com/users -H \"Content-Type: application/json\" -d '{\"name\":\"tom\"}'",
+        tags: ["linux", "debian", "centos", "macos", "curl", "http", "post", "请求", "接口", "json"]
+      },
+      {
         category: "Linux 系统",
         name: "查看系统版本",
         desc: "显示 Linux 发行版信息。",
@@ -110,6 +117,27 @@ window.COMMANDS_DATA = [
         desc: "查看内存和 swap 使用情况。",
         command: "free -h",
         tags: ["linux", "centos", "内存", "free", "系统状态"]
+      },
+      {
+        category: "Linux 系统",
+        name: "查看系统负载与运行时长",
+        desc: "查看开机时长与最近 1/5/15 分钟平均负载。",
+        command: "uptime",
+        tags: ["linux", "centos", "uptime", "负载", "运行时长"]
+      },
+      {
+        category: "Linux 系统",
+        name: "查看登录记录",
+        desc: "查看当前登录用户（who）与历史登录记录（last）。",
+        command: "who\n# 历史登录记录\nlast",
+        tags: ["linux", "centos", "who", "last", "登录", "安全", "记录"]
+      },
+      {
+        category: "Linux 系统",
+        name: "重启系统",
+        desc: "立即重启服务器（需 root 权限，谨慎）。",
+        command: "sudo reboot",
+        tags: ["linux", "centos", "reboot", "重启", "系统"]
       },
       {
         category: "Linux 权限",
@@ -771,6 +799,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "ZIP 压缩/解压",
+        desc: "用 zip 压缩目录或解压 zip 包。",
+        command: "zip -r backup.zip /path/to/dir\n# 解压\nunzip backup.zip",
+        tags: ["zip", "unzip", "压缩", "解压", "归档"]
+      },
+      {
+        category: "常用工具",
         name: "查看命令帮助",
         desc: "查看命令参数和说明文档。",
         command: "man find    # 或 find --help",
@@ -782,6 +817,13 @@ window.COMMANDS_DATA = [
         desc: "编辑当前用户 crontab。",
         command: "crontab -e",
         tags: ["定时任务", "cron", "crontab"]
+      },
+      {
+        category: "常用工具",
+        name: "查看定时任务",
+        desc: "列出当前用户的 crontab 任务。",
+        command: "crontab -l",
+        tags: ["定时任务", "cron", "crontab", "查看"]
       },
       {
         category: "常用工具",
@@ -1792,6 +1834,20 @@ window.COMMANDS_DATA = [
         tags: ["docker", "image", "prune", "清理", "磁盘"]
       },
       {
+        category: "Docker",
+        name: "导出/导入镜像文件",
+        desc: "将镜像保存为 tar 文件，并在其他机器导入。",
+        command: "docker save -o myapp.tar myapp:latest\n# 导入镜像\ndocker load -i myapp.tar",
+        tags: ["docker", "save", "load", "镜像", "迁移", "导出", "导入", "tar"]
+      },
+      {
+        category: "Docker",
+        name: "查看容器端口映射",
+        desc: "列出容器的端口映射关系。",
+        command: "docker port <container_name>",
+        tags: ["docker", "port", "端口", "映射", "容器"]
+      },
+      {
         category: "Docker Compose",
         name: "在 compose 服务内执行命令",
         desc: "进入指定服务容器执行交互命令。",
@@ -1876,6 +1932,20 @@ window.COMMANDS_DATA = [
         tags: ["git", "blame", "追踪修改", "排查", "历史"]
       },
       {
+        category: "Git",
+        name: "推送代码",
+        desc: "把本地提交推送到远程分支。",
+        command: "git push origin <branch>\n# 首次推送并关联上游\ngit push -u origin <branch>",
+        tags: ["git", "推送", "push", "远程", "上传"]
+      },
+      {
+        category: "Git",
+        name: "创建并查看标签",
+        desc: "查看所有标签，或为当前提交打版本标签。",
+        command: "git tag\n# 创建带注解的标签\ngit tag -a v1.0.0 -m \"release v1.0.0\"\n# 推送标签到远程\ngit push origin v1.0.0",
+        tags: ["git", "tag", "标签", "版本", "发布"]
+      },
+      {
         category: "Kubernetes",
         name: "查看服务列表",
         desc: "查看当前命名空间的 Service 资源。",
@@ -1923,6 +1993,34 @@ window.COMMANDS_DATA = [
         desc: "导出指定 PostgreSQL 数据库。",
         command: "pg_dump -h 127.0.0.1 -p 5432 -U postgres app_db > app_db.sql",
         tags: ["postgresql", "pg_dump", "备份", "导出", "数据库"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 查看查询计划",
+        desc: "分析 SQL 执行计划，排查慢查询。",
+        command: "EXPLAIN SELECT * FROM user WHERE name = 'tom';",
+        tags: ["mysql", "explain", "执行计划", "慢查询", "优化"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 查看表索引",
+        desc: "查看指定表的索引列表。",
+        command: "SHOW INDEX FROM user;",
+        tags: ["mysql", "索引", "index", "表结构", "优化"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 清空所有键",
+        desc: "清空所有库的键，操作不可恢复，慎用。",
+        command: "redis-cli FLUSHALL",
+        tags: ["redis", "flushall", "清空", "缓存", "慎用"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 发布/订阅消息",
+        desc: "订阅频道接收消息，或向频道发布消息。",
+        command: "redis-cli SUBSCRIBE channel_1\n# 发布消息到频道\nredis-cli PUBLISH channel_1 hello",
+        tags: ["redis", "pubsub", "subscribe", "publish", "订阅", "发布", "消息"]
       },
       {
         category: "常用工具",
