@@ -1276,14 +1276,14 @@
       const query = normalize(searchInput.value);
       const category = categorySelect.value;
       const rawTerms = query.split(/\s+/).filter(Boolean);
-      const terms = expandSearchTerms(rawTerms);
+      const termGroups = rawTerms.map(term => expandSearchTerms([term]));
       searchClearBtn.classList.toggle("is-hidden", !query.length);
 
       const list = COMMANDS.filter(item => {
         if (!inCategory(item, category)) return false;
         if (favoritesOnly && !favorites.has(item.id)) return false;
-        if (!terms.length) return true;
-        return terms.every(term => item.searchText.includes(term));
+        if (!termGroups.length) return true;
+        return termGroups.every(group => group.some(term => item.searchText.includes(term)));
       });
 
       const filterBits = [];
