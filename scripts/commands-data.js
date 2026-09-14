@@ -91,6 +91,13 @@ window.COMMANDS_DATA = [
         tags: ["linux", "debian", "centos", "macos", "下载", "curl", "wget", "网络"]
       },
       {
+        category: "Linux 网络",
+        name: "发送 HTTP 请求（curl）",
+        desc: "向接口发送 GET/POST 请求并显示响应结果。",
+        command: "curl https://api.example.com/users\n# POST 提交 JSON\ncurl -X POST https://api.example.com/users -H \"Content-Type: application/json\" -d '{\"name\":\"tom\"}'",
+        tags: ["linux", "debian", "centos", "macos", "curl", "http", "post", "请求", "接口", "json"]
+      },
+      {
         category: "Linux 系统",
         name: "查看系统版本",
         desc: "显示 Linux 发行版信息。",
@@ -110,6 +117,27 @@ window.COMMANDS_DATA = [
         desc: "查看内存和 swap 使用情况。",
         command: "free -h",
         tags: ["linux", "centos", "内存", "free", "系统状态"]
+      },
+      {
+        category: "Linux 系统",
+        name: "查看系统负载与运行时长",
+        desc: "查看开机时长与最近 1/5/15 分钟平均负载。",
+        command: "uptime",
+        tags: ["linux", "centos", "uptime", "负载", "运行时长"]
+      },
+      {
+        category: "Linux 系统",
+        name: "查看登录记录",
+        desc: "查看当前登录用户（who）与历史登录记录（last）。",
+        command: "who\n# 历史登录记录\nlast",
+        tags: ["linux", "centos", "who", "last", "登录", "安全", "记录"]
+      },
+      {
+        category: "Linux 系统",
+        name: "重启系统",
+        desc: "立即重启服务器（需 root 权限，谨慎）。",
+        command: "sudo reboot",
+        tags: ["linux", "centos", "reboot", "重启", "系统"]
       },
       {
         category: "Linux 权限",
@@ -330,6 +358,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "Docker",
+        name: "查看容器最近日志",
+        desc: "查看容器最近 200 行日志。",
+        command: "docker logs --tail 200 -f <container_name_or_id>",
+        tags: ["docker", "日志", "log", "排查", "tail"]
+      },
+      {
+        category: "Docker",
         name: "在主机与容器间复制文件",
         desc: "支持主机到容器、容器到主机双向复制。",
         command: "docker cp ./local-file.txt <container_name_or_id>:/tmp/local-file.txt\ndocker cp <container_name_or_id>:/var/log/app.log ./app.log",
@@ -411,6 +446,13 @@ window.COMMANDS_DATA = [
         desc: "获取并合并远程分支变更。",
         command: "git pull origin main",
         tags: ["git", "拉取", "pull", "更新"]
+      },
+      {
+        category: "Git",
+        name: "Git 设置 HTTP/HTTPS 代理",
+        desc: "clone/pull 时走本地代理（按需替换端口），适用于 GitHub 等访问受限仓库。",
+        command: "# 全局生效\ngit config --global http.proxy http://127.0.0.1:7890\ngit config --global https.proxy http://127.0.0.1:7890\n# 取消代理\ngit config --global --unset http.proxy\ngit config --global --unset https.proxy",
+        tags: ["git", "代理", "proxy", "clone", "pull", "拉取", "github", "网络"]
       },
       {
         category: "Git",
@@ -757,6 +799,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "ZIP 压缩/解压",
+        desc: "用 zip 压缩目录或解压 zip 包。",
+        command: "zip -r backup.zip /path/to/dir\n# 解压\nunzip backup.zip",
+        tags: ["zip", "unzip", "压缩", "解压", "归档"]
+      },
+      {
+        category: "常用工具",
         name: "查看命令帮助",
         desc: "查看命令参数和说明文档。",
         command: "man find    # 或 find --help",
@@ -768,6 +817,13 @@ window.COMMANDS_DATA = [
         desc: "编辑当前用户 crontab。",
         command: "crontab -e",
         tags: ["定时任务", "cron", "crontab"]
+      },
+      {
+        category: "常用工具",
+        name: "查看定时任务",
+        desc: "列出当前用户的 crontab 任务。",
+        command: "crontab -l",
+        tags: ["定时任务", "cron", "crontab", "查看"]
       },
       {
         category: "常用工具",
@@ -1338,6 +1394,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "Homebrew 安装 GUI 应用",
+        desc: "用 cask 安装图形界面应用（macOS）。",
+        command: "brew install --cask <app_name>\n# 搜索可用的 cask 应用\nbrew search --cask <keyword>",
+        tags: ["brew", "homebrew", "cask", "macos", "安装", "GUI", "应用"]
+      },
+      {
+        category: "常用工具",
         name: "Homebrew 搜索软件",
         desc: "搜索可安装的 formula 或 cask。",
         command: "brew search <keyword>",
@@ -1410,8 +1473,8 @@ window.COMMANDS_DATA = [
         category: "常用工具",
         name: "Homebrew 清理旧版本缓存",
         desc: "清理旧版本软件包和下载缓存，释放磁盘空间。",
-        command: "brew cleanup",
-        tags: ["brew", "homebrew", "macos", "清理", "缓存", "包管理"]
+        command: "brew cleanup\n# 彻底清理所有缓存（含所有版本）\nbrew cleanup --prune=all",
+        tags: ["brew", "homebrew", "macos", "清理", "缓存", "prune", "包管理"]
       },
       {
         category: "常用工具",
@@ -1475,6 +1538,104 @@ window.COMMANDS_DATA = [
         desc: "根据 requirements.txt 批量安装依赖。",
         command: "python3 -m pip install -r requirements.txt",
         tags: ["pip", "python", "requirements", "安装依赖", "包管理"]
+      },
+      {
+        category: "uv",
+        name: "uv 初始化项目",
+        desc: "在当前目录初始化一个新的 Python 项目（生成 pyproject.toml）。",
+        command: "uv init",
+        tags: ["uv", "python", "初始化", "项目", "pyproject"]
+      },
+      {
+        category: "uv",
+        name: "uv 添加依赖",
+        desc: "添加依赖并自动更新 pyproject.toml 和锁文件。",
+        command: "uv add <package_name>\n# 指定版本\nuv add \"requests>=2.28\"\n# 添加开发依赖\nuv add --dev pytest",
+        tags: ["uv", "python", "依赖", "添加", "包管理"]
+      },
+      {
+        category: "uv",
+        name: "uv 移除依赖",
+        desc: "从项目中移除依赖并更新配置。",
+        command: "uv remove <package_name>",
+        tags: ["uv", "python", "依赖", "移除", "包管理"]
+      },
+      {
+        category: "uv",
+        name: "uv 同步环境",
+        desc: "根据锁文件同步安装所有依赖到虚拟环境。",
+        command: "uv sync",
+        tags: ["uv", "python", "同步", "安装依赖", "虚拟环境"]
+      },
+      {
+        category: "uv",
+        name: "uv 锁定依赖",
+        desc: "生成或更新 uv.lock 锁文件，不执行安装。",
+        command: "uv lock",
+        tags: ["uv", "python", "锁文件", "lock", "依赖管理"]
+      },
+      {
+        category: "uv",
+        name: "uv 运行脚本",
+        desc: "在项目虚拟环境中运行 Python 脚本或命令。",
+        command: "uv run main.py\n# 运行带额外依赖的脚本\nuv run --with rich script.py\n# 指定 Python 版本运行\nuv run --python 3.11 script.py",
+        tags: ["uv", "python", "运行", "脚本", "虚拟环境"]
+      },
+      {
+        category: "uv",
+        name: "uv 创建虚拟环境",
+        desc: "在当前目录创建独立 Python 虚拟环境。",
+        command: "uv venv\n# 指定 Python 版本\nuv venv --python 3.12",
+        tags: ["uv", "python", "venv", "虚拟环境", "环境隔离"]
+      },
+      {
+        category: "uv",
+        name: "uv 安装 Python 版本",
+        desc: "安装指定版本的 Python 解释器。",
+        command: "uv python install 3.12\n# 安装多个版本\nuv python install 3.11 3.12 3.13\n# 查看可用版本\nuv python list",
+        tags: ["uv", "python", "安装", "版本管理", "python"]
+      },
+      {
+        category: "uv",
+        name: "uv pip 兼容安装",
+        desc: "以 pip 兼容模式安装包（不管理项目）。",
+        command: "uv pip install <package_name>\n# 从 requirements 安装\nuv pip install -r requirements.txt\n# 安装到虚拟环境\nuv pip install --python .venv requests",
+        tags: ["uv", "pip", "python", "安装", "包管理", "兼容"]
+      },
+      {
+        category: "uv",
+        name: "uv 全局安装工具",
+        desc: "全局安装 Python CLI 工具（类似 pipx）。",
+        command: "uv tool install ruff\n# 安装指定版本\nuv tool install ruff@0.5.0\n# 查看已安装工具\nuv tool list",
+        tags: ["uv", "tool", "python", "全局安装", "CLI 工具"]
+      },
+      {
+        category: "uv",
+        name: "uvx 临时运行工具",
+        desc: "不安装直接运行 Python CLI 工具（uv tool run 的别名）。",
+        command: "uvx ruff check .\n# 指定版本\nuvx ruff@0.3.0 check\n# 带额外依赖\nuvx --with mkdocs-material mkdocs serve",
+        tags: ["uv", "uvx", "python", "临时运行", "CLI 工具"]
+      },
+      {
+        category: "uv",
+        name: "uv 查看依赖树",
+        desc: "以树形结构展示项目依赖关系。",
+        command: "uv tree",
+        tags: ["uv", "python", "依赖树", "tree", "排查"]
+      },
+      {
+        category: "uv",
+        name: "uv 清理缓存",
+        desc: "清理 uv 下载缓存释放磁盘空间。",
+        command: "uv cache clean\n# 查看缓存大小\nuv cache dir",
+        tags: ["uv", "python", "缓存", "清理", "磁盘"]
+      },
+      {
+        category: "uv",
+        name: "uv 构建与发布",
+        desc: "构建 Python 包并发布到 PyPI。",
+        command: "uv build\n# 发布到 PyPI\nuv publish",
+        tags: ["uv", "python", "构建", "发布", "pypi", "打包"]
       },
       {
         category: "常用工具",
@@ -1611,6 +1772,13 @@ window.COMMANDS_DATA = [
       },
       {
         category: "Docker Compose",
+        name: "查看 compose 服务最近日志",
+        desc: "查看 compose 服务最近 200 行日志。",
+        command: "docker compose logs --tail 200 -f <service_name>",
+        tags: ["docker", "compose", "日志", "排查", "服务", "tail"]
+      },
+      {
+        category: "Docker Compose",
         name: "构建并后台启动 compose 服务",
         desc: "重新构建镜像后启动服务。",
         command: "docker compose up -d --build",
@@ -1671,6 +1839,20 @@ window.COMMANDS_DATA = [
         desc: "删除未被引用的 dangling 镜像层。",
         command: "docker image prune -f",
         tags: ["docker", "image", "prune", "清理", "磁盘"]
+      },
+      {
+        category: "Docker",
+        name: "导出/导入镜像文件",
+        desc: "将镜像保存为 tar 文件，并在其他机器导入。",
+        command: "docker save -o myapp.tar myapp:latest\n# 导入镜像\ndocker load -i myapp.tar",
+        tags: ["docker", "save", "load", "镜像", "迁移", "导出", "导入", "tar"]
+      },
+      {
+        category: "Docker",
+        name: "查看容器端口映射",
+        desc: "列出容器的端口映射关系。",
+        command: "docker port <container_name>",
+        tags: ["docker", "port", "端口", "映射", "容器"]
       },
       {
         category: "Docker Compose",
@@ -1757,6 +1939,20 @@ window.COMMANDS_DATA = [
         tags: ["git", "blame", "追踪修改", "排查", "历史"]
       },
       {
+        category: "Git",
+        name: "推送代码",
+        desc: "把本地提交推送到远程分支。",
+        command: "git push origin <branch>\n# 首次推送并关联上游\ngit push -u origin <branch>",
+        tags: ["git", "推送", "push", "远程", "上传"]
+      },
+      {
+        category: "Git",
+        name: "创建并查看标签",
+        desc: "查看所有标签，或为当前提交打版本标签。",
+        command: "git tag\n# 创建带注解的标签\ngit tag -a v1.0.0 -m \"release v1.0.0\"\n# 推送标签到远程\ngit push origin v1.0.0",
+        tags: ["git", "tag", "标签", "版本", "发布"]
+      },
+      {
         category: "Kubernetes",
         name: "查看服务列表",
         desc: "查看当前命名空间的 Service 资源。",
@@ -1806,6 +2002,34 @@ window.COMMANDS_DATA = [
         tags: ["postgresql", "pg_dump", "备份", "导出", "数据库"]
       },
       {
+        category: "数据库",
+        name: "MySQL 查看查询计划",
+        desc: "分析 SQL 执行计划，排查慢查询。",
+        command: "EXPLAIN SELECT * FROM user WHERE name = 'tom';",
+        tags: ["mysql", "explain", "执行计划", "慢查询", "优化"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 查看表索引",
+        desc: "查看指定表的索引列表。",
+        command: "SHOW INDEX FROM user;",
+        tags: ["mysql", "索引", "index", "表结构", "优化"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 清空所有键",
+        desc: "清空所有库的键，操作不可恢复，慎用。",
+        command: "redis-cli FLUSHALL",
+        tags: ["redis", "flushall", "清空", "缓存", "慎用"]
+      },
+      {
+        category: "数据库",
+        name: "Redis 发布/订阅消息",
+        desc: "订阅频道接收消息，或向频道发布消息。",
+        command: "redis-cli SUBSCRIBE channel_1\n# 发布消息到频道\nredis-cli PUBLISH channel_1 hello",
+        tags: ["redis", "pubsub", "subscribe", "publish", "订阅", "发布", "消息"]
+      },
+      {
         category: "常用工具",
         name: "NPM 按锁文件安装依赖",
         desc: "严格按 lock 文件安装，常用于 CI 环境。",
@@ -1832,6 +2056,13 @@ window.COMMANDS_DATA = [
         desc: "查看通过 brew 管理的服务状态。",
         command: "brew services list",
         tags: ["homebrew", "brew", "services", "macos", "服务管理"]
+      },
+      {
+        category: "常用工具",
+        name: "启动/停止/重启 Homebrew 服务",
+        desc: "用 brew services 管理后台服务（macOS）。",
+        command: "brew services start redis\n# 停止服务\nbrew services stop redis\n# 重启服务\nbrew services restart redis",
+        tags: ["homebrew", "brew", "services", "start", "stop", "restart", "macos", "服务管理"]
       },
       {
         category: "常用工具",

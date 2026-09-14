@@ -1,0 +1,28 @@
+/* Shared visual contract. See DESIGN-SYSTEM.md before migrating another tool. */
+:root {
+    color-scheme: light;
+    --wb-bg: #f5f6f2;
+    --wb-surface: #ffffff;
+    --wb-ink: #202e2a;
+    --wb-muted: #66736e;
+    --wb-line: #d9e0da;
+    --wb-accent: #17654e;
+    --wb-accent-hover: #104d3b;
+    --wb-tint: #eaf3ed;
+    --wb-warning: #98631b;
+    --wb-radius: 8px;
+    --wb-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --wb-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--wb-ink); background: var(--wb-bg); font-family: var(--wb-font); font-size: 16px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; }
+button, select, input[type="checkbox"] { cursor: pointer; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--wb-accent); outline-offset: 3px; }
+::selection { background: #cce8d9; color: #163d2f; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #b8c5bd; border: 2px solid var(--wb-bg); border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

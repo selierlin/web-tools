@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON 格式化工具</title>
+    <link rel="stylesheet" href="styles/workbench.css">
+    <link rel="stylesheet" href="styles/json-format.css">
+    <!--
     <style>
         :root {
             --primary-color: #4361ee;
@@ -376,23 +379,32 @@
             }
         }
     </style>
+    -->
 </head>
-<body>
-<div class="container">
-    <div class="tool-header">JSON 格式化工具</div>
+<body class="json-format">
+<main class="container">
+    <header class="page-heading">
+        <h1>JSON 格式化<span class="title-dot">.</span></h1>
+        <p class="page-description">校验、格式化、压缩与树形预览</p>
+    </header>
 
-    <div class="tool-controls">
-        <button class="btn btn-success" id="sortBtn"><span>🔤</span> 键名排序</button>
-        <button class="btn btn-warning" id="compressBtn"><span>📦</span> 压缩 JSON</button>
-        <button class="btn btn-danger" id="clearBtn"><span>🗑</span> 清空内容</button>
-        <button class="btn btn-secondary" id="copyFormatBtn"><span>📋</span> 复制格式化</button>
-        <button class="btn btn-secondary" id="copyCompressBtn"><span>📋</span> 复制压缩</button>
-    </div>
+    <section class="workspace" aria-label="JSON 格式化工作区">
+        <aside class="workspace-sidebar">
+            <p class="sidebar-title">处理说明</p>
+            <p class="sidebar-copy">粘贴 JSON 后会自动校验、格式化并生成可折叠的树形结构。</p>
+            <div class="format-guide">
+                <h2>快捷操作</h2>
+                <p><b>键名排序</b>：递归按键名排序</p>
+                <p><b>压缩 JSON</b>：移除空白字符</p>
+                <p><b>树形预览</b>：展开或折叠节点</p>
+            </div>
+        </aside>
 
-    <div class="tool-content">
+        <div class="tool-content">
         <div class="json-input-panel">
             <div class="label">
-                <span>📥 输入区</span>
+                <span><b>01</b> 原始 JSON</span>
+                <span class="panel-hint">粘贴或输入</span>
             </div>
             <textarea id="jsonInput" spellcheck="false" placeholder="在此粘贴 JSON 代码..."></textarea>
             <div class="result-tip" id="resultTip">就绪</div>
@@ -400,10 +412,10 @@
 
         <div class="json-output-panel">
             <div class="label">
-                <span>📤 树形预览</span>
+                <span><b>02</b> 树形预览</span>
                 <div class="output-sub-controls">
-                    <button class="sub-btn" id="expandAllBtn">🔓 展开</button>
-                    <button class="sub-btn" id="collapseAllBtn">🔒 折叠</button>
+                    <button class="sub-btn" id="expandAllBtn">展开</button>
+                    <button class="sub-btn" id="collapseAllBtn">折叠</button>
                 </div>
             </div>
             <div id="jsonOutputTree" class="json-output-tree"></div>
@@ -411,8 +423,17 @@
             <textarea id="jsonFormatText" style="display: none;"></textarea>
             <textarea id="jsonCompressText" style="display: none;"></textarea>
         </div>
-    </div>
-</div>
+        </div>
+
+        <div class="tool-controls">
+            <button class="btn btn-success" id="sortBtn">键名排序</button>
+            <button class="btn btn-warning" id="compressBtn">压缩 JSON</button>
+            <button class="btn btn-danger" id="clearBtn">清空内容</button>
+            <button class="btn btn-secondary" id="copyFormatBtn">复制格式化</button>
+            <button class="btn btn-secondary" id="copyCompressBtn">复制压缩</button>
+        </div>
+    </section>
+</main>
 
 <script>
     /**
@@ -501,48 +522,83 @@
     }
 
     function renderJsonTree(data) {
-        if (!data) {
+        if (data === null) {
             jsonOutputTree.innerHTML = '';
             return;
         }
         formatJson(data);
         compressJson(data);
 
-        function buildTreeHtml(obj, depth = 0, parentPath = []) {
-            const indent = '  '.repeat(depth);
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function pathToken(path) {
+            return encodeURIComponent(JSON.stringify(path));
+        }
+
+        function getCollapseSummary(obj) {
+            const isArray = Array.isArray(obj);
+            const count = isArray ? obj.length : Object.keys(obj).length;
+            const unit = isArray ? '项' : '属性';
+            const candidate = isArray
+                ? obj.find(item => item && typeof item === 'object' && !Array.isArray(item))
+                : obj;
+            const labelKey = candidate && Object.prototype.hasOwnProperty.call(candidate, 'name')
+                ? 'name'
+                : candidate && Object.prototype.hasOwnProperty.call(candidate, 'title')
+                    ? 'title'
+                    : null;
+            const labelValue = labelKey && typeof candidate[labelKey] !== 'object'
+                ? String(candidate[labelKey]).slice(0, 40)
+                : '';
+            return `(${count} ${unit}${labelValue ? ` · ${labelKey}: ${escapeHtml(labelValue)}` : ''})`;
+        }
+
+        function deleteButton(path, label) {
+            return `<button type="button" class="fe-delete" data-path="${pathToken(path)}" aria-label="删除${escapeHtml(label)}" title="删除${escapeHtml(label)}">×</button>`;
+        }
+
+        function buildTreeHtml(obj, parentPath = []) {
             let html = '';
+            const token = pathToken(parentPath);
 
             if (Array.isArray(obj)) {
-                const count = obj.length;
                 html += `<span class="fe-bracket">[</span> `;
-                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">▼</span>`;
-                html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 项)</span>`;
-                html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
+                html += `<span class="fe-toggle" data-path="${token}">▼</span>`;
+                html += `<span class="fe-collapse-note" data-path="${token}" style="display:none">${getCollapseSummary(obj)}</span>`;
+                html += `<div class="fe-tree-children" data-path="${token}" style="display:block;">`;
 
                 obj.forEach((item, index) => {
-                    const path = [...parentPath, `arr_${index}`];
-                    html += `<div style="padding-left: 20px;" onmouseenter="this.classList.add('fe-highlight')" onmouseleave="this.classList.remove('fe-highlight')">`;
+                    const path = [...parentPath, index];
+                    html += `<div class="fe-tree-row">`;
                     html += `<span class="fe-key">[${index}]</span>: `;
-                    html += typeof item === 'object' && item !== null ? buildTreeHtml(item, depth + 1, path) : formatPrimitive(item);
-                    html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
+                    html += typeof item === 'object' && item !== null ? buildTreeHtml(item, path) : formatPrimitive(item);
+                    html += deleteButton(path, `第 ${index + 1} 项`);
+                    html += index < obj.length - 1 ? `<span class="fe-bracket">,</span>` : '';
                     html += `</div>`;
                 });
                 html += `</div><span class="fe-bracket">]</span>`;
             } else if (typeof obj === 'object' && obj !== null) {
                 const keys = Object.keys(obj);
-                const count = keys.length;
                 html += `<span class="fe-bracket">{</span> `;
-                html += `<span class="fe-toggle" data-path="${parentPath.join('.')}">▼</span>`;
-                html += `<span class="fe-collapse-note" data-path="${parentPath.join('.')}" style="display:none">(${count} 属性)</span>`;
-                html += `<div class="fe-tree-children" data-path="${parentPath.join('.')}" style="display:block;">`;
+                html += `<span class="fe-toggle" data-path="${token}">▼</span>`;
+                html += `<span class="fe-collapse-note" data-path="${token}" style="display:none">${getCollapseSummary(obj)}</span>`;
+                html += `<div class="fe-tree-children" data-path="${token}" style="display:block;">`;
 
                 keys.forEach((key, index) => {
                     const value = obj[key];
-                    const path = [...parentPath, key.replace(/\W/g, '_')];
-                    html += `<div style="padding-left: 20px;" onmouseenter="this.classList.add('fe-highlight')" onmouseleave="this.classList.remove('fe-highlight')">`;
-                    html += `<span class="fe-key">"${key}"</span>: `;
-                    html += typeof value === 'object' && value !== null ? buildTreeHtml(value, depth + 1, path) : formatPrimitive(value);
-                    html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
+                    const path = [...parentPath, key];
+                    html += `<div class="fe-tree-row">`;
+                    html += `<span class="fe-key">"${escapeHtml(key)}"</span>: `;
+                    html += typeof value === 'object' && value !== null ? buildTreeHtml(value, path) : formatPrimitive(value);
+                    html += deleteButton(path, `属性 ${key}`);
+                    html += index < keys.length - 1 ? `<span class="fe-bracket">,</span>` : '';
                     html += `</div>`;
                 });
                 html += `</div><span class="fe-bracket">}</span>`;
@@ -553,7 +609,7 @@
         }
 
         function formatPrimitive(value) {
-            if (typeof value === 'string') return `<span class="fe-string">"${value}"</span>`;
+            if (typeof value === 'string') return `<span class="fe-string">"${escapeHtml(value)}"</span>`;
             if (typeof value === 'number') return `<span class="fe-number">${value}</span>`;
             if (typeof value === 'boolean') return `<span class="fe-boolean">${value}</span>`;
             if (value === null) return `<span class="fe-null">null</span>`;
@@ -562,14 +618,21 @@
 
         jsonOutputTree.innerHTML = buildTreeHtml(data);
         bindToggleEvents();
+        bindDeleteEvents();
+        bindTreeRowHover();
+    }
+
+    function getTreeElement(className, token) {
+        return Array.from(jsonOutputTree.querySelectorAll(`.${className}`))
+            .find(element => element.dataset.path === token);
     }
 
     function bindToggleEvents() {
         document.querySelectorAll('.fe-toggle').forEach(toggle => {
             toggle.onclick = function() {
                 const path = this.getAttribute('data-path');
-                const children = document.querySelector(`.fe-tree-children[data-path="${path}"]`);
-                const note = document.querySelector(`.fe-collapse-note[data-path="${path}"]`);
+                const children = getTreeElement('fe-tree-children', path);
+                const note = getTreeElement('fe-collapse-note', path);
                 if (children && note) {
                     const isExpanded = this.textContent === '▼';
                     this.textContent = isExpanded ? '▶' : '▼';
@@ -580,12 +643,47 @@
         });
     }
 
+    function bindDeleteEvents() {
+        jsonOutputTree.querySelectorAll('.fe-delete').forEach(button => {
+            button.onclick = function() {
+                const path = JSON.parse(decodeURIComponent(this.dataset.path));
+                const parsed = parseJson(jsonInput.value.trim());
+                if (!parsed || path.length === 0) return;
+
+                const parent = path.slice(0, -1).reduce((node, key) => node?.[key], parsed);
+                const key = path[path.length - 1];
+                if (Array.isArray(parent)) parent.splice(key, 1);
+                else if (parent && typeof parent === 'object') delete parent[key];
+                else return;
+
+                jsonInput.value = formatJson(parsed);
+                renderJsonTree(parsed);
+                showTip('已删除所选节点');
+            };
+        });
+    }
+
+    function bindTreeRowHover() {
+        let activeRow = null;
+        jsonOutputTree.onpointermove = function(event) {
+            const nextRow = event.target.closest('.fe-tree-row');
+            if (nextRow === activeRow) return;
+            activeRow?.classList.remove('is-active');
+            nextRow?.classList.add('is-active');
+            activeRow = nextRow;
+        };
+        jsonOutputTree.onpointerleave = function() {
+            activeRow?.classList.remove('is-active');
+            activeRow = null;
+        };
+    }
+
     function expandAllNodes() {
         document.querySelectorAll('.fe-toggle').forEach(toggle => {
             toggle.textContent = '▼';
             const path = toggle.getAttribute('data-path');
-            document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'block');
-            document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'none');
+            getTreeElement('fe-tree-children', path)?.style.setProperty('display', 'block');
+            getTreeElement('fe-collapse-note', path)?.style.setProperty('display', 'none');
         });
         showTip('已全部展开');
     }
@@ -594,8 +692,8 @@
         document.querySelectorAll('.fe-toggle').forEach(toggle => {
             toggle.textContent = '▶';
             const path = toggle.getAttribute('data-path');
-            document.querySelector(`.fe-tree-children[data-path="${path}"]`)?.style.setProperty('display', 'none');
-            document.querySelector(`.fe-collapse-note[data-path="${path}"]`)?.style.setProperty('display', 'inline');
+            getTreeElement('fe-tree-children', path)?.style.setProperty('display', 'none');
+            getTreeElement('fe-collapse-note', path)?.style.setProperty('display', 'inline');
         });
         showTip('已全部折叠');
     }
