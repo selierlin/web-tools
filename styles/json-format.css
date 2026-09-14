@@ -1,0 +1,68 @@
+.json-format { --success-color: var(--wb-accent); --danger-color: #9c3124; --text-muted: var(--wb-muted); padding: 20px 28px; }
+.json-format .container { max-width: 1680px; margin: 0 auto; }
+.json-format .page-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 18px; }
+.json-format h1 { margin: 0; font-size: 26px; font-weight: 650; line-height: 1.3; letter-spacing: -.5px; }
+.json-format .title-dot { color: var(--wb-accent); }
+.json-format .page-description { margin: 0; color: var(--wb-muted); font-size: 14px; }
+.json-format .workspace { display: grid; grid-template-columns: 236px minmax(0, 1fr); overflow: hidden; background: var(--wb-surface); border: 1px solid var(--wb-line); border-radius: var(--wb-radius); }
+.json-format .workspace-sidebar { grid-row: 1 / 3; padding: 24px 18px; background: #edf2ed; border-right: 1px solid var(--wb-line); }
+.json-format .sidebar-title { margin: 0 0 10px; font-size: 14px; font-weight: 650; }
+.json-format .sidebar-copy, .json-format .format-guide p { margin: 0; color: var(--wb-muted); font-size: 12px; line-height: 1.8; }
+.json-format .format-guide { margin-top: 24px; padding-top: 20px; border-top: 1px solid #cdd8ce; }
+.json-format .format-guide h2 { margin: 0 0 12px; color: var(--wb-muted); font-size: 13px; font-weight: 600; }
+.json-format .format-guide p + p { margin-top: 10px; }
+.json-format .format-guide b { color: var(--wb-ink); font-weight: 600; }
+.json-format .tool-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; min-height: 0; margin: 24px 24px 0; }
+.json-format .json-input-panel, .json-format .json-output-panel { display: flex; flex-direction: column; min-width: 0; }
+.json-format .label { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 14px; font-weight: 600; }
+.json-format .label b { margin-right: 10px; color: var(--wb-accent); font: 12px var(--wb-mono); }
+.json-format .panel-hint { color: var(--wb-muted); font-size: 12px; font-weight: 400; }
+.json-format textarea, .json-format .json-output-tree { min-height: 0; height: clamp(300px, calc(100dvh - 310px), 420px); padding: 18px; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); color: var(--wb-ink); font: 14px/1.75 var(--wb-mono); }
+.json-format textarea { width: 100%; resize: none; outline: none; }
+.json-format textarea:focus { border-color: var(--wb-accent); box-shadow: 0 0 0 3px #17654e12; }
+.json-format textarea::placeholder { color: #7a867f; }
+.json-format .json-output-tree { overflow: auto; background: #f3f7f4; border-color: #cbdacf; }
+.json-format .result-tip { min-height: 20px; margin-top: 10px; color: var(--wb-muted); font-size: 12px; }
+.json-format .output-sub-controls { display: flex; gap: 8px; }
+.json-format button { min-height: 40px; padding: 9px 14px; border: 1px solid var(--wb-line); border-radius: 6px; background: var(--wb-surface); color: var(--wb-ink); font-size: 14px; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s; }
+.json-format button:hover { border-color: var(--wb-accent); background: var(--wb-tint); }
+.json-format .sub-btn { min-height: 30px; padding: 4px 10px; color: var(--wb-muted); font-size: 12px; }
+.json-format .tool-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 18px 24px 20px; padding-top: 16px; border-top: 1px solid var(--wb-line); }
+.json-format .btn-success { color: white; background: var(--wb-accent); border-color: var(--wb-accent); }
+.json-format .btn-success:hover { color: white; background: var(--wb-accent-hover); }
+.json-format .btn-warning { color: #734a12; background: #fff8ea; border-color: #e3c486; }
+.json-format .btn-danger { color: #9c3124; background: #fff3f1; border-color: #e4bbb5; }
+.json-format .btn-secondary:last-child { margin-left: auto; }
+.json-format .fe-key { color: #17654e; font-weight: 600; }
+.json-format .fe-string { color: #14736a; }
+.json-format .fe-number { color: #a35f14; font-weight: 600; }
+.json-format .fe-boolean { color: #7650a7; font-weight: 600; }
+.json-format .fe-null { color: #7b857f; font-style: italic; }
+.json-format .fe-bracket { color: #66736e; }
+.json-format .fe-highlight { background: #e4f0e7; border-radius: 4px; }
+.json-format .fe-toggle { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-right: 6px; border: 1px solid var(--wb-line); border-radius: 4px; color: var(--wb-muted); background: var(--wb-surface); cursor: pointer; font-size: 10px; }
+.json-format .fe-toggle:hover { color: white; background: var(--wb-accent); border-color: var(--wb-accent); }
+.json-format .fe-tree-children { margin-left: 8px; border-left: 1px solid #d7e5da; }
+.json-format .fe-tree-row { padding-left: 20px; position: relative; }
+.json-format .fe-tree-row.is-active { background: #e4f0e7; border-radius: 4px; }
+.json-format .fe-delete { display: inline-flex; align-items: center; justify-content: center; width: 20px; min-height: 20px; margin-left: 8px; padding: 0; border-color: transparent; border-radius: 4px; color: #9c3124; background: transparent; font-size: 16px; line-height: 1; opacity: 0; vertical-align: text-bottom; }
+.json-format .fe-tree-row.is-active > .fe-delete, .json-format .fe-delete:focus-visible { opacity: 1; }
+.json-format .fe-delete:hover { border-color: #e4bbb5; background: #fff3f1; }
+@media (max-width: 900px) {
+  .json-format .workspace { grid-template-columns: 196px minmax(0, 1fr); }
+  .json-format .workspace-sidebar { padding: 20px 14px; }
+  .json-format .tool-content { gap: 10px; margin-right: 16px; }
+}
+@media (max-width: 768px) {
+  .json-format { padding: 16px 12px; }
+  .json-format .page-heading { margin-bottom: 14px; }
+  .json-format h1 { font-size: 24px; }
+  .json-format .workspace { display: block; }
+  .json-format .workspace-sidebar { padding: 14px; border-right: 0; border-bottom: 1px solid var(--wb-line); }
+  .json-format .sidebar-copy { display: none; }
+  .json-format .format-guide { display: none; }
+  .json-format .tool-content { grid-template-columns: minmax(0, 1fr); margin: 16px 14px 0; }
+  .json-format textarea, .json-format .json-output-tree { height: 230px; }
+  .json-format .tool-controls { margin: 16px 14px; }
+  .json-format .btn-secondary:last-child { margin-left: 0; }
+}

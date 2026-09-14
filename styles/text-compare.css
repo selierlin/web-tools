@@ -1,0 +1,174 @@
+/* Text compare page built on the shared workbench tokens. */
+.text-compare-page {
+    min-height: 100dvh;
+    height: auto;
+    display: block;
+    overflow: auto;
+    padding: 20px 28px;
+    background: var(--wb-bg);
+    color: var(--wb-ink);
+}
+
+.text-compare-page::before { display: none; }
+
+.text-compare-page .container {
+    width: min(100%, 1680px);
+    height: min(820px, calc(100dvh - 40px));
+    min-height: 620px;
+    margin: 0 auto;
+    background: var(--wb-surface);
+    border: 1px solid var(--wb-line);
+    border-radius: var(--wb-radius);
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.text-compare-page .container::after { display: none; }
+
+.text-compare-page .tool-header {
+    min-height: 70px;
+    padding: 14px 20px;
+    background: var(--wb-surface);
+    border-bottom-color: var(--wb-line);
+}
+
+.text-compare-page .tool-title {
+    color: var(--wb-ink);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    font-size: 26px;
+    font-weight: 650;
+    letter-spacing: -.5px;
+}
+
+.text-compare-page .tool-title > span { color: var(--wb-accent); }
+
+.text-compare-page .tool-title small {
+    display: block;
+    margin-top: 3px;
+    color: var(--wb-muted);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.text-compare-page button,
+.text-compare-page select,
+.text-compare-page input[type="text"] {
+    min-height: 34px;
+    border: 1px solid var(--wb-line);
+    border-radius: 6px;
+    background: var(--wb-surface);
+    color: var(--wb-ink);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: none;
+}
+
+.text-compare-page button:hover {
+    filter: none;
+    box-shadow: none;
+    border-color: var(--wb-accent);
+    background: var(--wb-tint);
+}
+
+.text-compare-page .btn-primary {
+    background: var(--wb-accent);
+    border-color: var(--wb-accent);
+    color: #fff;
+}
+
+.text-compare-page .btn-primary:hover { background: var(--wb-accent-hover); }
+
+.text-compare-page .btn-danger { color: #7a3027; background: #fff; border-color: #d9bcb6; }
+.text-compare-page .btn-danger:hover { color: #6a251d; background: #fff3f1; border-color: #b36f64; }
+
+.text-compare-page .header-summary { order: 3; }
+.text-compare-page .metric-chip {
+    border-color: var(--wb-line);
+    background: #f5f8f5;
+    color: var(--wb-muted);
+    font-size: 12px;
+}
+.text-compare-page .metric-chip strong { color: var(--wb-ink); font-size: 12px; }
+
+.text-compare-page .control-panel {
+    padding: 12px 20px;
+    gap: 10px 18px;
+    background: #f3f6f3;
+    border-bottom-color: var(--wb-line);
+}
+
+.text-compare-page .control-group { gap: 6px; font-size: 13px; color: var(--wb-muted); }
+.text-compare-page .mode-switch { border-color: var(--wb-line); border-radius: 6px; }
+.text-compare-page .mode-btn { min-height: 32px; border: 0; border-radius: 0; padding: 5px 10px; background: transparent; color: var(--wb-muted); }
+.text-compare-page .mode-btn.active { background: var(--wb-accent); color: #fff; }
+.text-compare-page .option-chip { border-color: var(--wb-line); background: var(--wb-surface); color: var(--wb-ink); font-size: 13px; }
+.text-compare-page .option-chip input { accent-color: var(--wb-accent); }
+.text-compare-page input[type="text"]:focus, .text-compare-page select:focus { border-color: var(--wb-accent); box-shadow: 0 0 0 3px #17654e12; }
+.text-compare-page .progress { color: var(--wb-muted); font-size: 12px; }
+
+.text-compare-page .compare-content { background: var(--wb-surface); }
+.text-compare-page .text-panel { background: var(--wb-surface); padding-top: 30px; }
+.text-compare-page .text-panel:first-child { border-right-color: var(--wb-line); }
+.text-compare-page .text-panel::before {
+    content: attr(data-panel-label);
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 30px;
+    padding: 7px 14px;
+    color: var(--wb-ink);
+    background: #f7f9f7;
+    border-bottom: 1px solid var(--wb-line);
+    font-size: 13px;
+    font-weight: 650;
+    z-index: 2;
+}
+.text-compare-page .text-panel:first-child::before { color: var(--wb-accent); }
+.text-compare-page .drop-mask { border-color: var(--wb-accent); background: #eaf3edf0; color: var(--wb-accent); }
+.text-compare-page .line-numbers { width: 48px; padding-top: 16px; background: #f5f8f5; border-right-color: var(--wb-line); color: #87958e; font-size: 13px; }
+.text-compare-page .text-editor { padding: 16px 0; }
+.text-compare-page textarea, .text-compare-page .editable-div { color: var(--wb-ink); font: 14px/22px var(--wb-mono); }
+.text-compare-page textarea:focus { color: var(--wb-ink); }
+.text-compare-page .text-line:hover { background: #f4f8f5; }
+.text-compare-page .diff-added { color: #17654e; background: #e6f4eb; border-left-color: #36976e; }
+.text-compare-page .diff-removed { color: #993b31; background: #fff0ed; border-left-color: #d86b5e; }
+
+.text-compare-page .result-section { padding: 12px 20px 20px; background: #f7f9f7; border-top: 1px solid var(--wb-line); max-height: 290px; gap: 12px; }
+.text-compare-page .result-card { border-color: var(--wb-line); border-radius: 6px; background: var(--wb-surface); }
+.text-compare-page .result-card:hover { border-color: var(--wb-accent); box-shadow: none; transform: none; }
+.text-compare-page .result-header { padding: 9px 10px; border-bottom-color: var(--wb-line); background: #f5f8f5; }
+.text-compare-page .result-title { color: var(--wb-ink); }
+.text-compare-page .result-count { color: var(--wb-muted); background: var(--wb-surface); }
+.text-compare-page .result-actions button { min-height: 27px; padding: 3px 6px; font-size: 12px; }
+.text-compare-page .result-body { color: var(--wb-ink); background: var(--wb-surface); }
+.text-compare-page .result-body:hover { background: var(--wb-surface); }
+.text-compare-page .result-item { border-bottom-color: #edf1ee; }
+.text-compare-page .item-no { color: #819088; }
+.text-compare-page .result-empty { color: var(--wb-muted); }
+.text-compare-page mark { background: #f7df8e; color: var(--wb-ink); }
+.text-compare-page .char-diff-removed { color: #93352c; background: #ffd9d2; }
+.text-compare-page .char-diff-added { color: #17654e; background: #cdebd8; }
+
+@media (max-width: 900px) {
+    .text-compare-page { padding: 0; }
+    .text-compare-page .container { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; }
+    .text-compare-page .tool-header { min-height: 64px; padding: 10px 14px; }
+    .text-compare-page .tool-title { font-size: 22px; }
+    .text-compare-page .tool-title small { display: none; }
+    .text-compare-page .control-panel { padding: 10px 14px; }
+    .text-compare-page .line-numbers { width: 38px; }
+    .text-compare-page .result-section { padding: 10px 14px 14px; }
+}
+
+@media (max-width: 600px) {
+    .text-compare-page .tool-header { align-items: flex-start; }
+    .text-compare-page .btn-group { gap: 5px; justify-content: flex-end; }
+    .text-compare-page .tool-header button { min-height: 32px; padding: 5px 8px; }
+    .text-compare-page .control-panel { gap: 8px; }
+    .text-compare-page .control-group { width: 100%; }
+    .text-compare-page .mode-switch { width: 100%; }
+    .text-compare-page .mode-btn { flex: 1; padding-inline: 5px; }
+}

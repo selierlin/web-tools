@@ -575,12 +575,14 @@
             border-radius: 10px;
         }
     </style>
+    <link rel="stylesheet" href="styles/workbench.css">
+    <link rel="stylesheet" href="styles/text-compare.css">
 </head>
-<body>
+<body class="text-compare-page">
 <div class="container">
     <header class="tool-header">
         <div class="header-left">
-            <div class="tool-title">文本对比 v2.0</div>
+            <div class="tool-title">文本对比<span>.</span><small>逐行、集合与 JSON 差异对比</small></div>
         </div>
         <div class="btn-group">
             <div class="header-summary" id="summaryBar">
@@ -642,14 +644,14 @@
     </section>
 
     <main class="compare-content">
-        <div class="text-panel" id="leftPanel">
+        <div class="text-panel" id="leftPanel" data-panel-label="原始文本 A">
             <div class="drop-mask">拖拽文件到左侧区域</div>
             <div class="line-numbers" id="leftLineNumbers"></div>
             <div class="text-editor" id="leftTextEditor">
                 <textarea id="leftText" placeholder="// 左侧内容：支持拖拽文件或粘贴"></textarea>
             </div>
         </div>
-        <div class="text-panel" id="rightPanel">
+        <div class="text-panel" id="rightPanel" data-panel-label="原始文本 B">
             <div class="drop-mask">拖拽文件到右侧区域</div>
             <div class="line-numbers" id="rightLineNumbers"></div>
             <div class="text-editor" id="rightTextEditor">

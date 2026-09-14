@@ -1,0 +1,64 @@
+/* Nacos management follows the shared workbench visual system. */
+.nacos-page { min-height: 100dvh; background: var(--wb-bg); color: var(--wb-ink); font-family: var(--wb-font); }
+.nacos-page .container { max-width: 1680px; }
+.nacos-page-header { position: relative; background: var(--wb-surface); border-bottom: 1px solid var(--wb-line); box-shadow: none; }
+.nacos-page-header > .container { min-height: 70px; padding-top: 14px; padding-bottom: 14px; }
+.nacos-page-header .fa-server { color: var(--wb-accent) !important; font-size: 20px; }
+.nacos-page-header h1 { color: var(--wb-ink) !important; font-size: 26px !important; font-weight: 650 !important; letter-spacing: -.5px; line-height: 1.15; }
+.nacos-page-header h1 span { color: var(--wb-accent); }
+.nacos-page-header p { margin-top: 3px; color: var(--wb-muted); font-size: 13px; font-weight: 400; }
+.nacos-page #connection-status { padding: 5px 8px; border: 1px solid var(--wb-line); border-radius: 999px; color: var(--wb-muted); font-size: 12px; }
+.nacos-page #refresh-btn, .nacos-page #save-config { min-height: 38px; border: 1px solid var(--wb-accent); border-radius: 6px; background: var(--wb-accent); color: #fff; font-size: 14px; font-weight: 600; box-shadow: none; }
+.nacos-page #refresh-btn:hover, .nacos-page #save-config:hover { background: var(--wb-accent-hover); }
+.nacos-config-shell { padding-top: 20px !important; padding-bottom: 0 !important; }
+.nacos-page .nacos-config-card { margin-bottom: 0; padding: 16px; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: #edf2ed; box-shadow: none; }
+.nacos-page .nacos-config-card .grid { grid-template-columns: minmax(240px, 1.2fr) minmax(220px, 1fr) minmax(200px, auto); gap: 14px; align-items: end; }
+.nacos-page label { color: var(--wb-ink) !important; font-size: 13px !important; font-weight: 650 !important; }
+.nacos-page input, .nacos-page select { min-height: 38px; border-color: var(--wb-line) !important; border-radius: 6px !important; color: var(--wb-ink) !important; background: var(--wb-surface) !important; font-size: 14px !important; box-shadow: none !important; }
+.nacos-page input:focus, .nacos-page select:focus { border-color: var(--wb-accent) !important; box-shadow: 0 0 0 3px #17654e12 !important; }
+.nacos-main { padding-top: 20px; }
+.nacos-tabs { margin-bottom: 16px; padding: 6px; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); }
+.nacos-tabs #tab-list { gap: 6px; margin-bottom: 0; }
+.nacos-tabs li { margin: 0 !important; }
+.nacos-tabs button { padding: 8px 12px !important; border: 1px solid transparent !important; border-radius: 6px !important; color: var(--wb-muted) !important; font-size: 14px; }
+.nacos-tabs #service-tab.border-nacos, .nacos-tabs #config-tab.border-nacos { border-color: var(--wb-accent) !important; background: var(--wb-tint); color: var(--wb-accent) !important; }
+.nacos-tabs button:hover { background: #f5f8f5 !important; color: var(--wb-ink) !important; }
+.nacos-page .nacos-data-card { overflow: hidden; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); box-shadow: none; }
+.nacos-page .nacos-data-card > div:first-child { min-height: 62px; padding: 12px 16px; border-bottom-color: var(--wb-line); background: #f7f9f7; }
+.nacos-page .nacos-data-card h2 { color: var(--wb-ink) !important; font-size: 16px !important; }
+.nacos-page .nacos-data-card h2 i { color: var(--wb-accent) !important; }
+.nacos-page .nacos-data-card input[type="text"] { width: min(320px, 38vw); }
+.nacos-page table { color: var(--wb-ink); font-size: 14px; }
+.nacos-page table thead tr { background: #f5f8f5 !important; }
+.nacos-page table th { padding: 10px 14px !important; border-color: var(--wb-line) !important; color: #52615b !important; font-size: 12px !important; font-weight: 650 !important; white-space: nowrap; }
+.nacos-page table td { padding: 10px 14px !important; border-color: #edf1ee !important; }
+.nacos-page .table-hover-row tr:hover { background: #f3f8f4 !important; }
+.nacos-page .sortable-header:hover { color: var(--wb-accent) !important; }
+.nacos-page .namespace-name { color: var(--wb-accent); }
+.nacos-page .nacos-data-card > div:last-child { border-top-color: var(--wb-line); background: #f7f9f7; }
+.nacos-page #services-pagination, .nacos-page #configs-pagination { padding: 12px 16px; }
+.nacos-page #prev-page, .nacos-page #next-page, .nacos-page #config-prev-page, .nacos-page #config-next-page, .nacos-page #close-modal-btn { min-height: 32px; border: 1px solid var(--wb-line); border-radius: 5px; background: var(--wb-surface); color: var(--wb-ink); font-size: 13px; }
+.nacos-page #prev-page:hover, .nacos-page #next-page:hover, .nacos-page #config-prev-page:hover, .nacos-page #config-next-page:hover, .nacos-page #close-modal-btn:hover { background: var(--wb-tint); border-color: var(--wb-accent); }
+.nacos-page .nacos-modal { background: #15231e80; }
+.nacos-page .nacos-modal-panel { border: 1px solid var(--wb-line); border-radius: var(--wb-radius); box-shadow: 0 24px 60px -30px #1b322a80; }
+.nacos-page .nacos-modal-panel > div:first-child, .nacos-page .nacos-modal-panel > div:last-child { border-color: var(--wb-line); background: #f7f9f7; }
+.nacos-page #close-modal { min-height: 30px; width: 30px; padding: 0; border-radius: 50%; }
+.nacos-page #close-modal:hover { color: #80332a; background: #fff3f1; }
+.nacos-footer { border-color: var(--wb-line); background: transparent; color: var(--wb-muted); }
+.nacos-footer p { color: var(--wb-muted) !important; }
+@media (max-width: 900px) {
+  .nacos-page-header > .container { min-height: 62px; }
+  .nacos-page-header h1 { font-size: 23px !important; }
+  .nacos-config-shell, .nacos-main { padding-left: 12px !important; padding-right: 12px !important; }
+  .nacos-page .nacos-config-card .grid { grid-template-columns: 1fr; }
+  .nacos-page .nacos-data-card input[type="text"] { width: min(280px, 55vw); }
+}
+@media (max-width: 600px) {
+  .nacos-page-header > .container { padding-left: 12px; padding-right: 12px; }
+  .nacos-page-header p, .nacos-page #connection-status span { display: none; }
+  .nacos-page #refresh-btn span { display: none; }
+  .nacos-page .nacos-data-card > div:first-child { align-items: flex-start; flex-direction: column; }
+  .nacos-page .nacos-data-card input[type="text"] { width: 100%; }
+  .nacos-tabs { overflow-x: auto; }
+  .nacos-tabs #tab-list { flex-wrap: nowrap; }
+}
