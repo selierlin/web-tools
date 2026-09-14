@@ -1473,8 +1473,8 @@ window.COMMANDS_DATA = [
         category: "常用工具",
         name: "Homebrew 清理旧版本缓存",
         desc: "清理旧版本软件包和下载缓存，释放磁盘空间。",
-        command: "brew cleanup",
-        tags: ["brew", "homebrew", "macos", "清理", "缓存", "包管理"]
+        command: "brew cleanup\n# 彻底清理所有缓存（含所有版本）\nbrew cleanup --prune=all",
+        tags: ["brew", "homebrew", "macos", "清理", "缓存", "prune", "包管理"]
       },
       {
         category: "常用工具",
