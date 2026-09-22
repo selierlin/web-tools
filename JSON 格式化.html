@@ -397,6 +397,7 @@
                 <p><b>键名排序</b>：递归按键名排序</p>
                 <p><b>压缩 JSON</b>：移除空白字符</p>
                 <p><b>树形预览</b>：展开或折叠节点</p>
+                <p><b>双击编辑</b>：直接修改键名或值</p>
             </div>
         </aside>
 
@@ -416,6 +417,7 @@
                 <div class="output-sub-controls">
                     <button class="sub-btn" id="expandAllBtn">展开</button>
                     <button class="sub-btn" id="collapseAllBtn">折叠</button>
+                    <button class="sub-btn" id="expandOutputBtn" type="button">放大</button>
                 </div>
             </div>
             <div id="jsonOutputTree" class="json-output-tree"></div>
@@ -594,7 +596,7 @@
                     const path = [...parentPath, index];
                     html += `<div class="fe-tree-row">`;
                     html += `<span class="fe-key">[${index}]</span>: `;
-                    html += typeof item === 'object' && item !== null ? buildTreeHtml(item, path) : formatPrimitive(item);
+                    html += typeof item === 'object' && item !== null ? buildTreeHtml(item, path) : formatPrimitive(item, pathToken(path));
                     html += deleteButton(path, `第 ${index + 1} 项`);
                     html += index < obj.length - 1 ? `<span class="fe-bracket">,</span>` : '';
                     html += `</div>`;
@@ -611,8 +613,8 @@
                     const value = obj[key];
                     const path = [...parentPath, key];
                     html += `<div class="fe-tree-row">`;
-                    html += `<span class="fe-key">"${escapeHtml(key)}"</span>: `;
-                    html += typeof value === 'object' && value !== null ? buildTreeHtml(value, path) : formatPrimitive(value);
+                    html += `<span class="fe-key fe-editable" data-path="${pathToken(path)}" data-edit="key" title="双击修改键名">"${escapeHtml(key)}"</span>: `;
+                    html += typeof value === 'object' && value !== null ? buildTreeHtml(value, path) : formatPrimitive(value, pathToken(path));
                     html += deleteButton(path, `属性 ${key}`);
                     html += index < keys.length - 1 ? `<span class="fe-bracket">,</span>` : '';
                     html += `</div>`;
@@ -624,17 +626,19 @@
             return html;
         }
 
-        function formatPrimitive(value) {
-            if (typeof value === 'string') return `<span class="fe-string">"${escapeHtml(value)}"</span>`;
-            if (typeof value === 'number') return `<span class="fe-number">${value}</span>`;
-            if (typeof value === 'boolean') return `<span class="fe-boolean">${value}</span>`;
-            if (value === null) return `<span class="fe-null">null</span>`;
+        function formatPrimitive(value, token = '') {
+            const editable = token ? ` fe-editable" data-path="${token}" data-edit="value" title="双击修改值` : '';
+            if (typeof value === 'string') return `<span class="fe-string${editable}">"${escapeHtml(value)}"</span>`;
+            if (typeof value === 'number') return `<span class="fe-number${editable}">${value}</span>`;
+            if (typeof value === 'boolean') return `<span class="fe-boolean${editable}">${value}</span>`;
+            if (value === null) return `<span class="fe-null${editable}">null</span>`;
             return '';
         }
 
         jsonOutputTree.innerHTML = buildTreeHtml(data);
         bindToggleEvents();
         bindDeleteEvents();
+        bindEditEvents();
         bindTreeRowHover();
     }
 
@@ -676,6 +680,78 @@
                 renderJsonTree(parsed);
                 showTip('已删除所选节点');
             };
+        });
+    }
+
+    function applyTreeEdit(span, path, rawText) {
+        const parsed = parseJson(jsonInput.value.trim());
+        if (!parsed) return;
+
+        if (span.dataset.edit === 'key') {
+            const newKey = rawText.trim();
+            const oldKey = path[path.length - 1];
+            if (!newKey || newKey === oldKey) return;
+            const container = path.slice(0, -1).reduce((node, key) => node?.[key], parsed);
+            if (!container || typeof container !== 'object' || Array.isArray(container)) return;
+            // 重建对象以保持键的原始顺序
+            const rebuilt = {};
+            for (const k of Object.keys(container)) rebuilt[k === oldKey ? newKey : k] = container[k];
+            if (path.length === 1) {
+                Object.keys(parsed).forEach(k => delete parsed[k]);
+                Object.assign(parsed, rebuilt);
+            } else {
+                const parentOfContainer = path.slice(0, -2).reduce((node, key) => node?.[key], parsed);
+                const containerKey = path[path.length - 2];
+                parentOfContainer[containerKey] = rebuilt;
+            }
+            showTip('键名已更新');
+        } else {
+            const key = path[path.length - 1];
+            const container = path.slice(0, -1).reduce((node, k) => node?.[k], parsed);
+            if (!container || typeof container !== 'object') return;
+            // 智能解析：数字/布尔/null/带引号字符串按 JSON 语义，其余按纯文本
+            let newVal;
+            try { newVal = JSON.parse(rawText); } catch (e) { newVal = rawText; }
+            container[key] = newVal;
+            showTip('值已更新');
+        }
+        jsonInput.value = formatJson(parsed);
+        renderJsonTree(parsed);
+    }
+
+    function startInlineEdit(span) {
+        const path = JSON.parse(decodeURIComponent(span.dataset.path));
+        let initial = span.textContent;
+        if (span.dataset.edit === 'key' || span.classList.contains('fe-string')) {
+            initial = initial.replace(/^"|"$/g, '');
+        }
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'fe-edit-input';
+        input.value = initial;
+        span.style.display = 'none';
+        span.after(input);
+        input.focus();
+        input.select();
+
+        let finished = false;
+        const finish = (commit) => {
+            if (finished) return;
+            finished = true;
+            input.remove();
+            span.style.display = '';
+            if (commit) applyTreeEdit(span, path, input.value);
+        };
+        input.addEventListener('blur', () => finish(true));
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+            else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+        });
+    }
+
+    function bindEditEvents() {
+        jsonOutputTree.querySelectorAll('.fe-editable').forEach(el => {
+            el.addEventListener('dblclick', function() { startInlineEdit(this); });
         });
     }
 
@@ -769,6 +845,18 @@
     copyCompressBtn.addEventListener('click', () => copyToClipboard(jsonCompressText, '压缩代码已复制'));
     expandAllBtn.addEventListener('click', expandAllNodes);
     collapseAllBtn.addEventListener('click', collapseAllNodes);
+
+    // 放大/还原输出面板
+    const expandOutputBtn = document.getElementById('expandOutputBtn');
+    const outputPanel = document.querySelector('.json-output-panel');
+    const setOutputExpanded = (expanded) => {
+        outputPanel.classList.toggle('expanded', expanded);
+        expandOutputBtn.textContent = expanded ? '还原' : '放大';
+    };
+    expandOutputBtn.addEventListener('click', () => setOutputExpanded(!outputPanel.classList.contains('expanded')));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setOutputExpanded(false);
+    });
 </script>
 <script src="scripts/form-persist.js"></script>
 </body>
