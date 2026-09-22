@@ -65,7 +65,15 @@
         </div>
 
         <div class="text-box result-panel">
-            <label class="panel-label" for="outputText"><span><b>02</b> 处理结果</span><span class="panel-hint">只读</span></label>
+            <label class="panel-label" for="outputText">
+                <span><b>02</b> 处理结果</span>
+                <span class="panel-tools">
+                    <span class="panel-hint">只读</span>
+                    <button type="button" class="panel-expand-btn" id="outputExpandBtn" title="放大" aria-label="放大或还原结果框">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </button>
+                </span>
+            </label>
             <div class="editor-wrapper">
                 <div class="line-numbers" id="outputLineNums">1</div>
                 <textarea id="outputText" placeholder="处理后的文本会显示在这里" readonly spellcheck="false"></textarea>
@@ -360,6 +368,21 @@
                 }
             }, 2000);
         }
+    });
+
+    // 放大/还原结果框
+    const outputExpandBtn = document.getElementById('outputExpandBtn');
+    const resultPanel = document.querySelector('.result-panel');
+    const setResultExpanded = (expanded) => {
+        resultPanel.classList.toggle('expanded', expanded);
+        outputExpandBtn.title = expanded ? '还原' : '放大';
+    };
+    outputExpandBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setResultExpanded(!resultPanel.classList.contains('expanded'));
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setResultExpanded(false);
     });
 
     updateLineNumbers(inputText, inputLineNums);

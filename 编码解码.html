@@ -132,7 +132,6 @@
             .btn-primary-hover:hover,
             .btn-secondary-hover:hover,
             .func-btn:hover,
-            #copySingleBtn:hover,
             #expandJsonBtn:hover,
             #collapseJsonBtn:hover {
                 transform: none !important;
@@ -143,29 +142,6 @@
     <link rel="stylesheet" href="styles/codec.css">
 </head>
 <body class="codec-page bg-gray-50 text-dark font-sans min-h-screen flex flex-col antialiased">
-
-<!-- 导航栏 -->
-<header class="codec-page-heading glass-header border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-    <div class="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-md transition-all hover:shadow-lg hover:scale-105">
-                <svg class="w-5.5 h-5.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            </div>
-            <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-                编码解码<span class="title-dot">.</span>
-                <small>常用文本编码、解码、摘要与格式转换</small>
-            </h1>
-        </div>
-        <div class="flex gap-3">
-            <button id="clearBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg btn-secondary-hover">
-                清空内容
-            </button>
-            <button id="copyResultBtn" class="px-3 py-1.5 md:px-4 md:py-2 text-sm font-medium bg-primary text-white hover:bg-primary-hover rounded-lg shadow-md btn-primary-hover">
-                复制结果
-            </button>
-        </div>
-    </div>
-</header>
 
 <main class="codec-main flex-grow container mx-auto px-4 py-6 max-w-7xl">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -279,15 +255,19 @@
             </div>
 
             <!-- 结果区 -->
-            <div class="bg-white rounded-2xl shadow-xl-soft border border-gray-100 flex-grow flex flex-col min-h-[350px] card-hover">
+            <div id="resultCard" class="bg-white rounded-2xl shadow-xl-soft border border-gray-100 flex-grow flex flex-col min-h-[350px] card-hover">
                 <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
                     <div class="flex items-center gap-2">
                         <span class="font-semibold text-gray-700 text-base">处理结果</span>
                         <span id="resultStatus" class="px-2.5 py-1 bg-white border border-gray-200 text-[10px] md:text-xs rounded-full shadow-sm text-gray-400">等待操作</span>
                     </div>
-                    <button id="copySingleBtn" class="p-2 text-gray-400 hover:text-primary transition-colors active:scale-90 transform hover:scale-105">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button id="expandResultBtn" class="codec-tool-btn" type="button" title="放大" aria-label="放大或还原结果区">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                        </button>
+                        <button id="clearBtn" class="codec-tool-btn" type="button">清空内容</button>
+                        <button id="copyResultBtn" class="codec-tool-btn codec-tool-btn-primary" type="button">复制结果</button>
+                    </div>
                 </div>
                 <textarea
                         id="resultText"
@@ -330,7 +310,8 @@
     const resultStatus = document.getElementById('resultStatus');
     const clearBtn = document.getElementById('clearBtn');
     const copyResultBtn = document.getElementById('copyResultBtn');
-    const copySingleBtn = document.getElementById('copySingleBtn');
+    const expandResultBtn = document.getElementById('expandResultBtn');
+    const resultCard = document.getElementById('resultCard');
     const funcBtns = document.querySelectorAll('.func-btn');
     const inputCharCount = document.getElementById('inputCharCount');
     const resultJsonPanel = document.getElementById('resultJsonPanel');
@@ -435,7 +416,16 @@
     };
 
     copyResultBtn.addEventListener('click', copyToClipboard);
-    copySingleBtn.addEventListener('click', copyToClipboard);
+
+    // 放大/还原结果区
+    const setResultExpanded = (expanded) => {
+        resultCard.classList.toggle('maximized', expanded);
+        expandResultBtn.title = expanded ? '还原' : '放大';
+    };
+    expandResultBtn.addEventListener('click', () => setResultExpanded(!resultCard.classList.contains('maximized')));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setResultExpanded(false);
+    });
 
     const gb2312Codec = (() => {
         let decoder = null;
@@ -647,6 +637,24 @@
         return '';
     };
 
+    const getCollapseSummary = (obj) => {
+        const isArray = Array.isArray(obj);
+        const count = isArray ? obj.length : Object.keys(obj).length;
+        const unit = isArray ? '项' : '属性';
+        const candidate = isArray
+            ? obj.find(item => item && typeof item === 'object' && !Array.isArray(item))
+            : obj;
+        const labelKey = candidate && Object.prototype.hasOwnProperty.call(candidate, 'name')
+            ? 'name'
+            : candidate && Object.prototype.hasOwnProperty.call(candidate, 'title')
+                ? 'title'
+                : null;
+        const labelValue = labelKey && typeof candidate[labelKey] !== 'object'
+            ? String(candidate[labelKey]).slice(0, 40)
+            : '';
+        return `(${count} ${unit}${labelValue ? ` · ${labelKey}: ${escapeHtml(labelValue)}` : ''})`;
+    };
+
     const buildTreeHtml = (obj, parentPath = []) => {
         let html = '';
         const currentPath = parentPath.join('.');
@@ -654,11 +662,11 @@
             const count = obj.length;
             html += `<span class="fe-bracket">[</span> `;
             html += `<span class="fe-toggle" data-path="${currentPath}">▼</span>`;
-            html += `<span class="fe-collapse-note text-gray-400 text-xs" data-path="${currentPath}" style="display:none">(${count} 项)</span>`;
+            html += `<span class="fe-collapse-note text-gray-400 text-xs" data-path="${currentPath}" style="display:none">${getCollapseSummary(obj)}</span>`;
             html += `<div class="fe-tree-children" data-path="${currentPath}" style="display:block;">`;
             obj.forEach((item, index) => {
                 const path = [...parentPath, `arr_${index}`];
-                html += `<div style="padding-left: 20px;">`;
+                html += `<div class="fe-tree-row">`;
                 html += `<span class="fe-key">[${index}]</span>: `;
                 html += typeof item === 'object' && item !== null ? buildTreeHtml(item, path) : formatPrimitive(item);
                 html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
@@ -670,18 +678,17 @@
 
         if (typeof obj === 'object' && obj !== null) {
             const keys = Object.keys(obj);
-            const count = keys.length;
             html += `<span class="fe-bracket">{</span> `;
             html += `<span class="fe-toggle" data-path="${currentPath}">▼</span>`;
-            html += `<span class="fe-collapse-note text-gray-400 text-xs" data-path="${currentPath}" style="display:none">(${count} 属性)</span>`;
+            html += `<span class="fe-collapse-note text-gray-400 text-xs" data-path="${currentPath}" style="display:none">${getCollapseSummary(obj)}</span>`;
             html += `<div class="fe-tree-children" data-path="${currentPath}" style="display:block;">`;
             keys.forEach((key, index) => {
                 const value = obj[key];
                 const path = [...parentPath, key.replace(/\W/g, '_')];
-                html += `<div style="padding-left: 20px;">`;
+                html += `<div class="fe-tree-row">`;
                 html += `<span class="fe-key">"${escapeHtml(key)}"</span>: `;
                 html += typeof value === 'object' && value !== null ? buildTreeHtml(value, path) : formatPrimitive(value);
-                html += index < count - 1 ? `<span class="fe-bracket">,</span>` : '';
+                html += index < keys.length - 1 ? `<span class="fe-bracket">,</span>` : '';
                 html += `</div>`;
             });
             html += `</div><span class="fe-bracket">}</span>`;
