@@ -20,7 +20,7 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--wb-accen
 .panel-label { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
 .panel-label b { font: 12px var(--wb-mono); color: var(--wb-accent); margin-right: 10px; }
 .panel-hint { color: var(--wb-muted); font-size: 12px; font-weight: 400; }
-.editor-wrapper { display: flex; flex: 1 1 auto; height: auto; min-height: 240px; overflow: hidden; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); transition: border-color .15s, box-shadow .15s; }
+.editor-wrapper { display: flex; flex: 1 1 0; height: auto; min-height: 240px; overflow: hidden; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); transition: border-color .15s, box-shadow .15s; }
 .editor-wrapper:focus-within { border-color: var(--wb-accent); box-shadow: 0 0 0 3px #17654e12; }
 .editor-wrapper.previewing { border: 1px dashed var(--wb-warning); background: #fffcf5; }
 .line-numbers { flex: 0 0 46px; padding: 18px 12px 18px 0; text-align: right; white-space: pre; user-select: none; overflow: hidden; pointer-events: none; font: 14px/1.75 var(--wb-mono); color: #8a978e; background: #f8faf7; border-right: 1px solid #edf0eb; }
