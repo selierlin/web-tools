@@ -523,6 +523,28 @@
         }
     }
 
+    // 折叠摘要展示的标签字段优先级：先精确匹配，再按包含关系降级；比较均忽略大小写
+    const SUMMARY_LABEL_PRIORITY = [
+        { key: 'name', mode: 'exact' },
+        { key: 'title', mode: 'exact' },
+        { key: 'name', mode: 'contains' },
+        { key: 'title', mode: 'contains' }
+    ];
+
+    function findSummaryLabelKey(candidate) {
+        if (!candidate || typeof candidate !== 'object') return null;
+        const keys = Object.keys(candidate);
+        for (const rule of SUMMARY_LABEL_PRIORITY) {
+            const hit = keys.find(key => {
+                const lower = key.toLowerCase();
+                const matched = rule.mode === 'exact' ? lower === rule.key : lower.includes(rule.key);
+                return matched && typeof candidate[key] !== 'object';
+            });
+            if (hit) return hit;
+        }
+        return null;
+    }
+
     function renderJsonTree(data) {
         if (data === null) {
             jsonOutputTree.innerHTML = '';
@@ -551,14 +573,8 @@
             const candidate = isArray
                 ? obj.find(item => item && typeof item === 'object' && !Array.isArray(item))
                 : obj;
-            const labelKey = candidate && Object.prototype.hasOwnProperty.call(candidate, 'name')
-                ? 'name'
-                : candidate && Object.prototype.hasOwnProperty.call(candidate, 'title')
-                    ? 'title'
-                    : null;
-            const labelValue = labelKey && typeof candidate[labelKey] !== 'object'
-                ? String(candidate[labelKey]).slice(0, 40)
-                : '';
+            const labelKey = findSummaryLabelKey(candidate);
+            const labelValue = labelKey ? String(candidate[labelKey]).slice(0, 40) : '';
             return `(${count} ${unit}${labelValue ? ` · ${labelKey}: ${escapeHtml(labelValue)}` : ''})`;
         }
 
