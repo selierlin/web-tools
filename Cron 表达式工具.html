@@ -4,420 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cron 表达式工具</title>
-    <style>
-        :root {
-            --primary-color: #4361ee;
-            --primary-hover: #3a56d4;
-            --success-color: #2ec4b6;
-            --warning-color: #f77f00;
-            --danger-color: #d62828;
-            --secondary-color: #64748b;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --radius: 14px;
-            --shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.1), 0 6px 12px -4px rgba(0, 0, 0, 0.05);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Inter", "system-ui", "-apple-system", "Microsoft YaHei", sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 16px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1400px;
-            background-color: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        /* 顶部导航 */
-        .tool-header {
-            background-color: #1e293b;
-            color: #ffffff;
-            padding: 18px 24px;
-            font-size: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            letter-spacing: 0.5px;
-        }
-
-        .tool-header::before {
-            content: "⏰";
-            margin-right: 12px;
-            color: var(--success-color);
-            font-family: monospace;
-        }
-
-        /* 控制栏优化 */
-        .tool-controls {
-            padding: 16px 24px;
-            background-color: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-
-        .btn:active { transform: scale(0.96); }
-
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-
-        .btn-success { background-color: var(--success-color); color: white; }
-        .btn-success:hover { opacity: 0.9; }
-
-        .btn-warning { background-color: var(--warning-color); color: white; }
-        .btn-warning:hover { opacity: 0.9; }
-
-        .btn-danger { background-color: var(--danger-color); color: white; }
-        .btn-danger:hover { opacity: 0.9; }
-
-        .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-secondary:hover { background-color: #e2e8f0; }
-
-        /* 内容区响应式布局 */
-        .tool-content {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            min-height: 600px;
-        }
-
-        .cron-input-section {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .cron-input-panel {
-            flex: 1;
-            min-width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .cron-examples-panel {
-            flex: 1;
-            min-width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .label {
-            font-size: 14px;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .label-note {
-            font-size: 11px;
-            font-weight: 400;
-            text-transform: none;
-            letter-spacing: 0;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 120px;
-            padding: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            font-size: 14px;
-            line-height: 1.6;
-            resize: vertical;
-            background-color: #f8fafc;
-            color: #334155;
-            font-family: "Cascadia Code", "Consolas", monospace;
-            transition: border-color 0.2s;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            font-size: 14px;
-            line-height: 1.6;
-            background-color: #f8fafc;
-            color: #334155;
-            font-family: "Cascadia Code", "Consolas", monospace;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
-        }
-
-        /* 输出区美化 */
-        .cron-output-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .cron-schedule-list {
-            width: 100%;
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            background: #ffffff;
-            padding: 16px;
-        }
-
-        .schedule-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s;
-        }
-
-        .schedule-item:hover {
-            background-color: #f8fafc;
-        }
-
-        .schedule-item:last-child {
-            border-bottom: none;
-        }
-
-        .schedule-index {
-            width: 30px;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-right: 16px;
-        }
-
-        .schedule-time {
-            flex: 1;
-            font-family: "Cascadia Code", "Consolas", monospace;
-            font-size: 14px;
-        }
-
-        /* 滚动条美化 */
-        ::-webkit-scrollbar { width: 7px; height: 7px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,0.5); }
-
-        .result-tip {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            padding-left: 4px;
-        }
-
-        .cron-hint {
-            font-size: 12px;
-            line-height: 1.6;
-            color: var(--warning-color);
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-bottom: 10px;
-        }
-
-        .examples-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 10px;
-        }
-
-        .example-item {
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            background-color: #f8fafc;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .example-item:hover {
-            border-color: var(--primary-color);
-            background-color: #f0f7ff;
-            transform: translateY(-2px);
-        }
-
-        .example-expression {
-            font-family: "Cascadia Code", "Consolas", monospace;
-            font-size: 13px;
-            margin-bottom: 4px;
-            color: var(--primary-color);
-        }
-
-        .example-description {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        /* 手机端适配 */
-        @media (max-width: 992px) {
-            body { padding: 8px; }
-
-            .tool-header { padding: 14px 18px; font-size: 18px; }
-
-            .tool-content {
-                padding: 16px;
-                gap: 16px;
-            }
-
-            .cron-input-section {
-                flex-direction: column;
-            }
-
-            .cron-input-panel,
-            .cron-examples-panel {
-                min-width: unset;
-            }
-
-            .tool-controls {
-                padding: 12px;
-                gap: 8px;
-            }
-
-            .btn {
-                flex: 1 1 calc(50% - 10px); /* 按钮两列排布 */
-                justify-content: center;
-                padding: 12px 8px;
-                font-size: 13px;
-            }
-
-            .examples-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .btn {
-                flex: 1 1 100%; /* 极小屏幕单列排布 */
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles/workbench.css">
+    <link rel="stylesheet" href="styles/cron.css">
 </head>
-<body>
-<div class="container">
-    <div class="tool-header">Cron 表达式工具</div>
+<body class="cron-tool">
+<main class="container">
+    <header class="page-heading">
+        <h1>Cron 表达式<span class="title-dot">.</span></h1>
+        <p class="page-description">解析 5 段与 6 段表达式，计算最近 10 次运行时间</p>
+    </header>
 
-    <div class="tool-controls">
-        <button class="btn btn-primary" id="calculateBtn"><span>🔍</span> 计算运行时间</button>
-        <button class="btn btn-secondary" id="clearBtn"><span>🗑</span> 清空</button>
-        <button class="btn btn-secondary" id="copyBtn"><span>📋</span> 复制表达式</button>
-    </div>
+    <section class="workspace" aria-label="Cron 表达式工作区">
+        <aside class="workspace-sidebar">
+            <p class="sidebar-title">常用示例</p>
+            <div class="examples-grid">
+                <button class="example-item" type="button" data-cron="0 0 * * *">
+                    <span class="example-expression">0 0 * * *</span>
+                    <span class="example-description">每天 00:00（5 段）</span>
+                </button>
+                <button class="example-item" type="button" data-cron="*/15 * * * *">
+                    <span class="example-expression">*/15 * * * *</span>
+                    <span class="example-description">每 15 分钟（5 段）</span>
+                </button>
+                <button class="example-item" type="button" data-cron="0 9 * * MON-FRI">
+                    <span class="example-expression">0 9 * * MON-FRI</span>
+                    <span class="example-description">工作日 09:00（字母区间）</span>
+                </button>
+                <button class="example-item" type="button" data-cron="0 0 12 * * SUN">
+                    <span class="example-expression">0 0 12 * * SUN</span>
+                    <span class="example-description">每周日 12:00（字母，无歧义）</span>
+                </button>
+                <button class="example-item" type="button" data-cron="*/5 * * * * *">
+                    <span class="example-expression">*/5 * * * * *</span>
+                    <span class="example-description">每 5 秒（6 段）</span>
+                </button>
+                <button class="example-item" type="button" data-cron="0 0 12 * * *">
+                    <span class="example-expression">0 0 12 * * *</span>
+                    <span class="example-description">每天 12:00:00（6 段）</span>
+                </button>
+                <button class="example-item" type="button" data-cron="0 0 12 ? * MON-FRI">
+                    <span class="example-expression">0 0 12 ? * MON-FRI</span>
+                    <span class="example-description">工作日 12:00（Quartz 占位符 ?）</span>
+                </button>
+                <button class="example-item" type="button" data-cron="0 0 0 1 JAN ?">
+                    <span class="example-expression">0 0 0 1 JAN ?</span>
+                    <span class="example-description">每年 1 月 1 日（月份别名 JAN）</span>
+                </button>
+            </div>
 
-    <div class="tool-content">
-        <div class="cron-input-section">
+            <div class="format-guide">
+                <h2>格式说明</h2>
+                <p><b>5 段</b>：分 时 日 月 周</p>
+                <p><b>6 段</b>：秒 分 时 日 月 周</p>
+                <p><b>字母别名</b>：<code>SUN</code>、<code>JAN</code> 等，各框架含义一致</p>
+                <p><b>周字段</b>：按 <code>0=周日</code> 计算，纯数字写法在 Quartz 下含义不同</p>
+            </div>
+        </aside>
+
+        <div class="tool-content">
             <div class="cron-input-panel">
                 <div class="label">
-                    <span>📥 Cron 表达式</span>
-                    <span class="label-note">5 段：分 时 日 月 周 ｜ 6 段：秒 分 时 日 月 周</span>
+                    <span><b>01</b> Cron 表达式</span>
+                    <span class="panel-hint">5 段或 6 段</span>
                 </div>
                 <input type="text" id="cronInput" placeholder="输入 Cron 表达式，例如：0 12 * * * 或 */5 * * * * *" spellcheck="false">
                 <div class="result-tip" id="resultTip">就绪</div>
             </div>
 
-            <div class="cron-examples-panel">
+            <div class="cron-output-panel">
                 <div class="label">
-                    <span>📚 常用示例</span>
+                    <span><b>02</b> 最近 10 次运行时间</span>
                 </div>
-                <div class="examples-grid">
-                    <div class="example-item" data-cron="0 0 * * *">
-                        <div class="example-expression">0 0 * * *</div>
-                        <div class="example-description">每天 00:00（5 段）</div>
-                    </div>
-                    <div class="example-item" data-cron="*/15 * * * *">
-                        <div class="example-expression">*/15 * * * *</div>
-                        <div class="example-description">每 15 分钟（5 段）</div>
-                    </div>
-                    <div class="example-item" data-cron="0 9 * * MON-FRI">
-                        <div class="example-expression">0 9 * * MON-FRI</div>
-                        <div class="example-description">工作日 09:00（字母区间）</div>
-                    </div>
-                    <div class="example-item" data-cron="0 0 12 * * SUN">
-                        <div class="example-expression">0 0 12 * * SUN</div>
-                        <div class="example-description">每周日 12:00（字母，无歧义）</div>
-                    </div>
-                    <div class="example-item" data-cron="*/5 * * * * *">
-                        <div class="example-expression">*/5 * * * * *</div>
-                        <div class="example-description">每 5 秒（6 段）</div>
-                    </div>
-                    <div class="example-item" data-cron="0 0 12 * * *">
-                        <div class="example-expression">0 0 12 * * *</div>
-                        <div class="example-description">每天 12:00:00（6 段）</div>
-                    </div>
-                    <div class="example-item" data-cron="0 0 12 ? * MON-FRI">
-                        <div class="example-expression">0 0 12 ? * MON-FRI</div>
-                        <div class="example-description">工作日 12:00（Quartz 占位符 ?）</div>
-                    </div>
-                    <div class="example-item" data-cron="0 0 0 1 JAN ?">
-                        <div class="example-expression">0 0 0 1 JAN ?</div>
-                        <div class="example-description">每年 1 月 1 日（月份别名 JAN）</div>
-                    </div>
-                </div>
+                <div class="cron-hint" id="dayOfWeekHint" hidden></div>
+                <div id="cronScheduleList" class="cron-schedule-list"></div>
             </div>
         </div>
 
-        <div class="cron-output-panel">
-            <div class="label">
-                <span>📤 最近 10 次运行时间</span>
-            </div>
-            <div class="cron-hint" id="dayOfWeekHint" hidden></div>
-            <div id="cronScheduleList" class="cron-schedule-list"></div>
+        <div class="tool-controls">
+            <button class="btn btn-success" id="calculateBtn">计算运行时间</button>
+            <button class="btn btn-danger" id="clearBtn">清空</button>
+            <button class="btn btn-secondary" id="copyBtn">复制表达式</button>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 
 <script>
     /**

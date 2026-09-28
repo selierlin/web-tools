@@ -1,0 +1,69 @@
+/* Cron 表达式工具页样式。共享 token 见 styles/workbench.css 与 DESIGN-SYSTEM.md。 */
+.cron-tool { padding: 20px 28px; height: 100dvh; display: flex; flex-direction: column; }
+.cron-tool .container { width: 100%; max-width: 1680px; margin: 0 auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.cron-tool .page-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 18px; }
+.cron-tool h1 { margin: 0; font-size: 26px; font-weight: 650; line-height: 1.3; letter-spacing: -.5px; }
+.cron-tool .title-dot { color: var(--wb-accent); }
+.cron-tool .page-description { margin: 0; color: var(--wb-muted); font-size: 14px; }
+
+.cron-tool .workspace { display: grid; grid-template-columns: 236px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; flex: 1 1 auto; min-height: 0; overflow: hidden; background: var(--wb-surface); border: 1px solid var(--wb-line); border-radius: var(--wb-radius); }
+.cron-tool .workspace-sidebar { grid-row: 1 / 3; padding: 24px 18px; overflow: auto; background: #edf2ed; border-right: 1px solid var(--wb-line); }
+.cron-tool .sidebar-title { margin: 0 0 12px; font-size: 14px; font-weight: 650; }
+
+.cron-tool .examples-grid { display: flex; flex-direction: column; gap: 8px; }
+.cron-tool .example-item { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 8px 10px; border: 1px solid var(--wb-line); border-radius: 6px; background: var(--wb-surface); color: var(--wb-ink); text-align: left; cursor: pointer; transition: background .15s, border-color .15s; }
+.cron-tool .example-item:hover { border-color: var(--wb-accent); background: var(--wb-tint); }
+.cron-tool .example-expression { font: 12px/1.6 var(--wb-mono); overflow-wrap: anywhere; }
+.cron-tool .example-description { color: var(--wb-muted); font-size: 12px; }
+
+.cron-tool .format-guide { margin-top: 24px; padding-top: 20px; border-top: 1px solid #cdd8ce; }
+.cron-tool .format-guide h2 { margin: 0 0 12px; color: var(--wb-muted); font-size: 13px; font-weight: 600; }
+.cron-tool .format-guide p { margin: 0; color: var(--wb-muted); font-size: 12px; line-height: 1.8; }
+.cron-tool .format-guide p + p { margin-top: 10px; }
+.cron-tool .format-guide b { color: var(--wb-ink); font-weight: 600; }
+.cron-tool .format-guide code { font: 12px var(--wb-mono); color: #345345; }
+
+.cron-tool .tool-content { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 16px; min-height: 0; margin: 24px 24px 0; }
+.cron-tool .cron-input-panel, .cron-tool .cron-output-panel { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.cron-tool .label { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; font-size: 14px; font-weight: 600; }
+.cron-tool .label b { margin-right: 10px; color: var(--wb-accent); font: 12px var(--wb-mono); }
+.cron-tool .panel-hint { color: var(--wb-muted); font-size: 12px; font-weight: 400; }
+
+.cron-tool #cronInput { width: 100%; min-height: 44px; padding: 10px 14px; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); color: var(--wb-ink); font: 14px/1.75 var(--wb-mono); outline: none; transition: border-color .15s, box-shadow .15s; }
+.cron-tool #cronInput:focus { border-color: var(--wb-accent); box-shadow: 0 0 0 3px #17654e12; }
+.cron-tool #cronInput::placeholder { color: #7a867f; }
+.cron-tool .result-tip { min-height: 20px; margin-top: 10px; color: var(--wb-muted); font-size: 12px; }
+
+.cron-tool .cron-hint { margin-bottom: 12px; padding: 8px 12px; border: 1px solid #e3c486; border-radius: 6px; background: #fff8ea; color: #734a12; font-size: 13px; line-height: 1.6; }
+.cron-tool .cron-schedule-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 8px; border: 1px solid #cbdacf; border-radius: var(--wb-radius); background: #f3f7f4; }
+.cron-tool .schedule-item { display: flex; align-items: baseline; gap: 12px; padding: 7px 12px; border-radius: 6px; }
+.cron-tool .schedule-item:nth-child(odd) { background: #eaf3ed; }
+.cron-tool .schedule-index { flex: 0 0 22px; color: var(--wb-muted); font: 12px/1.75 var(--wb-mono); text-align: right; }
+.cron-tool .schedule-time { color: var(--wb-ink); font: 14px/1.75 var(--wb-mono); }
+
+.cron-tool .tool-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 24px 20px; padding-top: 16px; border-top: 1px solid var(--wb-line); }
+.cron-tool .tool-controls button { min-height: 40px; padding: 9px 14px; border: 1px solid var(--wb-line); border-radius: 6px; background: var(--wb-surface); color: var(--wb-ink); font-size: 14px; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s; }
+.cron-tool .tool-controls button:hover { border-color: var(--wb-accent); background: var(--wb-tint); }
+.cron-tool .btn-success { border-color: var(--wb-accent); background: var(--wb-accent); color: #fff; }
+.cron-tool .btn-success:hover { border-color: var(--wb-accent-hover); background: var(--wb-accent-hover); color: #fff; }
+.cron-tool .btn-danger { border-color: #e4bbb5; background: #fff3f1; color: #9c3124; }
+.cron-tool .btn-secondary { margin-left: auto; }
+
+@media (max-width: 1100px) {
+  .cron-tool .workspace { grid-template-columns: 208px minmax(0, 1fr); }
+  .cron-tool .workspace-sidebar { padding: 20px 14px; }
+  .cron-tool .tool-content { margin-right: 16px; }
+  .cron-tool .panel-hint { display: none; }
+}
+@media (max-width: 768px) {
+  .cron-tool { padding: 16px 12px; height: auto; min-height: 100dvh; }
+  .cron-tool .page-heading { margin-bottom: 14px; }
+  .cron-tool h1 { font-size: 24px; }
+  .cron-tool .workspace { display: block; }
+  .cron-tool .workspace-sidebar { padding: 14px; border-right: 0; border-bottom: 1px solid var(--wb-line); }
+  .cron-tool .format-guide { display: none; }
+  .cron-tool .tool-content { grid-template-rows: auto auto; margin: 16px 14px 0; }
+  .cron-tool .cron-schedule-list { flex: none; height: 300px; }
+  .cron-tool .tool-controls { margin: 16px 14px; }
+  .cron-tool .btn-secondary { margin-left: 0; }
+}
