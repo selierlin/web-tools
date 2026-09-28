@@ -151,6 +151,13 @@
             justify-content: space-between;
         }
 
+        .label-note {
+            font-size: 11px;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
         textarea {
             width: 100%;
             min-height: 120px;
@@ -252,6 +259,17 @@
             padding-left: 4px;
         }
 
+        .cron-hint {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--warning-color);
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+        }
+
         .examples-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -344,8 +362,9 @@
             <div class="cron-input-panel">
                 <div class="label">
                     <span>📥 Cron 表达式</span>
+                    <span class="label-note">5 段：分 时 日 月 周 ｜ 6 段：秒 分 时 日 月 周</span>
                 </div>
-                <input type="text" id="cronInput" placeholder="输入 Cron 表达式，例如：0 0 * * *" spellcheck="false">
+                <input type="text" id="cronInput" placeholder="输入 Cron 表达式，例如：0 12 * * * 或 */5 * * * * *" spellcheck="false">
                 <div class="result-tip" id="resultTip">就绪</div>
             </div>
 
@@ -356,27 +375,35 @@
                 <div class="examples-grid">
                     <div class="example-item" data-cron="0 0 * * *">
                         <div class="example-expression">0 0 * * *</div>
-                        <div class="example-description">每天 midnight</div>
-                    </div>
-                    <div class="example-item" data-cron="0 * * * *">
-                        <div class="example-expression">0 * * * *</div>
-                        <div class="example-description">每小时</div>
+                        <div class="example-description">每天 00:00（5 段）</div>
                     </div>
                     <div class="example-item" data-cron="*/15 * * * *">
                         <div class="example-expression">*/15 * * * *</div>
-                        <div class="example-description">每 15 分钟</div>
+                        <div class="example-description">每 15 分钟（5 段）</div>
                     </div>
-                    <div class="example-item" data-cron="0 0 * * 0">
-                        <div class="example-expression">0 0 * * 0</div>
-                        <div class="example-description">每周日 midnight</div>
+                    <div class="example-item" data-cron="0 9 * * MON-FRI">
+                        <div class="example-expression">0 9 * * MON-FRI</div>
+                        <div class="example-description">工作日 09:00（字母区间）</div>
                     </div>
-                    <div class="example-item" data-cron="0 0 1 * *">
-                        <div class="example-expression">0 0 1 * *</div>
-                        <div class="example-description">每月 1 日</div>
+                    <div class="example-item" data-cron="0 0 12 * * SUN">
+                        <div class="example-expression">0 0 12 * * SUN</div>
+                        <div class="example-description">每周日 12:00（字母，无歧义）</div>
                     </div>
-                    <div class="example-item" data-cron="0 0 1 1 *">
-                        <div class="example-expression">0 0 1 1 *</div>
-                        <div class="example-description">每年 1 月 1 日</div>
+                    <div class="example-item" data-cron="*/5 * * * * *">
+                        <div class="example-expression">*/5 * * * * *</div>
+                        <div class="example-description">每 5 秒（6 段）</div>
+                    </div>
+                    <div class="example-item" data-cron="0 0 12 * * *">
+                        <div class="example-expression">0 0 12 * * *</div>
+                        <div class="example-description">每天 12:00:00（6 段）</div>
+                    </div>
+                    <div class="example-item" data-cron="0 0 12 ? * MON-FRI">
+                        <div class="example-expression">0 0 12 ? * MON-FRI</div>
+                        <div class="example-description">工作日 12:00（Quartz 占位符 ?）</div>
+                    </div>
+                    <div class="example-item" data-cron="0 0 0 1 1 ?">
+                        <div class="example-expression">0 0 0 1 1 ?</div>
+                        <div class="example-description">每年 1 月 1 日（Quartz）</div>
                     </div>
                 </div>
             </div>
@@ -386,6 +413,7 @@
             <div class="label">
                 <span>📤 最近 10 次运行时间</span>
             </div>
+            <div class="cron-hint" id="dayOfWeekHint" hidden></div>
             <div id="cronScheduleList" class="cron-schedule-list"></div>
         </div>
     </div>
@@ -398,6 +426,7 @@
     const cronInput = document.getElementById('cronInput');
     const cronScheduleList = document.getElementById('cronScheduleList');
     const resultTip = document.getElementById('resultTip');
+    const dayOfWeekHint = document.getElementById('dayOfWeekHint');
     const calculateBtn = document.getElementById('calculateBtn');
     const clearBtn = document.getElementById('clearBtn');
     const copyBtn = document.getElementById('copyBtn');
@@ -444,25 +473,52 @@
             const schedule = parseCronExpression(cronExpr);
             const nextRuns = getNextRuns(schedule, 10);
             renderScheduleList(nextRuns);
+            renderDayOfWeekHint(schedule);
             showTip('计算完成');
         } catch (error) {
+            renderDayOfWeekHint(null);
             showTip(`解析失败：${error.message}`, true);
         }
     }
 
-    // 简单的 Cron 表达式解析器
+    // 周字段的字母别名：SUN/MON/... 在 Unix 与 Quartz 中含义一致，用它可消除框架歧义
+    const DAY_OF_WEEK_ALIASES = {
+        SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6
+    };
+
+    // 归一化字段：把 Quartz 占位符 ? 视作 *，并把周字段的字母别名转成数字
+    function normalizeCronField(field, hasAliases = false) {
+        let result = field === '?' ? '*' : field;
+        if (hasAliases) {
+            result = result.replace(/[A-Za-z]+/g, name => {
+                const value = DAY_OF_WEEK_ALIASES[name.toUpperCase()];
+                return value === undefined ? name : String(value);
+            });
+        }
+        return result;
+    }
+
+    // 简单的 Cron 表达式解析器（支持 5 段与 6 段）
     function parseCronExpression(expr) {
         const parts = expr.trim().split(/\s+/);
-        if (parts.length !== 5) {
-            throw new Error('Cron 表达式应为 5 个字段');
+        if (parts.length !== 5 && parts.length !== 6) {
+            throw new Error('Cron 表达式应为 5 个字段（分 时 日 月 周）或 6 个字段（秒 分 时 日 月 周）');
         }
 
+        // 6 段时首位为「秒」，其余字段整体后移一位
+        const hasSeconds = parts.length === 6;
+        const offset = hasSeconds ? 1 : 0;
+        const rawDayOfWeek = parts[offset + 4];
+
         return {
-            minute: parts[0],
-            hour: parts[1],
-            dayOfMonth: parts[2],
-            month: parts[3],
-            dayOfWeek: parts[4]
+            second: hasSeconds ? parts[0] : '0',
+            minute: parts[offset],
+            hour: parts[offset + 1],
+            dayOfMonth: normalizeCronField(parts[offset + 2]),
+            month: parts[offset + 3],
+            dayOfWeek: normalizeCronField(rawDayOfWeek, true),
+            // 6 段且「周」用数字时，Unix（0=周日）与 Quartz（1=周日）解释不同，需提示用户
+            ambiguousDayOfWeek: hasSeconds && !/[A-Za-z]/.test(rawDayOfWeek) && /[0-9]/.test(rawDayOfWeek)
         };
     }
 
@@ -479,26 +535,34 @@
         return runs;
     }
 
-    // 计算下一次运行时间
+    // 计算下一次运行时间（先按分钟定位匹配的日期时间，再在该分钟内寻找匹配的秒）
     function getNextRunTime(schedule, current) {
         const next = new Date(current);
-        next.setMinutes(next.getMinutes() + 1);
-        next.setSeconds(0);
         next.setMilliseconds(0);
+        next.setSeconds(next.getSeconds() + 1); // 严格向后推进 1 秒
+
+        let startSecond = next.getSeconds();
 
         while (true) {
-            if (matchesCron(schedule, next)) {
-                return next;
+            if (matchesWithoutSeconds(schedule, next)) {
+                for (let second = startSecond; second < 60; second++) {
+                    if (matchesField(schedule.second, second)) {
+                        next.setSeconds(second);
+                        return next;
+                    }
+                }
             }
             next.setMinutes(next.getMinutes() + 1);
+            next.setSeconds(0);
+            startSecond = 0;
             if (next.getTime() - current.getTime() > 365 * 24 * 60 * 60 * 1000) {
                 throw new Error('无法在一年内找到匹配的运行时间');
             }
         }
     }
 
-    // 检查日期是否匹配 Cron 表达式
-    function matchesCron(schedule, date) {
+    // 检查日期（不含秒）是否匹配 Cron 表达式
+    function matchesWithoutSeconds(schedule, date) {
         return (
             matchesField(schedule.minute, date.getMinutes()) &&
             matchesField(schedule.hour, date.getHours()) &&
@@ -554,6 +618,17 @@
         cronScheduleList.innerHTML = html;
     }
 
+    // 「周」字段使用数字时的框架差异提示（Unix 0=周日 / Quartz 1=周日）
+    function renderDayOfWeekHint(schedule) {
+        if (!schedule || !schedule.ambiguousDayOfWeek) {
+            dayOfWeekHint.hidden = true;
+            dayOfWeekHint.textContent = '';
+            return;
+        }
+        dayOfWeekHint.textContent = '⚠️ 「周」字段按 0=周日 计算（Unix / Spring 习惯）；Quartz 中 1=周日。若用于 Quartz，建议改用字母别名（SUN、MON…）以避免歧义。';
+        dayOfWeekHint.hidden = false;
+    }
+
     // 事件监听器
     calculateBtn.addEventListener('click', () => {
         const cronExpr = cronInput.value.trim();
@@ -563,6 +638,7 @@
     clearBtn.addEventListener('click', () => {
         cronInput.value = '';
         cronScheduleList.innerHTML = '';
+        renderDayOfWeekHint(null);
         showTip('已清空');
     });
 
