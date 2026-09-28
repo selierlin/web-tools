@@ -527,8 +527,12 @@
     const SUMMARY_LABEL_PRIORITY = [
         { key: 'name', mode: 'exact' },
         { key: 'title', mode: 'exact' },
+        { key: 'remark', mode: 'exact' },
+        { key: 'desc', mode: 'exact' },
         { key: 'name', mode: 'contains' },
-        { key: 'title', mode: 'contains' }
+        { key: 'title', mode: 'contains' },
+        { key: 'remark', mode: 'contains' },
+        { key: 'desc', mode: 'contains' }
     ];
 
     function findSummaryLabelKey(candidate) {
