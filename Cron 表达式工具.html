@@ -401,9 +401,9 @@
                         <div class="example-expression">0 0 12 ? * MON-FRI</div>
                         <div class="example-description">工作日 12:00（Quartz 占位符 ?）</div>
                     </div>
-                    <div class="example-item" data-cron="0 0 0 1 1 ?">
-                        <div class="example-expression">0 0 0 1 1 ?</div>
-                        <div class="example-description">每年 1 月 1 日（Quartz）</div>
+                    <div class="example-item" data-cron="0 0 0 1 JAN ?">
+                        <div class="example-expression">0 0 0 1 JAN ?</div>
+                        <div class="example-description">每年 1 月 1 日（月份别名 JAN）</div>
                     </div>
                 </div>
             </div>
@@ -486,13 +486,22 @@
         SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6
     };
 
-    // 归一化字段：把 Quartz 占位符 ? 视作 *，并把周字段的字母别名转成数字
-    function normalizeCronField(field, hasAliases = false) {
+    // 月份字段的字母别名（Unix 与 Quartz 通用）
+    const MONTH_ALIASES = {
+        JAN: 1, FEB: 2, MAR: 3, APR: 4, MAY: 5, JUN: 6,
+        JUL: 7, AUG: 8, SEP: 9, OCT: 10, NOV: 11, DEC: 12
+    };
+
+    // 归一化字段：把 Quartz 占位符 ? 视作 *，并把字母别名转成数字；无法识别的别名直接报错
+    function normalizeCronField(field, aliases) {
         let result = field === '?' ? '*' : field;
-        if (hasAliases) {
+        if (aliases) {
             result = result.replace(/[A-Za-z]+/g, name => {
-                const value = DAY_OF_WEEK_ALIASES[name.toUpperCase()];
-                return value === undefined ? name : String(value);
+                const value = aliases[name.toUpperCase()];
+                if (value === undefined) {
+                    throw new Error(`无法识别的字段别名：${name}`);
+                }
+                return String(value);
             });
         }
         return result;
@@ -515,8 +524,8 @@
             minute: parts[offset],
             hour: parts[offset + 1],
             dayOfMonth: normalizeCronField(parts[offset + 2]),
-            month: parts[offset + 3],
-            dayOfWeek: normalizeCronField(rawDayOfWeek, true),
+            month: normalizeCronField(parts[offset + 3], MONTH_ALIASES),
+            dayOfWeek: normalizeCronField(rawDayOfWeek, DAY_OF_WEEK_ALIASES),
             // 6 段且「周」用数字时，Unix（0=周日）与 Quartz（1=周日）解释不同，需提示用户
             ambiguousDayOfWeek: hasSeconds && !/[A-Za-z]/.test(rawDayOfWeek) && /[0-9]/.test(rawDayOfWeek)
         };
