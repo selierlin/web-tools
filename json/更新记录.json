@@ -1,7 +1,252 @@
 {
-  "generatedAt": "2026-02-22T08:35:20.009Z",
-  "total": 39,
+  "generatedAt": "2026-09-30T03:17:52.482Z",
+  "total": 75,
   "commits": [
+    {
+      "hash": "990e66493b2250df6dc2d3bd96dd5f3e42ab0fd3",
+      "shortHash": "990e664",
+      "date": "2026-09-30T11:17:22+08:00",
+      "author": "Selier",
+      "subject": "feat(sql): 新增 CREATE TABLE 字段名提取"
+    },
+    {
+      "hash": "ee6f84789072b624b29cec2534e30cef7f2755c4",
+      "shortHash": "ee6f847",
+      "date": "2026-09-30T11:17:17+08:00",
+      "author": "Selier",
+      "subject": "feat(json): 支持点击树节点整行折叠并同步编码解码页"
+    },
+    {
+      "hash": "05f5f369109d18e20fe77047c23bb416b57abc86",
+      "shortHash": "05f5f36",
+      "date": "2026-09-28T18:08:04+08:00",
+      "author": "Selier",
+      "subject": "refactor(cron): 页面迁移到工作台风格"
+    },
+    {
+      "hash": "f4adec1b9ed338047bdc3632af6e8d8d5b0be870",
+      "shortHash": "f4adec1",
+      "date": "2026-09-28T18:08:00+08:00",
+      "author": "Selier",
+      "subject": "feat(json): 折叠摘要标签优先级补充 remark/desc 并同步编码解码页"
+    },
+    {
+      "hash": "a5fc0c48c9ce110ea1abfd9fcc4945f5ed884370",
+      "shortHash": "a5fc0c4",
+      "date": "2026-09-28T17:55:14+08:00",
+      "author": "Selier",
+      "subject": "feat(cron): 支持月份字母别名 JAN-DEC"
+    },
+    {
+      "hash": "f205ef5b9c4997009ce1375665fe13ca866b6d2f",
+      "shortHash": "f205ef5",
+      "date": "2026-09-24T15:26:33+08:00",
+      "author": "Selier",
+      "subject": "fix(text-process): 修复输入多行文本时页面被无限拉长"
+    },
+    {
+      "hash": "bb4505c9675805d170b40bfa10a6bb84b453df8f",
+      "shortHash": "bb4505c",
+      "date": "2026-09-22T11:57:13+08:00",
+      "author": "Selier",
+      "subject": "feat(ui): 四工具视口自适应与结果区放大；JSON 树编辑与折叠摘要"
+    },
+    {
+      "hash": "b9997fd3941461d6a005ad9fa569038ebf0623d7",
+      "shortHash": "b9997fd",
+      "date": "2026-09-28T17:50:27+08:00",
+      "author": "Selier",
+      "subject": "feat(cron): 支持 6 段 Cron 表达式并添加周字段别名提示"
+    },
+    {
+      "hash": "be25ffeed3a02c1d6bdc4891a4fc03d2af030333",
+      "shortHash": "be25ffe",
+      "date": "2026-09-14T14:11:28+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 补充 Homebrew 深度清理命令"
+    },
+    {
+      "hash": "8d32303d8b2353d1e3f999c8f7cd5451f04a0170",
+      "shortHash": "8d32303",
+      "date": "2026-09-14T14:08:52+08:00",
+      "author": "Selier",
+      "subject": "style(ui): 统一工具页面工作台风格"
+    },
+    {
+      "hash": "f4cd3ce459547367444ad2174bdcd7779e6ade10",
+      "shortHash": "f4cd3ce",
+      "date": "2026-08-10T10:58:00+08:00",
+      "author": "Selier",
+      "subject": "fix(commands): 移除「下载」与 curl/wget 同义词，避免搜索误命中"
+    },
+    {
+      "hash": "62f59ffbe42ae97e97d372c72b0a44d9d692bbe4",
+      "shortHash": "62f59ff",
+      "date": "2026-08-10T10:00:08+08:00",
+      "author": "Selier",
+      "subject": "fix(commands): 修复搜索同义词按与逻辑匹配导致条目丢失"
+    },
+    {
+      "hash": "37d4c751f4d73b96273449c843cf9551d4887286",
+      "shortHash": "37d4c75",
+      "date": "2026-08-10T09:52:16+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 新增 Homebrew 服务管理与 cask 安装条目"
+    },
+    {
+      "hash": "9755e4d4638167ad73c8a0f38ad9b789a7bdb0fe",
+      "shortHash": "9755e4d",
+      "date": "2026-08-10T09:39:46+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 补充 Git/Docker/数据库/系统等高频命令速查条目"
+    },
+    {
+      "hash": "0be7561c358636f8875fe2f6a627374fc4499a46",
+      "shortHash": "0be7561",
+      "date": "2026-08-10T09:33:43+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 为命令速查添加 Git HTTP/HTTPS 代理配置"
+    },
+    {
+      "hash": "bb6953da9f297c04d157a77fa9a610a8fe1d2607",
+      "shortHash": "bb6953d",
+      "date": "2026-07-30T15:48:26+08:00",
+      "author": "Selier",
+      "subject": "Revert \"style(ui): 更新文本加工页面样式与布局\""
+    },
+    {
+      "hash": "cc668ee5c041fe3b1eeb49c70f5faada0a925b30",
+      "shortHash": "cc668ee",
+      "date": "2026-07-30T15:33:53+08:00",
+      "author": "Selier",
+      "subject": "refactor: 将外部 CDN 依赖改为本地 vendor 目录引用"
+    },
+    {
+      "hash": "578d76bf31750c94a11b216a31b44467df0e1e3b",
+      "shortHash": "578d76b",
+      "date": "2026-07-17T09:11:19+08:00",
+      "author": "Selier",
+      "subject": "style(ui): 更新文本加工页面样式与布局"
+    },
+    {
+      "hash": "6a4fa01eda2c65bf26a1a6dcfce57287b66bc2b7",
+      "shortHash": "6a4fa01",
+      "date": "2026-06-14T00:26:45+08:00",
+      "author": "Selier",
+      "subject": "feat(search): 为命令速查工具添加英文搜索关键字"
+    },
+    {
+      "hash": "3ec715f7a58f62a1868ae95848fbb9e445e506d4",
+      "shortHash": "3ec715f",
+      "date": "2026-06-13T23:53:01+08:00",
+      "author": "Selier",
+      "subject": "feat(search): 为时间/日期工具添加英文关键词"
+    },
+    {
+      "hash": "fab174b09bddf122d5aeb9f804e34e23ca9e4398",
+      "shortHash": "fab174b",
+      "date": "2026-05-17T11:12:23+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 添加 uv 命令速查及补充 docker 日志命令"
+    },
+    {
+      "hash": "ac7ec1c274e2e77c77a1e5613372cb5181b7edc2",
+      "shortHash": "ac7ec1c",
+      "date": "2026-04-26T14:31:20+08:00",
+      "author": "Selier",
+      "subject": "feat(form-persist): 添加表单持久化功能，自动保存恢复输入内容"
+    },
+    {
+      "hash": "8a4c9c76e9888a2bc0e235f72496e3681fe5681b",
+      "shortHash": "8a4c9c7",
+      "date": "2026-04-26T11:45:57+08:00",
+      "author": "Selier",
+      "subject": "chore(deploy): 添加自动化部署脚本与.gitignore配置"
+    },
+    {
+      "hash": "8beab29fae5245a77084da160d0effb65cbe3111",
+      "shortHash": "8beab29",
+      "date": "2026-04-26T11:22:43+08:00",
+      "author": "Selier",
+      "subject": "feat(text-tool): 添加操作按钮悬浮预览功能"
+    },
+    {
+      "hash": "17752cc56f1860ca9d3aa8b498c8a53239208673",
+      "shortHash": "17752cc",
+      "date": "2026-04-26T11:02:15+08:00",
+      "author": "Selier",
+      "subject": "feat(qrcode): 弹窗中增加二维码图片展示"
+    },
+    {
+      "hash": "68d77f93285ec580d1880aa5acf87800383f9f1f",
+      "shortHash": "68d77f9",
+      "date": "2026-04-26T09:54:37+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 添加 brew autoremove 和 brew cleanup 命令"
+    },
+    {
+      "hash": "f1acb5286f9c1d6c14d6268727dfd56a440ef990",
+      "shortHash": "f1acb52",
+      "date": "2026-04-09T19:58:27+08:00",
+      "author": "Selier",
+      "subject": "feat(header): 优化工具导航栏显示逻辑和视觉样式"
+    },
+    {
+      "hash": "334953dce20d362d199733b6af03a08807a7f041",
+      "shortHash": "334953d",
+      "date": "2026-03-14T21:30:37+08:00",
+      "author": "Selier",
+      "subject": "refactor(ui): 重构工具导航菜单实现及交互逻辑"
+    },
+    {
+      "hash": "bf6a9fbcfed0f9287b8262ada6d5b70bb46a6d53",
+      "shortHash": "bf6a9fb",
+      "date": "2026-03-12T13:51:54+08:00",
+      "author": "Selier",
+      "subject": "feat(commands): 添加 OpenClaw 命令集支持"
+    },
+    {
+      "hash": "ccbea41801f8499e0edf7b8f2c9e1c2795eb109a",
+      "shortHash": "ccbea41",
+      "date": "2026-03-04T09:37:44+08:00",
+      "author": "Selier",
+      "subject": "feat(codec): 新增GB2312编码解码支持及JSON树视图功能"
+    },
+    {
+      "hash": "20c1741f7d748c1f2cc0e5218f4c81a48acf0416",
+      "shortHash": "20c1741",
+      "date": "2026-02-27T21:11:33+08:00",
+      "author": "Selier",
+      "subject": "style(ui): 优化滚动条样式及界面视觉效果"
+    },
+    {
+      "hash": "00c3e85de0b42c86d19880cba13be02453aef92d",
+      "shortHash": "00c3e85",
+      "date": "2026-02-25T09:54:11+08:00",
+      "author": "Selier",
+      "subject": "feat(ui): 调整扩展工具菜单项顺序及动态加载支持"
+    },
+    {
+      "hash": "2513169c98666b521634ef3632dc6fffedf14fbe",
+      "shortHash": "2513169",
+      "date": "2026-02-23T19:16:51+08:00",
+      "author": "Selier",
+      "subject": "feat(map): 添加全球时间地图及双城时差功能"
+    },
+    {
+      "hash": "98884ba84ea4e42a3afa0a2ba2e157e074e03cdc",
+      "shortHash": "98884ba",
+      "date": "2026-02-23T19:02:30+08:00",
+      "author": "Selier",
+      "subject": "feat(tools): 新增SQL工具模块"
+    },
+    {
+      "hash": "47228f527bfeeadd11471d812f2a4c5a9233d4dc",
+      "shortHash": "47228f5",
+      "date": "2026-02-23T19:01:21+08:00",
+      "author": "Selier",
+      "subject": "Merge remote-tracking branch 'origin/main'"
+    },
     {
       "hash": "a57092986860e4c4abe1adf513a264172b72dbbf",
       "shortHash": "a570929",
@@ -29,6 +274,13 @@
       "date": "2026-02-21T14:42:37+08:00",
       "author": "Selier",
       "subject": "feat(ui): 优化文本批量加工与文本对比界面和功能"
+    },
+    {
+      "hash": "b2006069d340defb640a3281cdc50bf308a013b6",
+      "shortHash": "b200606",
+      "date": "2026-02-21T11:59:22+08:00",
+      "author": "Selier",
+      "subject": "feat(sql-tools): 新增 SQL 工具页面与功能支持"
     },
     {
       "hash": "214348191c6c8f99a66d75e0c3c5400394e01476",
