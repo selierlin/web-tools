@@ -44,6 +44,8 @@
 .json-format .fe-toggle:hover { color: white; background: var(--wb-accent); border-color: var(--wb-accent); }
 .json-format .fe-tree-children { margin-left: 8px; border-left: 1px solid #d7e5da; }
 .json-format .fe-tree-row { padding-left: 20px; position: relative; }
+.json-format .fe-tree-row:has(> .fe-toggle) { cursor: pointer; }
+.json-format .fe-tree-row:not(:has(> .fe-toggle)) { cursor: auto; }
 .json-format .fe-tree-row.is-active { background: #e4f0e7; border-radius: 4px; }
 .json-format .fe-delete { display: inline-flex; align-items: center; justify-content: center; width: 20px; min-height: 20px; margin-left: 8px; padding: 0; border-color: transparent; border-radius: 4px; color: #9c3124; background: transparent; font-size: 16px; line-height: 1; opacity: 0; vertical-align: text-bottom; }
 .json-format .fe-tree-row.is-active > .fe-delete, .json-format .fe-delete:focus-visible { opacity: 1; }

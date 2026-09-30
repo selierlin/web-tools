@@ -718,19 +718,25 @@
         return formatPrimitive(obj);
     };
 
+    const toggleTreeNode = (toggle) => {
+        const path = toggle.getAttribute('data-path');
+        const children = resultJsonTree.querySelector(`.fe-tree-children[data-path="${path}"]`);
+        const note = resultJsonTree.querySelector(`.fe-collapse-note[data-path="${path}"]`);
+        if (!children || !note) return;
+        const isExpanded = toggle.textContent === '▼';
+        toggle.textContent = isExpanded ? '▶' : '▼';
+        children.style.display = isExpanded ? 'none' : 'block';
+        note.style.display = isExpanded ? 'inline' : 'none';
+    };
+
     const bindTreeToggleEvents = () => {
-        resultJsonTree.querySelectorAll('.fe-toggle').forEach((toggle) => {
-            toggle.onclick = function () {
-                const path = this.getAttribute('data-path');
-                const children = resultJsonTree.querySelector(`.fe-tree-children[data-path="${path}"]`);
-                const note = resultJsonTree.querySelector(`.fe-collapse-note[data-path="${path}"]`);
-                if (!children || !note) return;
-                const isExpanded = this.textContent === '▼';
-                this.textContent = isExpanded ? '▶' : '▼';
-                children.style.display = isExpanded ? 'none' : 'block';
-                note.style.display = isExpanded ? 'inline' : 'none';
-            };
-        });
+        resultJsonTree.onclick = (event) => {
+            const row = event.target.closest('.fe-tree-row');
+            const toggle = row
+                ? row.querySelector(':scope > .fe-toggle')
+                : resultJsonTree.querySelector('.fe-toggle');
+            if (toggle) toggleTreeNode(toggle);
+        };
     };
 
     const renderResultJsonTree = (jsonText, funcName) => {

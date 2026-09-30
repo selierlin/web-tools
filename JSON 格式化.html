@@ -651,20 +651,26 @@
             .find(element => element.dataset.path === token);
     }
 
+    function toggleTreeNode(toggle) {
+        const path = toggle.getAttribute('data-path');
+        const children = getTreeElement('fe-tree-children', path);
+        const note = getTreeElement('fe-collapse-note', path);
+        if (!children || !note) return;
+        const isExpanded = toggle.textContent === '▼';
+        toggle.textContent = isExpanded ? '▶' : '▼';
+        children.style.display = isExpanded ? 'none' : 'block';
+        note.style.display = isExpanded ? 'inline' : 'none';
+    }
+
     function bindToggleEvents() {
-        document.querySelectorAll('.fe-toggle').forEach(toggle => {
-            toggle.onclick = function() {
-                const path = this.getAttribute('data-path');
-                const children = getTreeElement('fe-tree-children', path);
-                const note = getTreeElement('fe-collapse-note', path);
-                if (children && note) {
-                    const isExpanded = this.textContent === '▼';
-                    this.textContent = isExpanded ? '▶' : '▼';
-                    children.style.display = isExpanded ? 'none' : 'block';
-                    note.style.display = isExpanded ? 'inline' : 'none';
-                }
-            };
-        });
+        jsonOutputTree.onclick = function(event) {
+            if (event.target.closest('.fe-delete, .fe-edit-input')) return;
+            const row = event.target.closest('.fe-tree-row');
+            const toggle = row
+                ? row.querySelector(':scope > .fe-toggle')
+                : jsonOutputTree.querySelector('.fe-toggle');
+            if (toggle) toggleTreeNode(toggle);
+        };
     }
 
     function bindDeleteEvents() {
