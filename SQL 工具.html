@@ -221,13 +221,14 @@
   <div class="container">
     <header class="header">
       <h1 class="title">SQL 工具</h1>
-      <p class="desc">SQL 格式化、SQL/Java Bean 互转、多条 INSERT INTO 合并</p>
+      <p class="desc">SQL 格式化、SQL/Java Bean 互转、多条 INSERT INTO 合并、CREATE TABLE 字段名提取</p>
     </header>
 
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-panel="format-panel" type="button">SQL 格式化</button>
       <button class="tab-btn" data-panel="bean-panel" type="button">SQL / Bean 互转</button>
       <button class="tab-btn" data-panel="insert-panel" type="button">INSERT 合并</button>
+      <button class="tab-btn" data-panel="columns-panel" type="button">提取字段名</button>
     </div>
 
     <section class="panel active" id="format-panel">
@@ -336,6 +337,37 @@
       </div>
       <p class="hint">仅合并目标表名与列清单一致的语句；不同结构会分别输出。</p>
     </section>
+
+    <section class="panel" id="columns-panel">
+      <div class="toolbar">
+        <button class="primary" type="button" id="btnColumnsExtract">提取字段名</button>
+        <button type="button" id="btnColumnsCopy">复制结果</button>
+        <button class="danger" type="button" id="btnColumnsClear">清空</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <p class="block-title">输入 CREATE TABLE</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="columnsInputLines" aria-hidden="true">1</pre>
+              <textarea id="columnsInput" placeholder="CREATE TABLE `t_user` (&#10;  `id` int NULL,&#10;  `name` varchar(64) NULL&#10;);"></textarea>
+            </div>
+            <p class="editor-stats" id="columnsInputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+        <div>
+          <p class="block-title">输出（逗号分隔）</p>
+          <div class="editor-wrap">
+            <div class="editor">
+              <pre class="line-numbers" id="columnsOutputLines" aria-hidden="true">1</pre>
+              <textarea id="columnsOutput" readonly placeholder="字段名…"></textarea>
+            </div>
+            <p class="editor-stats" id="columnsOutputStats">行号: 1 | 字符数: 0 | 行数: 1</p>
+          </div>
+        </div>
+      </div>
+      <p class="hint">支持 MySQL / Doris 等常见 DDL；自动跳过 PRIMARY KEY、KEY、DISTRIBUTED BY、PROPERTIES 等非字段定义。</p>
+    </section>
   </div>
 
   <script src="./vendor/sql-formatter/15.6.10/sql-formatter.min.js"></script>
@@ -349,7 +381,7 @@
       navigator.clipboard.writeText(text).catch(function () {});
     }
 
-    const EDITOR_IDS = ['sqlInput', 'sqlOutput', 'beanInput', 'beanOutput', 'insertInput', 'insertOutput'];
+    const EDITOR_IDS = ['sqlInput', 'sqlOutput', 'beanInput', 'beanOutput', 'insertInput', 'insertOutput', 'columnsInput', 'columnsOutput'];
 
     function getLineCount(value) {
       if (!value) return 1;
@@ -469,29 +501,83 @@
       return 'VARCHAR(255)';
     }
 
+    // 取表体：从 CREATE TABLE 的第一个 `(` 到与之配对的 `)`。
+    // 既不能用惰性匹配（会在 VARCHAR(64) 处提前截断、其后字段静默丢失），
+    // 也不能贪婪到最后一个 `)`（Doris 的 DISTRIBUTED BY / PROPERTIES 会被当成字段）。
+    function readTableBody(text, openIndex) {
+      let depth = 0;
+      let quote = '';
+      let escaped = false;
+
+      for (let i = openIndex; i < text.length; i += 1) {
+        const ch = text[i];
+        if (escaped) { escaped = false; continue; }
+        if (quote) {
+          if (ch === '\\') escaped = true;
+          else if (ch === quote) quote = '';
+          continue;
+        }
+        if (ch === '\'' || ch === '"' || ch === '`') { quote = ch; continue; }
+        if (ch === '(') depth += 1;
+        else if (ch === ')') {
+          depth -= 1;
+          if (depth === 0) return text.slice(openIndex + 1, i);
+        }
+      }
+      throw new Error('CREATE TABLE 的括号不配对');
+    }
+
+    // 按「顶层逗号」切分字段定义：既支持一行一个字段的标准 DDL，
+    // 也支持整条 CREATE TABLE 写在一行的情况（按行切只会取到第一个字段）。
+    function splitColumnDefs(body) {
+      const defs = [];
+      let current = '';
+      let depth = 0;
+      let quote = '';
+      let escaped = false;
+
+      for (let i = 0; i < body.length; i += 1) {
+        const ch = body[i];
+        if (escaped) { current += ch; escaped = false; continue; }
+        if (quote) {
+          current += ch;
+          if (ch === '\\') escaped = true;
+          else if (ch === quote) quote = '';
+          continue;
+        }
+        if (ch === '\'' || ch === '"' || ch === '`') { quote = ch; current += ch; continue; }
+        if (ch === ',' && depth === 0) { defs.push(current); current = ''; continue; }
+        if (ch === '(') depth += 1;
+        else if (ch === ')') depth -= 1;
+        current += ch;
+      }
+      if (current.trim()) defs.push(current);
+      return defs;
+    }
+
     function parseCreateTable(sql) {
       const text = String(sql || '').trim();
-      const tableMatch = text.match(/create\s+table\s+(if\s+not\s+exists\s+)?([`\w.\"]+)\s*\(([^]+?)\)\s*[^;]*;?\s*$/i);
+      const tableMatch = text.match(/create\s+table\s+(?:if\s+not\s+exists\s+)?([`\w."]+)\s*\(/i);
       if (!tableMatch) {
         throw new Error('未识别到 CREATE TABLE 语句');
       }
-      const tableRaw = tableMatch[2].trim();
-      const tableName = tableRaw.split('.').pop().replace(/[`\"]/g, '');
-      const body = tableMatch[3];
-      const lines = body.split(/\n/);
+      const tableRaw = tableMatch[1].trim();
+      const tableName = tableRaw.split('.').pop().replace(/[`"]/g, '');
+      const body = readTableBody(text, tableMatch.index + tableMatch[0].length - 1);
       const columns = [];
 
-      for (let i = 0; i < lines.length; i += 1) {
-        const rawLine = lines[i].trim().replace(/,+\s*$/, '');
+      const defs = splitColumnDefs(body);
+      for (let i = 0; i < defs.length; i += 1) {
+        const rawLine = defs[i].trim();
         if (!rawLine) continue;
         if (/^(primary\s+key|unique\s+key|key|index|constraint|foreign\s+key)/i.test(rawLine)) continue;
-        const m = rawLine.match(/^([`\"]?[a-zA-Z_][a-zA-Z0-9_]*[`\"]?)\s+([^\s,]+(?:\s*\([^)]*\))?)/);
+        const m = rawLine.match(/^([`"]?[a-zA-Z_][a-zA-Z0-9_]*[`"]?)\s+([^\s,]+(?:\s*\([^)]*\))?)/);
         if (!m) continue;
 
-        const colName = m[1].replace(/[`\"]/g, '');
+        const colName = m[1].replace(/[`"]/g, '');
         const type = m[2];
         const nullable = !/\bnot\s+null\b/i.test(rawLine);
-        const commentMatch = rawLine.match(/\bcomment\s+('(?:\\'|''|[^'])*'|\"(?:\\\"|[^\"])*\")/i);
+        const commentMatch = rawLine.match(/\bcomment\s+('(?:\\'|''|[^'])*'|"(?:\\"|[^"])*")/i);
         const commentRaw = commentMatch ? commentMatch[1] : '';
         const javaName = toCamelCase(colName);
         columns.push({
@@ -512,6 +598,11 @@
         className: upperCamel(tableName),
         columns: columns
       };
+    }
+
+    // 提取 CREATE TABLE 的字段名，保持 DDL 中的原名与顺序
+    function extractColumnNames(sql) {
+      return parseCreateTable(sql).columns.map(function (c) { return c.columnName; });
     }
 
     function decodeSqlComment(raw) {
@@ -777,6 +868,28 @@
     $('btnInsertClear').addEventListener('click', function () {
       setAreaValue('insertInput', '');
       setAreaValue('insertOutput', '');
+    });
+
+    $('btnColumnsExtract').addEventListener('click', function () {
+      const input = $('columnsInput').value.trim();
+      if (!input) {
+        setAreaValue('columnsOutput', '');
+        return;
+      }
+      try {
+        setAreaValue('columnsOutput', extractColumnNames(input).join(','));
+      } catch (err) {
+        setAreaValue('columnsOutput', '提取失败: ' + err.message);
+      }
+    });
+
+    $('btnColumnsCopy').addEventListener('click', function () {
+      copyText($('columnsOutput').value);
+    });
+
+    $('btnColumnsClear').addEventListener('click', function () {
+      setAreaValue('columnsInput', '');
+      setAreaValue('columnsOutput', '');
     });
 
     initEditors();
