@@ -391,7 +391,7 @@
     <section class="workspace" aria-label="JSON 格式化工作区">
         <aside class="workspace-sidebar">
             <p class="sidebar-title">处理说明</p>
-            <p class="sidebar-copy">粘贴 JSON 后会自动校验、格式化并生成可折叠的树形结构。</p>
+            <p class="sidebar-copy">粘贴 JSON 后会自动校验、格式化并生成可折叠的树形结构；粘贴日志时会自动拆出其中的多段 JSON，逐段预览。</p>
             <div class="format-guide">
                 <h2>快捷操作</h2>
                 <p><b>键名排序</b>：递归按键名排序</p>
@@ -407,7 +407,7 @@
                 <span><b>01</b> 原始 JSON</span>
                 <span class="panel-hint">粘贴或输入</span>
             </div>
-            <textarea id="jsonInput" spellcheck="false" placeholder="在此粘贴 JSON 代码..."></textarea>
+            <textarea id="jsonInput" spellcheck="false" placeholder="在此粘贴 JSON，或直接粘贴含多段 JSON 的日志..."></textarea>
             <div class="result-tip" id="resultTip">就绪</div>
         </div>
 
@@ -421,9 +421,6 @@
                 </div>
             </div>
             <div id="jsonOutputTree" class="json-output-tree"></div>
-            <!-- 隐藏的辅助文本域，保持逻辑不变 -->
-            <textarea id="jsonFormatText" style="display: none;"></textarea>
-            <textarea id="jsonCompressText" style="display: none;"></textarea>
         </div>
         </div>
 
@@ -438,13 +435,11 @@
 </main>
 
 <script>
-    /**
-     * 业务逻辑代码保持原封不动
-     */
     const jsonInput = document.getElementById('jsonInput');
     const jsonOutputTree = document.getElementById('jsonOutputTree');
-    const jsonFormatText = document.getElementById('jsonFormatText');
-    const jsonCompressText = document.getElementById('jsonCompressText');
+    // 复制源放内存，避免隐藏 textarea 被 form-persist 重复写入 localStorage
+    let formattedCache = '';
+    let compressedCache = '';
     const sortBtn = document.getElementById('sortBtn');
     const compressBtn = document.getElementById('compressBtn');
     const clearBtn = document.getElementById('clearBtn');
@@ -466,13 +461,119 @@
         }, 3000);
     }
 
-    function parseJson(jsonStr) {
+    // ---------- 输入识别：单文档 / 多段 JSON ----------
+    const MAX_SCAN_CHARS = 2 * 1024 * 1024;
+    const MAX_SEGMENTS = 100;
+    const MULTI_EXPAND_DEPTH = 2;
+
+    // 当前输入识别出的 JSON 片段，start/end 始终指向输入框里的原文位置
+    let segments = [];
+
+    // 从 start 处的 { 或 [ 开始做字符串感知的括号配对，返回闭合字符下标；未闭合返回 -1
+    function scanBalanced(text, start) {
+        let depth = 0;
+        let inString = false;
+        let escaped = false;
+        for (let i = start; i < text.length; i++) {
+            const ch = text.charCodeAt(i);
+            if (inString) {
+                if (escaped) escaped = false;
+                else if (ch === 92) escaped = true;       // 反斜杠
+                else if (ch === 34) inString = false;     // 双引号
+                continue;
+            }
+            if (ch === 34) { inString = true; continue; }
+            if (ch === 123 || ch === 91) depth++;         // { [
+            else if (ch === 125 || ch === 93) {           // } ]
+                depth--;
+                if (depth === 0) return i;
+                if (depth < 0) return -1;
+            }
+        }
+        return -1;
+    }
+
+    function countLinesBefore(text, end) {
+        let lines = 1;
+        for (let i = 0; i < end; i++) if (text.charCodeAt(i) === 10) lines++;
+        return lines;
+    }
+
+    // 单遍扫描提取所有 JSON 片段；候选解析失败时从下一字符重扫，可从包裹文本中捞回内层 JSON
+    function extractJsonSegments(text) {
+        const found = [];
+        let scannedTo = 0;
+        let line = 1;
+        let wasted = 0;
+        const advanceTo = (pos) => {
+            for (let k = scannedTo; k < pos; k++) if (text.charCodeAt(k) === 10) line++;
+            scannedTo = pos;
+        };
+        // 失败重扫的字符总量设上限，避免大量未闭合括号导致 O(n²) 卡死页面
+        const overBudget = (amount) => {
+            wasted += amount;
+            return wasted > MAX_SCAN_CHARS;
+        };
+        let i = 0;
+        while (i < text.length && found.length < MAX_SEGMENTS) {
+            const ch = text.charCodeAt(i);
+            if (ch !== 123 && ch !== 91) { i++; continue; }
+            const end = scanBalanced(text, i);
+            if (end < 0) {
+                if (overBudget(text.length - i)) return { segments: found, limited: true };
+                i++;
+                continue;
+            }
+            let value;
+            try {
+                value = JSON.parse(text.slice(i, end + 1));
+            } catch (error) {
+                // 可能是被非 JSON 包裹的花括号，或更内层的 JSON，从下一个字符继续找
+                if (overBudget(end - i + 1)) return { segments: found, limited: true };
+                i++;
+                continue;
+            }
+            // 日志里的 {} / [] 多是占位符或空返回值，单独成卡片没有信息量
+            if (isEmptyContainer(value)) {
+                i = end + 1;
+                continue;
+            }
+            advanceTo(i);
+            found.push({ start: i, end: end + 1, raw: text.slice(i, end + 1), value, line });
+            i = end + 1;
+        }
+        return { segments: found, limited: found.length >= MAX_SEGMENTS && i < text.length };
+    }
+
+    function isEmptyContainer(value) {
+        if (Array.isArray(value)) return value.length === 0;
+        return !!value && typeof value === 'object' && Object.keys(value).length === 0;
+    }
+
+    // 统一入口：全文就是一个合法 JSON 时走单文档模式（行为与旧版一致），否则按多段识别
+    function analyzeInput() {
+        const text = jsonInput.value;
+        const trimmed = text.trim();
+        if (!trimmed) return { segments: [], single: false, empty: true };
+
         try {
-            if (!jsonStr.trim()) return null;
-            return JSON.parse(jsonStr);
+            const value = JSON.parse(trimmed);
+            const start = text.indexOf(trimmed);
+            return {
+                segments: [{ start, end: start + trimmed.length, raw: trimmed, value, line: countLinesBefore(text, start) }],
+                single: true,
+                empty: false
+            };
         } catch (error) {
-            showTip(`格式错误：${error.message}`, true);
-            return null;
+            const limited = text.length > MAX_SCAN_CHARS ? text.slice(0, MAX_SCAN_CHARS) : text;
+            const result = extractJsonSegments(limited);
+            return {
+                segments: result.segments,
+                limited: result.limited || text.length > MAX_SCAN_CHARS,
+                single: false,
+                empty: false,
+                error
+            };
         }
     }
 
@@ -487,30 +588,8 @@
         return obj;
     }
 
-    function formatJson(obj) {
-        try {
-            const formatted = JSON.stringify(obj, null, 4);
-            jsonFormatText.value = formatted;
-            return formatted;
-        } catch (error) {
-            showTip(`格式化失败：${error.message}`, true);
-            return '';
-        }
-    }
-
-    function compressJson(obj) {
-        try {
-            const compressed = JSON.stringify(obj);
-            jsonCompressText.value = compressed;
-            return compressed;
-        } catch (error) {
-            showTip(`压缩失败：${error.message}`, true);
-            return '';
-        }
-    }
-
-    async function copyToClipboard(textArea, successMsg) {
-        const value = textArea.value.trim();
+    async function copyText(text, successMsg) {
+        const value = text.trim();
         if (!value) {
             showTip('暂无内容可复制', true);
             return;
@@ -549,112 +628,187 @@
         return null;
     }
 
-    function renderJsonTree(data) {
-        if (data === null) {
-            jsonOutputTree.innerHTML = '';
-            return;
-        }
-        formatJson(data);
-        compressJson(data);
-
-        function escapeHtml(value) {
-            return String(value)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        function pathToken(path) {
-            return encodeURIComponent(JSON.stringify(path));
-        }
-
-        function getCollapseSummary(obj) {
-            const isArray = Array.isArray(obj);
-            const count = isArray ? obj.length : Object.keys(obj).length;
-            const unit = isArray ? '项' : '属性';
-            const candidate = isArray
-                ? obj.find(item => item && typeof item === 'object' && !Array.isArray(item))
-                : obj;
-            const labelKey = findSummaryLabelKey(candidate);
-            const labelValue = labelKey ? String(candidate[labelKey]).slice(0, 40) : '';
-            return `(${count} ${unit}${labelValue ? ` · ${labelKey}: ${escapeHtml(labelValue)}` : ''})`;
-        }
-
-        function deleteButton(path, label) {
-            return `<button type="button" class="fe-delete" data-path="${pathToken(path)}" aria-label="删除${escapeHtml(label)}" title="删除${escapeHtml(label)}">×</button>`;
-        }
-
-        function buildTreeHtml(obj, parentPath = []) {
-            let html = '';
-            const token = pathToken(parentPath);
-
-            if (Array.isArray(obj)) {
-                html += `<span class="fe-bracket">[</span> `;
-                html += `<span class="fe-toggle" data-path="${token}">▼</span>`;
-                html += `<span class="fe-collapse-note" data-path="${token}" style="display:none">${getCollapseSummary(obj)}</span>`;
-                html += `<div class="fe-tree-children" data-path="${token}" style="display:block;">`;
-
-                obj.forEach((item, index) => {
-                    const path = [...parentPath, index];
-                    html += `<div class="fe-tree-row">`;
-                    html += `<span class="fe-key">[${index}]</span>: `;
-                    html += typeof item === 'object' && item !== null ? buildTreeHtml(item, path) : formatPrimitive(item, pathToken(path));
-                    html += deleteButton(path, `第 ${index + 1} 项`);
-                    html += index < obj.length - 1 ? `<span class="fe-bracket">,</span>` : '';
-                    html += `</div>`;
-                });
-                html += `</div><span class="fe-bracket">]</span>`;
-            } else if (typeof obj === 'object' && obj !== null) {
-                const keys = Object.keys(obj);
-                html += `<span class="fe-bracket">{</span> `;
-                html += `<span class="fe-toggle" data-path="${token}">▼</span>`;
-                html += `<span class="fe-collapse-note" data-path="${token}" style="display:none">${getCollapseSummary(obj)}</span>`;
-                html += `<div class="fe-tree-children" data-path="${token}" style="display:block;">`;
-
-                keys.forEach((key, index) => {
-                    const value = obj[key];
-                    const path = [...parentPath, key];
-                    html += `<div class="fe-tree-row">`;
-                    html += `<span class="fe-key fe-editable" data-path="${pathToken(path)}" data-edit="key" title="双击修改键名">"${escapeHtml(key)}"</span>: `;
-                    html += typeof value === 'object' && value !== null ? buildTreeHtml(value, path) : formatPrimitive(value, pathToken(path));
-                    html += deleteButton(path, `属性 ${key}`);
-                    html += index < keys.length - 1 ? `<span class="fe-bracket">,</span>` : '';
-                    html += `</div>`;
-                });
-                html += `</div><span class="fe-bracket">}</span>`;
-            } else {
-                html += formatPrimitive(obj);
-            }
-            return html;
-        }
-
-        function formatPrimitive(value, token = '') {
-            const editable = token ? ` fe-editable" data-path="${token}" data-edit="value" title="双击修改值` : '';
-            if (typeof value === 'string') return `<span class="fe-string${editable}">"${escapeHtml(value)}"</span>`;
-            if (typeof value === 'number') return `<span class="fe-number${editable}">${value}</span>`;
-            if (typeof value === 'boolean') return `<span class="fe-boolean${editable}">${value}</span>`;
-            if (value === null) return `<span class="fe-null${editable}">null</span>`;
-            return '';
-        }
-
-        jsonOutputTree.innerHTML = buildTreeHtml(data);
-        bindToggleEvents();
-        bindDeleteEvents();
-        bindEditEvents();
-        bindTreeRowHover();
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
-    function getTreeElement(className, token) {
-        return Array.from(jsonOutputTree.querySelectorAll(`.${className}`))
+    function pathToken(path) {
+        return encodeURIComponent(JSON.stringify(path));
+    }
+
+    function getCollapseSummary(obj) {
+        const isArray = Array.isArray(obj);
+        const count = isArray ? obj.length : Object.keys(obj).length;
+        const unit = isArray ? '项' : '属性';
+        const candidate = isArray
+            ? obj.find(item => item && typeof item === 'object' && !Array.isArray(item))
+            : obj;
+        const labelKey = findSummaryLabelKey(candidate);
+        const labelValue = labelKey ? String(candidate[labelKey]).slice(0, 40) : '';
+        return `(${count} ${unit}${labelValue ? ` · ${labelKey}: ${escapeHtml(labelValue)}` : ''})`;
+    }
+
+    function deleteButton(path, label) {
+        return `<button type="button" class="fe-delete" data-path="${pathToken(path)}" aria-label="删除${escapeHtml(label)}" title="删除${escapeHtml(label)}">×</button>`;
+    }
+
+    // maxDepth 为 null 时全部展开；否则达到该深度的节点渲染为折叠态
+    function buildTreeHtml(obj, parentPath = [], depth = 0, maxDepth = null) {
+        let html = '';
+        const token = pathToken(parentPath);
+        const collapsed = maxDepth !== null && depth >= maxDepth;
+        const arrow = collapsed ? '▶' : '▼';
+        const childrenDisplay = collapsed ? 'none' : 'block';
+        const noteDisplay = collapsed ? 'inline' : 'none';
+
+        if (Array.isArray(obj)) {
+            html += `<span class="fe-bracket">[</span> `;
+            html += `<span class="fe-toggle" data-path="${token}">${arrow}</span>`;
+            html += `<span class="fe-collapse-note" data-path="${token}" style="display:${noteDisplay}">${getCollapseSummary(obj)}</span>`;
+            html += `<div class="fe-tree-children" data-path="${token}" style="display:${childrenDisplay};">`;
+
+            obj.forEach((item, index) => {
+                const path = [...parentPath, index];
+                html += `<div class="fe-tree-row">`;
+                html += `<span class="fe-key">[${index}]</span>: `;
+                html += typeof item === 'object' && item !== null ? buildTreeHtml(item, path, depth + 1, maxDepth) : formatPrimitive(item, pathToken(path));
+                html += deleteButton(path, `第 ${index + 1} 项`);
+                html += index < obj.length - 1 ? `<span class="fe-bracket">,</span>` : '';
+                html += `</div>`;
+            });
+            html += `</div><span class="fe-bracket">]</span>`;
+        } else if (typeof obj === 'object' && obj !== null) {
+            const keys = Object.keys(obj);
+            html += `<span class="fe-bracket">{</span> `;
+            html += `<span class="fe-toggle" data-path="${token}">${arrow}</span>`;
+            html += `<span class="fe-collapse-note" data-path="${token}" style="display:${noteDisplay}">${getCollapseSummary(obj)}</span>`;
+            html += `<div class="fe-tree-children" data-path="${token}" style="display:${childrenDisplay};">`;
+
+            keys.forEach((key, index) => {
+                const value = obj[key];
+                const path = [...parentPath, key];
+                html += `<div class="fe-tree-row">`;
+                html += `<span class="fe-key fe-editable" data-path="${pathToken(path)}" data-edit="key" title="双击修改键名">"${escapeHtml(key)}"</span>: `;
+                html += typeof value === 'object' && value !== null ? buildTreeHtml(value, path, depth + 1, maxDepth) : formatPrimitive(value, pathToken(path));
+                html += deleteButton(path, `属性 ${key}`);
+                html += index < keys.length - 1 ? `<span class="fe-bracket">,</span>` : '';
+                html += `</div>`;
+            });
+            html += `</div><span class="fe-bracket">}</span>`;
+        } else {
+            html += formatPrimitive(obj);
+        }
+        return html;
+    }
+
+    function formatPrimitive(value, token = '') {
+        const editable = token ? ` fe-editable" data-path="${token}" data-edit="value" title="双击修改值` : '';
+        if (typeof value === 'string') return `<span class="fe-string${editable}">"${escapeHtml(value)}"</span>`;
+        if (typeof value === 'number') return `<span class="fe-number${editable}">${value}</span>`;
+        if (typeof value === 'boolean') return `<span class="fe-boolean${editable}">${value}</span>`;
+        if (value === null) return `<span class="fe-null${editable}">null</span>`;
+        return '';
+    }
+
+    function describeSegment(seg) {
+        const size = seg.raw.length >= 1024 ? `${(seg.raw.length / 1024).toFixed(1)} KB` : `${seg.raw.length} 字符`;
+        if (!seg.value || typeof seg.value !== 'object') return `${size} · 第 ${seg.line} 行`;
+        const isArray = Array.isArray(seg.value);
+        const count = isArray ? seg.value.length : Object.keys(seg.value).length;
+        return `${count} ${isArray ? '项' : '属性'} · ${size} · 第 ${seg.line} 行`;
+    }
+
+    function renderOutput(analysis, options = {}) {
+        segments = analysis.segments;
+        const count = segments.length;
+        const single = count === 1 && analysis.single;
+        const treeState = options.keepState instanceof Map
+            ? options.keepState
+            : options.keepState ? captureTreeState() : null;
+        const scrollTop = jsonOutputTree.scrollTop;
+
+        if (!count) {
+            jsonOutputTree.innerHTML = '';
+            formattedCache = '';
+            compressedCache = '';
+            if (!analysis.empty) {
+                const reason = analysis.error ? `格式错误：${analysis.error.message}` : '未找到有效的 JSON 片段';
+                showTip(analysis.limited ? '内容过多，未能识别出 JSON 片段' : reason, true);
+            }
+            return;
+        }
+
+        formattedCache = segments.map(seg => JSON.stringify(seg.value, null, 4)).join('\n\n');
+        compressedCache = segments.map(seg => JSON.stringify(seg.value)).join('\n');
+
+        const maxDepth = single ? null : MULTI_EXPAND_DEPTH;
+        jsonOutputTree.innerHTML = segments.map((seg, index) => {
+            const badge = Array.isArray(seg.value) ? '[]' : '{ }';
+            return [
+                `<section class="json-seg-card${single ? ' is-single' : ''}" data-seg="${index}">`,
+                `<header class="seg-header">`,
+                `<span class="seg-index">#${index + 1}</span>`,
+                `<span class="seg-badge">${badge}</span>`,
+                `<span class="seg-meta">${escapeHtml(describeSegment(seg))}</span>`,
+                `<span class="seg-actions">`,
+                `<button type="button" class="seg-btn" data-act="copy">复制</button>`,
+                count > 1 ? `<button type="button" class="seg-btn seg-remove" data-act="remove">删除此段</button>` : '',
+                `</span>`,
+                `</header>`,
+                `<div class="seg-body">${buildTreeHtml(seg.value, [], 0, maxDepth)}</div>`,
+                `</section>`
+            ].join('');
+        }).join('');
+
+        bindTreeEvents();
+        bindCardEvents();
+
+        if (treeState) {
+            restoreTreeState(treeState);
+            jsonOutputTree.scrollTop = scrollTop;
+        }
+    }
+
+    // 记录各卡片当前的展开状态，重建 DOM 后回放，避免编辑/删除节点后视图被重置
+    function captureTreeState() {
+        const state = new Map();
+        jsonOutputTree.querySelectorAll('.json-seg-card').forEach(card => {
+            const nodes = new Map();
+            card.querySelectorAll('.fe-toggle').forEach(toggle => {
+                const children = getTreeElement(card, 'fe-tree-children', toggle.dataset.path);
+                if (children) nodes.set(toggle.dataset.path, children.style.display !== 'none');
+            });
+            state.set(Number(card.dataset.seg), nodes);
+        });
+        return state;
+    }
+
+    function restoreTreeState(state) {
+        state.forEach((nodes, index) => {
+            const card = jsonOutputTree.querySelector(`.json-seg-card[data-seg="${index}"]`);
+            if (!card) return;
+            nodes.forEach((expanded, path) => {
+                const toggle = getTreeElement(card, 'fe-toggle', path);
+                if (!toggle || (toggle.textContent === '▼') === expanded) return;
+                toggleTreeNode(card, toggle);
+            });
+        });
+    }
+
+    function getTreeElement(root, className, token) {
+        return Array.from(root.querySelectorAll(`.${className}`))
             .find(element => element.dataset.path === token);
     }
 
-    function toggleTreeNode(toggle) {
+    function toggleTreeNode(root, toggle) {
         const path = toggle.getAttribute('data-path');
-        const children = getTreeElement('fe-tree-children', path);
-        const note = getTreeElement('fe-collapse-note', path);
+        const children = getTreeElement(root, 'fe-tree-children', path);
+        const note = getTreeElement(root, 'fe-collapse-note', path);
         if (!children || !note) return;
         const isExpanded = toggle.textContent === '▼';
         toggle.textContent = isExpanded ? '▶' : '▼';
@@ -662,39 +816,64 @@
         note.style.display = isExpanded ? 'inline' : 'none';
     }
 
+    function bindTreeEvents() {
+        bindToggleEvents();
+        bindDeleteEvents();
+        bindEditEvents();
+        bindTreeRowHover();
+    }
+
     function bindToggleEvents() {
         jsonOutputTree.onclick = function(event) {
-            if (event.target.closest('.fe-delete, .fe-edit-input')) return;
+            if (event.target.closest('.fe-delete, .fe-edit-input, .seg-actions')) return;
+            if (!event.target.closest('.seg-body')) return;
+            const card = event.target.closest('.json-seg-card');
+            if (!card) return;
             const row = event.target.closest('.fe-tree-row');
             const toggle = row
                 ? row.querySelector(':scope > .fe-toggle')
-                : jsonOutputTree.querySelector('.fe-toggle');
-            if (toggle) toggleTreeNode(toggle);
+                : card.querySelector('.fe-toggle');
+            if (toggle) toggleTreeNode(card, toggle);
         };
     }
 
     function bindDeleteEvents() {
-        jsonOutputTree.querySelectorAll('.fe-delete').forEach(button => {
-            button.onclick = function() {
-                const path = JSON.parse(decodeURIComponent(this.dataset.path));
-                const parsed = parseJson(jsonInput.value.trim());
-                if (!parsed || path.length === 0) return;
-
-                const parent = path.slice(0, -1).reduce((node, key) => node?.[key], parsed);
-                const key = path[path.length - 1];
-                if (Array.isArray(parent)) parent.splice(key, 1);
-                else if (parent && typeof parent === 'object') delete parent[key];
-                else return;
-
-                jsonInput.value = formatJson(parsed);
-                renderJsonTree(parsed);
-                showTip('已删除所选节点');
-            };
+        jsonOutputTree.querySelectorAll('.json-seg-card').forEach(card => {
+            const index = Number(card.dataset.seg);
+            card.querySelectorAll('.fe-delete').forEach(button => {
+                button.onclick = function(event) {
+                    event.stopPropagation();
+                    deleteTreeNode(index, JSON.parse(decodeURIComponent(this.dataset.path)));
+                };
+            });
         });
     }
 
-    function applyTreeEdit(span, path, rawText) {
-        const parsed = parseJson(jsonInput.value.trim());
+    function deleteTreeNode(index, path) {
+        const parsed = segments[index]?.value;
+        if (!parsed || !path.length) return;
+
+        const parent = path.slice(0, -1).reduce((node, key) => node?.[key], parsed);
+        const key = path[path.length - 1];
+        if (Array.isArray(parent)) parent.splice(key, 1);
+        else if (parent && typeof parent === 'object') delete parent[key];
+        else return;
+
+        replaceSegmentValue(index, parsed);
+        showTip('已删除所选节点');
+    }
+
+    // 用新的值替换该段在输入框中的原文切片，其余日志文本保持不动
+    function replaceSegmentValue(index, value) {
+        const seg = segments[index];
+        if (!seg) return;
+        const formatted = JSON.stringify(value, null, 4);
+        jsonInput.value = jsonInput.value.slice(0, seg.start) + formatted + jsonInput.value.slice(seg.end);
+        renderOutput(analyzeInput(), { keepState: true });
+    }
+
+    function applyTreeEdit(index, span, path, rawText) {
+        const parsed = segments[index]?.value;
         if (!parsed) return;
 
         if (span.dataset.edit === 'key') {
@@ -725,11 +904,10 @@
             container[key] = newVal;
             showTip('值已更新');
         }
-        jsonInput.value = formatJson(parsed);
-        renderJsonTree(parsed);
+        replaceSegmentValue(index, parsed);
     }
 
-    function startInlineEdit(span) {
+    function startInlineEdit(index, span) {
         const path = JSON.parse(decodeURIComponent(span.dataset.path));
         let initial = span.textContent;
         if (span.dataset.edit === 'key' || span.classList.contains('fe-string')) {
@@ -750,7 +928,7 @@
             finished = true;
             input.remove();
             span.style.display = '';
-            if (commit) applyTreeEdit(span, path, input.value);
+            if (commit) applyTreeEdit(index, span, path, input.value);
         };
         input.addEventListener('blur', () => finish(true));
         input.addEventListener('keydown', (e) => {
@@ -760,9 +938,45 @@
     }
 
     function bindEditEvents() {
-        jsonOutputTree.querySelectorAll('.fe-editable').forEach(el => {
-            el.addEventListener('dblclick', function() { startInlineEdit(this); });
+        jsonOutputTree.querySelectorAll('.json-seg-card').forEach(card => {
+            const index = Number(card.dataset.seg);
+            card.querySelectorAll('.fe-editable').forEach(el => {
+                el.addEventListener('dblclick', function() { startInlineEdit(index, this); });
+            });
         });
+    }
+
+    function bindCardEvents() {
+        jsonOutputTree.querySelectorAll('.json-seg-card').forEach(card => {
+            const index = Number(card.dataset.seg);
+            card.querySelectorAll('.seg-btn').forEach(button => {
+                button.onclick = function(event) {
+                    event.stopPropagation();
+                    const seg = segments[index];
+                    if (!seg) return;
+                    if (this.dataset.act === 'copy') {
+                        copyText(JSON.stringify(seg.value, null, 4), `第 ${index + 1} 段格式化代码已复制`);
+                    } else if (this.dataset.act === 'remove') {
+                        removeSegment(index);
+                    }
+                };
+            });
+        });
+    }
+
+    // 删除整段：连同它在输入框中的原文一起移除
+    function removeSegment(index) {
+        const seg = segments[index];
+        if (!seg) return;
+        // 后续段索引会前移，展开状态同步左移，避免张冠李戴
+        const shifted = new Map();
+        captureTreeState().forEach((nodes, i) => {
+            if (i === index) return;
+            shifted.set(i > index ? i - 1 : i, nodes);
+        });
+        jsonInput.value = jsonInput.value.slice(0, seg.start) + jsonInput.value.slice(seg.end);
+        renderOutput(analyzeInput(), { keepState: shifted });
+        showTip(`已删除第 ${index + 1} 段 JSON`);
     }
 
     function bindTreeRowHover() {
@@ -780,81 +994,96 @@
         };
     }
 
-    function expandAllNodes() {
-        document.querySelectorAll('.fe-toggle').forEach(toggle => {
-            toggle.textContent = '▼';
-            const path = toggle.getAttribute('data-path');
-            getTreeElement('fe-tree-children', path)?.style.setProperty('display', 'block');
-            getTreeElement('fe-collapse-note', path)?.style.setProperty('display', 'none');
+    function setAllNodesExpanded(expanded) {
+        jsonOutputTree.querySelectorAll('.json-seg-card').forEach(card => {
+            card.querySelectorAll('.fe-toggle').forEach(toggle => {
+                toggle.textContent = expanded ? '▼' : '▶';
+                const path = toggle.getAttribute('data-path');
+                getTreeElement(card, 'fe-tree-children', path)?.style.setProperty('display', expanded ? 'block' : 'none');
+                getTreeElement(card, 'fe-collapse-note', path)?.style.setProperty('display', expanded ? 'none' : 'inline');
+            });
         });
-        showTip('已全部展开');
+        showTip(expanded ? '已全部展开' : '已全部折叠');
     }
 
-    function collapseAllNodes() {
-        document.querySelectorAll('.fe-toggle').forEach(toggle => {
-            toggle.textContent = '▶';
-            const path = toggle.getAttribute('data-path');
-            getTreeElement('fe-tree-children', path)?.style.setProperty('display', 'none');
-            getTreeElement('fe-collapse-note', path)?.style.setProperty('display', 'inline');
-        });
-        showTip('已全部折叠');
+    // 按段回写：从后往前替换，避免前面段的偏移失效
+    function rewriteSegments(transform, space = 4) {
+        let text = jsonInput.value;
+        for (let i = segments.length - 1; i >= 0; i--) {
+            const seg = segments[i];
+            const next = transform ? transform(seg.value) : seg.value;
+            text = text.slice(0, seg.start) + JSON.stringify(next, null, space) + text.slice(seg.end);
+        }
+        jsonInput.value = text;
     }
 
     let formatTimer = null;
     jsonInput.addEventListener('input', function() {
         clearTimeout(formatTimer);
         formatTimer = setTimeout(() => {
-            const inputValue = this.value.trim();
-            if (!inputValue) {
+            if (!this.value.trim()) {
+                segments = [];
                 jsonOutputTree.innerHTML = '';
-                jsonFormatText.value = '';
-                jsonCompressText.value = '';
+                formattedCache = '';
+                compressedCache = '';
                 showTip('就绪');
                 return;
             }
-            const parsedJson = parseJson(inputValue);
-            if (parsedJson) {
-                const formatted = formatJson(parsedJson);
+            let analysis = analyzeInput();
+            // 单文档模式沿用旧行为：把输入框就地格式化
+            if (analysis.single) {
+                const formatted = JSON.stringify(analysis.segments[0].value, null, 4);
                 const cursorPos = this.selectionStart;
                 this.value = formatted;
                 this.selectionStart = this.selectionEnd = Math.min(cursorPos, formatted.length);
-                renderJsonTree(parsedJson);
+                analysis = analyzeInput();
+            }
+            renderOutput(analysis);
+            if (!analysis.segments.length) return; // 错误提示已由 renderOutput 给出
+            if (analysis.single) {
                 showTip('实时格式化完成');
+            } else {
+                const limited = analysis.limited ? ' · 内容过多，未完整识别' : '';
+                showTip(`识别到 ${analysis.segments.length} 段 JSON${limited}`);
             }
         }, 400);
     });
 
     sortBtn.addEventListener('click', () => {
-        const parsed = parseJson(jsonInput.value.trim());
-        if (parsed) {
-            const sorted = sortJsonKeys(parsed);
-            jsonInput.value = formatJson(sorted);
-            renderJsonTree(sorted);
-            showTip('键名排序完成');
+        segments = analyzeInput().segments;
+        if (!segments.length) {
+            showTip('暂无内容可排序', true);
+            return;
         }
+        rewriteSegments(sortJsonKeys);
+        renderOutput(analyzeInput(), { keepState: true });
+        showTip('键名排序完成');
     });
 
     compressBtn.addEventListener('click', () => {
-        const parsed = parseJson(jsonInput.value.trim());
-        if (parsed) {
-            jsonInput.value = compressJson(parsed);
-            renderJsonTree(parsed);
-            showTip('压缩完成');
+        segments = analyzeInput().segments;
+        if (!segments.length) {
+            showTip('暂无内容可压缩', true);
+            return;
         }
+        rewriteSegments(null, null);
+        renderOutput(analyzeInput(), { keepState: true });
+        showTip('压缩完成');
     });
 
     clearBtn.addEventListener('click', () => {
+        segments = [];
         jsonInput.value = '';
         jsonOutputTree.innerHTML = '';
-        jsonFormatText.value = '';
-        jsonCompressText.value = '';
+        formattedCache = '';
+        compressedCache = '';
         showTip('内容已清空');
     });
 
-    copyFormatBtn.addEventListener('click', () => copyToClipboard(jsonFormatText, '格式化代码已复制'));
-    copyCompressBtn.addEventListener('click', () => copyToClipboard(jsonCompressText, '压缩代码已复制'));
-    expandAllBtn.addEventListener('click', expandAllNodes);
-    collapseAllBtn.addEventListener('click', collapseAllNodes);
+    copyFormatBtn.addEventListener('click', () => copyText(formattedCache, '格式化代码已复制'));
+    copyCompressBtn.addEventListener('click', () => copyText(compressedCache, '压缩代码已复制'));
+    expandAllBtn.addEventListener('click', () => setAllNodesExpanded(true));
+    collapseAllBtn.addEventListener('click', () => setAllNodesExpanded(false));
 
     // 放大/还原输出面板
     const expandOutputBtn = document.getElementById('expandOutputBtn');
