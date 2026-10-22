@@ -51,6 +51,7 @@
             position: relative;
             display: flex;
             align-items: center;
+            min-width: 0;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -65,7 +66,8 @@
 
         .smart-input-wrapper input[type="text"] {
             flex: 1; padding: 14px 16px; background: transparent;
-            border: none; color: white; font-size: 1.1rem; outline: none; width: 100%;
+            border: none; color: white; font-size: 1.1rem; outline: none;
+            width: 100%; min-width: 0;
         }
 
         /* 日历图标区域 */
@@ -89,19 +91,26 @@
             border-radius: 12px; padding: 15px; margin-top: 15px;
         }
 
-        .res-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .res-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; min-height: 26px; }
         .res-row:last-child { margin-bottom: 0; }
-        .res-label { font-size: 0.85rem; color: #94a3b8; }
-        .res-value { font-weight: 600; color: #fff; font-size: 1.1rem; }
+        .res-label { font-size: 0.85rem; color: #94a3b8; flex-shrink: 0; }
+        .res-value { font-weight: 600; color: #fff; font-size: 1.1rem; text-align: right; min-width: 0; white-space: nowrap; }
         .highlight { color: #f472b6; text-shadow: 0 0 10px rgba(244,114,182,0.3); }
 
         .offset-input {
-            width: 100%; padding: 12px; background: rgba(0,0,0,0.3);
+            width: 100%; min-width: 0; padding: 12px 4px; background: rgba(0,0,0,0.3);
             border: 1px solid var(--border); border-radius: 12px;
             color: #fff; text-align: center; font-size: 1.1rem; outline: none;
         }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .offset-input:focus { border-color: var(--primary); }
+
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; min-width: 0; }
+        .offset-field { min-width: 0; }
+        .offset-field label {
+            display: block; font-size: 0.72rem; color: #94a3b8;
+            text-align: center; margin-bottom: 6px;
+        }
         small { color: #64748b; font-size: 0.75rem; display: block; margin-top: 5px; }
 
         ::-webkit-scrollbar { width: 7px; height: 7px; }
@@ -117,9 +126,9 @@
     <h1>DATE CALCULATOR</h1>
 
     <div class="card">
-        <div class="section-title">📅 日期推算 (加/减天数)</div>
+        <div class="section-title">📅 日期推算 (加/减天、时、分、秒)</div>
         <div class="smart-input-wrapper">
-            <input type="text" id="baseDate" placeholder="输入 20251231" maxlength="8">
+            <input type="text" id="baseDate" placeholder="输入 20251231103000" maxlength="19">
             <!-- 点击这个 div 触发隐藏的 input -->
             <div class="calendar-btn" onclick="openPicker('basePicker')">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -128,15 +137,32 @@
                     <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
             </div>
-            <input type="date" id="basePicker" class="hidden-date-input" onchange="onPickerChange(this, 'baseDate')">
+            <input type="datetime-local" id="basePicker" class="hidden-date-input" onchange="onPickerChange(this, 'baseDate')">
         </div>
 
-        <input type="number" id="dayOffset" class="offset-input" value="7">
-        <small>* 输入负数如 -60 代表向前推算</small>
+        <div class="grid-4">
+            <div class="offset-field">
+                <label>天</label>
+                <input type="number" id="offsetDay" class="offset-input" value="7">
+            </div>
+            <div class="offset-field">
+                <label>时</label>
+                <input type="number" id="offsetHour" class="offset-input" value="0">
+            </div>
+            <div class="offset-field">
+                <label>分</label>
+                <input type="number" id="offsetMinute" class="offset-input" value="0">
+            </div>
+            <div class="offset-field">
+                <label>秒</label>
+                <input type="number" id="offsetSecond" class="offset-input" value="0">
+            </div>
+        </div>
+        <small>* 均支持负数，如 -60 天代表向前推算；只输入 8 位日期时按 00:00:00 处理</small>
 
         <div class="result-group">
             <div class="res-row">
-                <span class="res-label">目标日期</span>
+                <span class="res-label">目标时间</span>
                 <span class="res-value highlight" id="targetDate">-</span>
             </div>
             <div class="res-row">
@@ -148,27 +174,30 @@
 
     <div class="card">
         <div class="section-title">📏 日期间隔计算</div>
-        <div class="grid-2">
-            <div class="smart-input-wrapper">
-                <input type="text" id="dateA" placeholder="日期 A" maxlength="8">
-                <div class="calendar-btn" onclick="openPicker('pickerA')">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                </div>
-                <input type="date" id="pickerA" class="hidden-date-input" onchange="onPickerChange(this, 'dateA')">
+        <div class="smart-input-wrapper">
+            <input type="text" id="dateA" placeholder="时间 A" maxlength="19">
+            <div class="calendar-btn" onclick="openPicker('pickerA')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             </div>
-            <div class="smart-input-wrapper">
-                <input type="text" id="dateB" placeholder="日期 B" maxlength="8">
-                <div class="calendar-btn" onclick="openPicker('pickerB')">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                </div>
-                <input type="date" id="pickerB" class="hidden-date-input" onchange="onPickerChange(this, 'dateB')">
-            </div>
+            <input type="datetime-local" id="pickerA" class="hidden-date-input" onchange="onPickerChange(this, 'dateA')">
         </div>
+        <div class="smart-input-wrapper">
+            <input type="text" id="dateB" placeholder="时间 B" maxlength="19">
+            <div class="calendar-btn" onclick="openPicker('pickerB')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <input type="datetime-local" id="pickerB" class="hidden-date-input" onchange="onPickerChange(this, 'dateB')">
+        </div>
+        <small>* 可只填日期(YYYYMMDD)或精确到秒(YYYYMMDDHHmmss)；正数表示 B 晚于 A</small>
 
         <div class="result-group">
             <div class="res-row">
+                <span class="res-label">精确相差</span>
+                <span class="res-value highlight" id="diffExact">-</span>
+            </div>
+            <div class="res-row">
                 <span class="res-label">相差天数</span>
-                <span class="res-value highlight" id="diffDays">-</span>
+                <span class="res-value" id="diffDays">-</span>
             </div>
             <div class="res-row">
                 <span class="res-label">相差小时</span>
@@ -177,6 +206,10 @@
             <div class="res-row">
                 <span class="res-label">总分钟数</span>
                 <span class="res-value" id="diffMinutes">-</span>
+            </div>
+            <div class="res-row">
+                <span class="res-label">总秒数</span>
+                <span class="res-value" id="diffSeconds">-</span>
             </div>
         </div>
     </div>
@@ -198,8 +231,8 @@
     // 2. 日历选定后的回调
     function onPickerChange(picker, textId) {
         if (picker.value) {
-            // 将 2025-12-31 转为 20251231
-            const val = picker.value.replace(/-/g, '');
+            // 将 2025-12-31T10:30 转为 202512311030（datetime-local 不含秒）
+            const val = picker.value.replace(/[-T:]/g, '');
             document.getElementById(textId).value = val;
             runCalculations();
         }
@@ -207,15 +240,14 @@
 
     // 3. 初始加载
     document.addEventListener('DOMContentLoaded', () => {
-        const today = new Date();
-        const formatted = formatDate(today);
-        
-        document.getElementById('baseDate').value = formatted;
-        document.getElementById('dateA').value = formatted;
-        document.getElementById('dateB').value = "20251231";
+        const now = new Date();
+
+        document.getElementById('baseDate').value = formatDateTime(now);
+        document.getElementById('dateA').value = formatDateTime(now);
+        document.getElementById('dateB').value = "20251231235959";
 
         // 绑定手动输入的监听
-        ['baseDate', 'dayOffset', 'dateA', 'dateB'].forEach(id => {
+        ['baseDate', 'offsetDay', 'offsetHour', 'offsetMinute', 'offsetSecond', 'dateA', 'dateB'].forEach(id => {
             document.getElementById(id).addEventListener('input', runCalculations);
         });
 
@@ -228,55 +260,98 @@
         calcDiff();
     }
 
-    function formatDate(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}${m}${d}`;
+    const pad = (n) => String(n).padStart(2, '0');
+
+    function formatDateTime(date) {
+        return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`
+            + `${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
     }
 
-    function smartParseDate(str) {
-        if (!str || str.length !== 8) return null;
-        const y = parseInt(str.substring(0, 4));
-        const m = parseInt(str.substring(4, 6)) - 1;
-        const d = parseInt(str.substring(6, 8));
-        const date = new Date(y, m, d);
-        return (date.getFullYear() === y && date.getMonth() === m && date.getDate() === d) ? date : null;
+    function formatDisplay(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} `
+            + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    }
+
+    // 支持 8 位日期、12 位到分、14 位到秒，也容忍 - / . : 空格 T 等分隔符
+    function smartParseDateTime(str) {
+        if (!str) return null;
+        const digits = str.trim().replace(/[-/.\s:T]/g, '');
+        if (digits.length !== 8 && digits.length !== 12 && digits.length !== 14) return null;
+
+        const y = parseInt(digits.substring(0, 4), 10);
+        const mo = parseInt(digits.substring(4, 6), 10) - 1;
+        const d = parseInt(digits.substring(6, 8), 10);
+        const h = digits.length >= 12 ? parseInt(digits.substring(8, 10), 10) : 0;
+        const mi = digits.length >= 12 ? parseInt(digits.substring(10, 12), 10) : 0;
+        const s = digits.length === 14 ? parseInt(digits.substring(12, 14), 10) : 0;
+
+        if (h > 23 || mi > 59 || s > 59) return null;
+
+        const date = new Date(y, mo, d, h, mi, s);
+        return (date.getFullYear() === y && date.getMonth() === mo && date.getDate() === d) ? date : null;
     }
 
     function calcOffset() {
-        const baseStr = document.getElementById('baseDate').value;
-        const offset = parseInt(document.getElementById('dayOffset').value) || 0;
-        const date = smartParseDate(baseStr);
+        const base = smartParseDateTime(document.getElementById('baseDate').value);
+        const day = parseInt(document.getElementById('offsetDay').value, 10) || 0;
+        const hour = parseInt(document.getElementById('offsetHour').value, 10) || 0;
+        const minute = parseInt(document.getElementById('offsetMinute').value, 10) || 0;
+        const second = parseInt(document.getElementById('offsetSecond').value, 10) || 0;
         const targetEl = document.getElementById('targetDate');
         const weekEl = document.getElementById('targetWeek');
 
-        if (date) {
-            date.setDate(date.getDate() + offset);
+        if (base) {
+            const target = new Date(base.getTime());
+            target.setDate(target.getDate() + day);
+            target.setHours(target.getHours() + hour);
+            target.setMinutes(target.getMinutes() + minute);
+            target.setSeconds(target.getSeconds() + second);
+
             const weekDays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-            targetEl.innerText = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-            weekEl.innerText = weekDays[date.getDay()];
+            targetEl.innerText = formatDisplay(target);
+            weekEl.innerText = weekDays[target.getDay()];
         } else {
-            targetEl.innerText = "格式: YYYYMMDD";
+            targetEl.innerText = "格式: YYYYMMDD[HHmmss]";
             weekEl.innerText = "-";
         }
     }
 
     function calcDiff() {
-        const dateA = smartParseDate(document.getElementById('dateA').value);
-        const dateB = smartParseDate(document.getElementById('dateB').value);
+        const dateA = smartParseDateTime(document.getElementById('dateA').value);
+        const dateB = smartParseDateTime(document.getElementById('dateB').value);
+        const exactEl = document.getElementById('diffExact');
         const dEl = document.getElementById('diffDays');
         const hEl = document.getElementById('diffHours');
         const mEl = document.getElementById('diffMinutes');
+        const sEl = document.getElementById('diffSeconds');
 
-        if (dateA && dateB) {
-            const ms = Math.abs(dateB - dateA);
-            dEl.innerText = Math.floor(ms / 86400000).toLocaleString() + " 天";
-            hEl.innerText = Math.floor(ms / 3600000).toLocaleString() + " 小时";
-            mEl.innerText = Math.floor(ms / 60000).toLocaleString() + " 分钟";
-        } else {
-            dEl.innerText = "-"; hEl.innerText = "-"; mEl.innerText = "-";
+        if (!dateA || !dateB) {
+            [exactEl, dEl, hEl, mEl, sEl].forEach(el => el.innerText = "-");
+            return;
         }
+
+        const sign = dateB < dateA ? -1 : 1;
+        let rest = Math.floor(Math.abs(dateB - dateA) / 1000);
+
+        const days = Math.floor(rest / 86400); rest -= days * 86400;
+        const hours = Math.floor(rest / 3600); rest -= hours * 3600;
+        const minutes = Math.floor(rest / 60);
+        const seconds = rest - minutes * 60;
+
+        // 精确相差：天 + HH:mm:ss，保持单行避免结果区高度跳动
+        const hms = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        exactEl.innerText = (sign < 0 ? "-" : "") + (days ? `${days} 天 ` : "") + hms;
+
+        // 避免 -0 这种显示
+        const total = (unit) => {
+            const v = Math.floor(Math.abs(dateB - dateA) / unit) * sign;
+            return (v === 0 ? 0 : v).toLocaleString();
+        };
+
+        dEl.innerText = `${total(86400000)} 天`;
+        hEl.innerText = `${total(3600000)} 小时`;
+        mEl.innerText = `${total(60000)} 分钟`;
+        sEl.innerText = `${total(1000)} 秒`;
     }
 </script>
 <script src="scripts/form-persist.js"></script>
