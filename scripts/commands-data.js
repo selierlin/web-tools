@@ -1638,6 +1638,27 @@ window.COMMANDS_DATA = [
         tags: ["uv", "python", "构建", "发布", "pypi", "打包"]
       },
       {
+        category: "uv",
+        name: "uv 安装",
+        desc: "macOS 上用 curl 脚本或 Homebrew 安装 uv。",
+        command: "# curl\ncurl -LsSf https://astral.sh/uv/install.sh | sh\n\n# Homebrew\nbrew install uv",
+        tags: ["uv", "python", "安装", "install", "homebrew", "macos"]
+      },
+      {
+        category: "uv",
+        name: "uv 查看 / 卸载 Python 版本",
+        desc: "列出可安装版本、卸载已装版本；若提示 PATH 未配置，执行 update-shell。",
+        command: "uv python list\nuv python uninstall 3.11\nuv python update-shell",
+        tags: ["uv", "python", "版本", "list", "uninstall", "update-shell", "PATH"]
+      },
+      {
+        category: "uv",
+        name: "uv 从 requirements.txt 安装与导出依赖",
+        desc: "按 requirements.txt 安装依赖，或把当前环境依赖导出成 requirements.txt。",
+        command: "uv pip install -r requirements.txt\nuv pip freeze > requirements.txt",
+        tags: ["uv", "python", "requirements", "依赖", "pip", "freeze", "导出"]
+      },
+      {
         category: "常用工具",
         name: "NPX 临时执行包",
         desc: "不全局安装，直接执行 npm 包命令。",
@@ -1653,10 +1674,52 @@ window.COMMANDS_DATA = [
       },
       {
         category: "常用工具",
+        name: "OrbStack 设置 Docker 代理（macOS）",
+        desc: "需设置两处：1) Settings > Network > Proxy，Proxy 选 Custom 并填代理地址；2) Settings > Docker > Advanced engine config，粘贴下方 JSON 后点 Apply。",
+        command: "{\n  \"proxies\": {\n    \"http-proxy\": \"http://127.0.0.1:7890\",\n    \"https-proxy\": \"http://127.0.0.1:7890\",\n    \"no-proxy\": \"localhost,::1,127.0.0.1,10.0.0.0/8,127.0.0.0/8,172.16.0.0/12,192.168.0.0/16\"\n  }\n}",
+        tags: ["docker", "proxy", "代理", "orbstack", "macos", "engine config", "daemon.json", "http_proxy", "https_proxy"]
+      },
+      {
+        category: "常用工具",
+        name: "Docker server 端代理（daemon.json）",
+        desc: "Linux 上让 Docker daemon 走代理，写入 /etc/docker/daemon.json 后重启 docker。与 client 的 config.json 是两处独立配置。",
+        command: "sudo tee /etc/docker/daemon.json <<'JSON'\n{\n  \"proxies\": {\n    \"http-proxy\": \"http://127.0.0.1:7890\",\n    \"https-proxy\": \"http://127.0.0.1:7890\",\n    \"no-proxy\": \"localhost,::1,127.0.0.1,10.0.0.0/8,127.0.0.0/8,172.16.0.0/12,192.168.0.0/16\"\n  }\n}\nJSON\nsudo systemctl restart docker",
+        tags: ["docker", "proxy", "代理", "daemon.json", "server", "linux", "systemctl", "http_proxy", "https_proxy"]
+      },
+      {
+        category: "常用工具",
+        name: "Docker server 端代理（systemd drop-in）",
+        desc: "Ubuntu 新版本等 systemd 系统，用 drop-in 配置替代改 daemon.json；改完需 daemon-reload 再重启 docker。",
+        command: "sudo mkdir -p /etc/systemd/system/docker.service.d\nsudo tee /etc/systemd/system/docker.service.d/proxy.conf <<'CONF'\n[Service]\nEnvironment=\"HTTP_PROXY=http://127.0.0.1:7890\"\nEnvironment=\"HTTPS_PROXY=http://127.0.0.1:7890\"\nEnvironment=\"NO_PROXY=localhost,::1,127.0.0.1,10.0.0.0/8,127.0.0.0/8,172.16.0.0/12,192.168.0.0/16\"\nCONF\nsudo systemctl daemon-reload\nsudo systemctl restart docker\nsudo systemctl show --property=Environment docker",
+        tags: ["docker", "proxy", "代理", "systemd", "drop-in", "proxy.conf", "linux", "ubuntu", "debian", "http_proxy"]
+      },
+      {
+        category: "常用工具",
+        name: "docker build / run 单次传代理参数",
+        desc: "不改配置文件，只在本次构建或运行时注入代理环境变量。",
+        command: "docker build \\\n  --build-arg HTTP_PROXY=\"http://127.0.0.1:7890\" \\\n  --build-arg HTTPS_PROXY=\"http://127.0.0.1:7890\" \\\n  --build-arg NO_PROXY=\"localhost,::1,127.0.0.1,10.0.0.0/8,127.0.0.0/8,172.16.0.0/12,192.168.0.0/16\" .\n\ndocker run \\\n  --env HTTP_PROXY=\"http://127.0.0.1:7890\" \\\n  --env HTTPS_PROXY=\"http://127.0.0.1:7890\" \\\n  --env NO_PROXY=\"localhost,::1,127.0.0.1,10.0.0.0/8,127.0.0.0/8,172.16.0.0/12,192.168.0.0/16\" \\\n  nginx",
+        tags: ["docker", "proxy", "代理", "build-arg", "env", "build", "run", "http_proxy", "https_proxy"]
+      },
+      {
+        category: "常用工具",
         name: "NPM 设置 HTTP/HTTPS 代理",
         desc: "同时为 npm 设置 HTTP 和 HTTPS 代理地址。",
         command: "npm config set proxy http://127.0.0.1:7890\nnpm config set https-proxy http://127.0.0.1:7890",
         tags: ["npm", "node", "proxy", "代理", "http_proxy", "https_proxy", "包管理", "依赖"]
+      },
+      {
+        category: "常用工具",
+        name: "NPM 查看代理配置",
+        desc: "查看当前 npm 设置的 HTTP / HTTPS 代理地址。",
+        command: "npm config get proxy\nnpm config get https-proxy",
+        tags: ["npm", "node", "proxy", "代理", "http_proxy", "https_proxy", "查看"]
+      },
+      {
+        category: "常用工具",
+        name: "NPM 删除代理配置",
+        desc: "清除 npm 已设置的 HTTP / HTTPS 代理。",
+        command: "npm config delete proxy\nnpm config delete https-proxy",
+        tags: ["npm", "node", "proxy", "代理", "http_proxy", "https_proxy", "删除", "取消"]
       },
       {
         category: "常用工具",
@@ -1953,6 +2016,20 @@ window.COMMANDS_DATA = [
         tags: ["git", "tag", "标签", "版本", "发布"]
       },
       {
+        category: "Java",
+        name: "查看 JVM 内存与 GC 状态",
+        desc: "定位内存泄漏、频繁 Full GC。pid 用 jps 或 ps 查。",
+        command: "jstat -gcutil <pid> 1000\n# 每 1 秒输出一次各代使用率与 GC 次数/耗时\n\njstat -gc <pid>\n# 查看各分区容量（KB）\n\njmap -heap <pid>\n# 查看堆内存配置概览\n\njava -XX:+PrintFlagsFinal -version | grep Ratio\n# 查看 JVM 参数默认值",
+        tags: ["java", "jvm", "jstat", "jmap", "gc", "内存", "调优", "堆"]
+      },
+      {
+        category: "Java",
+        name: "导出 JVM 堆转储",
+        desc: "导出 hprof 快照供 MAT / VisualVM 分析。注意会触发一次 Full GC，生产环境慎用。",
+        command: "# 导出完整堆快照（含已回收对象）\njmap -dump:format=b,file=a.hprof <pid>\n\n# 只导出存活对象（触发 Full GC 后再 dump）\njmap -dump:live,format=b,file=a.hprof <pid>",
+        tags: ["java", "jvm", "jmap", "dump", "hprof", "堆转储", "内存泄漏"]
+      },
+      {
         category: "Kubernetes",
         name: "查看服务列表",
         desc: "查看当前命名空间的 Service 资源。",
@@ -2028,6 +2105,20 @@ window.COMMANDS_DATA = [
         desc: "订阅频道接收消息，或向频道发布消息。",
         command: "redis-cli SUBSCRIBE channel_1\n# 发布消息到频道\nredis-cli PUBLISH channel_1 hello",
         tags: ["redis", "pubsub", "subscribe", "publish", "订阅", "发布", "消息"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 创建用户并授权",
+        desc: "创建用户并授予指定库的全部权限，最后刷新权限表生效。",
+        command: "CREATE USER 'api'@'%' IDENTIFIED BY '你的密码';\nGRANT ALL PRIVILEGES ON api_test.* TO 'api'@'%';\nFLUSH PRIVILEGES;",
+        tags: ["mysql", "数据库", "用户", "授权", "grant", "create user", "flush privileges", "权限"]
+      },
+      {
+        category: "数据库",
+        name: "MySQL 批量替换字段内容",
+        desc: "对匹配行做字符串替换，只更新包含旧关键字的记录。",
+        command: "UPDATE your_table\nSET your_column = REPLACE(your_column, 'old_keyword', 'new_keyword')\nWHERE your_column LIKE '%old_keyword%';",
+        tags: ["mysql", "数据库", "replace", "批量替换", "update", "字符串替换"]
       },
       {
         category: "常用工具",

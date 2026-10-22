@@ -46,6 +46,8 @@
 .codec-main .json-tree .fe-null { color: #7b857f; font-style: italic; }
 .codec-main .json-tree .fe-bracket { color: #66736e; }
 .codec-main .json-tree .fe-tree-row { padding-left: 20px; position: relative; }
+.codec-main .json-tree .fe-tree-row:has(> .fe-toggle) { cursor: pointer; }
+.codec-main .json-tree .fe-tree-row:not(:has(> .fe-toggle)) { cursor: auto; }
 .codec-main .json-tree .fe-tree-row:hover { background: #e4f0e7; border-radius: 4px; }
 .codec-main .json-tree .fe-tree-children { margin-left: 8px; border-left: 1px solid #d7e5da; }
 .codec-main .json-tree .fe-toggle { border-color: var(--wb-line); background: var(--wb-surface); color: var(--wb-muted); }
