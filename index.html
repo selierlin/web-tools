@@ -532,7 +532,8 @@
     function refreshVisibleLinks(keepSelection = false) {
         const previousLink = keepSelection && selectedVisibleIndex >= 0 ? visibleLinksCache[selectedVisibleIndex] : null;
         visibleLinksCache = getVisibleLinks();
-        if (visibleLinksCache.length === 0) {
+        // 未搜索时不保留键盘选中态，避免首个工具常驻描边
+        if (!searchBox.value.trim() || visibleLinksCache.length === 0) {
             selectedVisibleIndex = -1;
             applySelectedLinkStyle();
             return;
