@@ -75,13 +75,25 @@ npm start                 # 默认 http://127.0.0.1:8899
 
 ### 部署
 
-静态页与后端分开部署，数据目录独立在代码目录之外，避免 `rsync --delete` 清掉账号：
+静态页与后端分开部署，数据目录独立在代码目录之外，避免 `rsync --delete` 清掉账号。
+
+**zzw（手动脚本，前后端目录平级）**
 
 | 内容 | 服务器路径 | 部署命令 |
 | --- | --- | --- |
 | 静态页 | `/usr/Projects/web-tools/` | `./deploy-private.sh` |
 | 后端代码 | `/usr/Projects/web-tools-server/` | `./deploy-server.sh` |
 | 数据与 `.env` | `/usr/Projects/web-tools-data/boce/` | 手动维护，脚本不碰 |
+
+**内网（Jenkins `Test_web-tools_test`，同一个项目目录下 fe/be 分家）**
+
+| 内容 | 服务器路径 | 说明 |
+| --- | --- | --- |
+| 前端静态 | `/opt/webapps/web-tools/fe/` | nginx root，`rsync --delete` 覆盖 |
+| 后端数据 | `/opt/webapps/web-tools/be/` | 挂载到容器 `/data`，`.env` 也在这里，同步不碰 |
+
+流水线模板在共享库 `WebTools_Jenkinsfile.groovy`，后端代码不打到目标机（内含镜像），
+目标机只需 Docker、数据目录和 `.env`。
 
 nginx 片段见 `deploy/nginx-boce.conf`，要点：`/boce/` 走静态，`/boce/api/` 反代到 `127.0.0.1:8899`，
 并挡掉站点根下的 `/server/` 源码目录。
