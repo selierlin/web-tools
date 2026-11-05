@@ -30,5 +30,5 @@ ENV NODE_ENV=production \
     TZ=Asia/Shanghai \
     BOCE_WEB_DIR=/app/web
 
-EXPOSE 56091
+EXPOSE 56095
 CMD ["node", "boce/index.js"]
