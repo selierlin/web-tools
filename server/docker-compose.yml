@@ -1,6 +1,6 @@
 # 拨测后端：静态页面由宿主机 nginx 托管，这里只跑 API
-# 代码目录：/usr/Projects/web-tools-server（由 deploy-server.sh 同步）
-# 数据目录：/usr/Projects/web-tools-data/boce（compose 与 rsync 都不碰）
+# 代码目录：/usr/Projects/web-tools/be/app（由 deploy-server.sh 同步）
+# 数据目录：/usr/Projects/web-tools/be/data（compose 与 rsync 都不碰）
 #
 # 镜像由 deploy-server.sh 用经典 docker build 生成：宿主机 compose v5 要求
 # buildx ≥0.17，而机器上是 0.11.2，所以不走 compose build。
@@ -10,13 +10,13 @@ services:
     container_name: web-tools-boce
     restart: always
     env_file:
-      - /usr/Projects/web-tools-data/boce/.env
+      - /usr/Projects/web-tools/be/data/.env
     environment:
       - TZ=Asia/Shanghai
       - BOCE_DATA_DIR=/data
       - PORT=8899
     volumes:
-      - /usr/Projects/web-tools-data/boce:/data
+      - /usr/Projects/web-tools/be/data:/data
     ports:
       # 只监听本机，外网访问必须经 nginx
       - "127.0.0.1:8899:8899"
