@@ -24,6 +24,10 @@ rsync -avz --delete \
   --exclude='.venv' \
   --exclude='.claude' \
   --exclude='node_modules' \
+  --exclude='data' \
+  --exclude='server' \
+  --exclude='deploy' \
+  --exclude='deploy-server.sh' \
   --exclude='.gitignore' \
   --exclude='deploy.sh' \
   --exclude='deploy-private.sh' \

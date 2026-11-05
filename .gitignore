@@ -1,6 +1,14 @@
 .idea
 .superpowers/
 deploy-private.sh
+deploy-server.sh
 .venv
 .DS_Store
 .claude/settings.local.json
+
+# 拨测后端
+node_modules
+server/.env
+
+# 拨测运行数据（含账号密码、历史记录），禁止提交
+data/
