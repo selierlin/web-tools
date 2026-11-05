@@ -21,5 +21,5 @@ COPY boce ./boce
 ENV NODE_ENV=production
 ENV TZ=Asia/Shanghai
 
-EXPOSE 8899
+EXPOSE 56091
 CMD ["node", "boce/index.js"]
