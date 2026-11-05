@@ -8,7 +8,10 @@ ARG NPM_REGISTRY=https://registry.npmmirror.com
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --registry=${NPM_REGISTRY}
+# 内网构建机出现过 npm ci 返回 0、node_modules 只有空目录的情况（依赖文件没落盘），
+# 这里显式校验一次，让问题停在构建阶段，而不是部署后容器重启循环。
+RUN npm ci --omit=dev --registry=${NPM_REGISTRY} \
+ && node -e "require.resolve('express')"
 
 COPY boce ./boce
 
