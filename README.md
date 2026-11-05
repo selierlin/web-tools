@@ -85,18 +85,18 @@ npm start                 # 默认 http://127.0.0.1:8899
 | 后端代码 | `/usr/Projects/web-tools/be/app/` | `./deploy-server.sh` |
 | 数据与 `.env` | `/usr/Projects/web-tools/be/data/` | 手动维护，脚本不碰 |
 
-**内网（Jenkins `Test_web-tools_test`，同一个项目目录下 fe/be 分家）**
+**内网（Jenkins `Test_web-tools_test`）**
 
 | 内容 | 服务器路径 | 说明 |
 | --- | --- | --- |
-| 前端静态 | `/opt/webapps/web-tools/fe/` | nginx root，`rsync --delete` 覆盖 |
+| 前端静态 | 镜像内 `/app/web/` | 随镜像发布，由 Node 托管，不落宿主机 |
 | 后端数据 | `/opt/webapps/web-tools/be/` | 挂载到容器 `/data`，`.env` 也在这里，同步不碰 |
 
-流水线模板在共享库 `WebTools_Jenkinsfile.groovy`，后端代码不打到目标机（内含镜像），
+流水线模板在共享库 `WebTools_Jenkinsfile.groovy`，前后端都不落目标机（除了挂载的数据目录），
 目标机只需 Docker、数据目录和 `.env`。
 
-nginx 片段见 `deploy/nginx-boce.conf`，要点：`/boce/` 走静态，`/boce/api/` 反代到 `127.0.0.1:8899`，
-并挡掉站点根下的 `/server/` 源码目录。
+nginx 片段见 `deploy/nginx-boce.conf`，静态页由 Node 出，所以整站一层反代到
+`127.0.0.1:56091` 即可（公网 zzw 那套仍是 nginx 出静态、反代 `8899`）。
 
 ### 迁移旧版数据
 

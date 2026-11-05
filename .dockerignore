@@ -1,0 +1,14 @@
+# 构建上下文是仓库根目录（静态页要打进镜像），这里过滤掉不需要进镜像的东西
+.git
+.gitignore
+node_modules
+server/node_modules
+server/vendor/node_modules
+data
+deploy
+.idea
+.qoder
+.DS_Store
+**/.DS_Store
+README.md
+DESIGN-SYSTEM.md
