@@ -3,7 +3,7 @@
 
 ## 项目介绍
 
-这是一个纯前端的在线工具箱项目，包含多个实用的开发工具，所有功能都在浏览器中运行，无需后端支持。
+这是一个在线工具箱项目。绝大多数工具是纯前端、在浏览器中运行；唯一需要后端的是「拨测」（`boce/` + `server/`），因为它要代持账号、直连 boce 协议。
 
 ## 功能列表
 
@@ -35,7 +35,7 @@
 
 ## 技术特点
 
-- 纯前端实现，无需后端支持
+- 除拨测外均为纯前端实现，无需后端支持
 - 响应式设计，支持移动端访问
 - 界面美观，采用现代化设计风格
 - 功能实用，覆盖开发常用场景
@@ -43,7 +43,57 @@
 
 ## 使用方法
 
-直接打开 index.html 文件即可使用所有工具。
+直接打开 index.html 文件即可使用所有工具（拨测需先启动后端，见下节）。
+
+## 拨测（boce）
+
+全国 31 省 × 三网共 92 节点的 HTTP 拨测，支持多账号轮换、额度监控、历史对比与 CSV 导出。
+
+```
+boce/            前端静态页，输入访问口令后进入
+server/          后端，Express + WebSocket，代持账号并直连 boce 协议
+server/scripts/migrate-legacy.js  旧版单池数据迁入指定口令的空间
+deploy/          nginx 片段与部署说明
+```
+
+### 访问口令即空间
+
+没有注册流程。输入任意 ≥8 位的口令，服务端用 scrypt 派生出一个稳定的空间 ID，
+首次输入即创建空间，之后同一口令回到同一空间——**口令丢失等于数据丢失，无法找回**。
+不同口令之间完全隔离，互相看不到账号与历史。
+
+### 本地运行
+
+```bash
+cd server
+npm install
+cp .env.example .env      # 至少改掉 BOCE_SECRET
+npm start                 # 默认 http://127.0.0.1:8899
+```
+
+打开 `http://127.0.0.1:8899/` 即可（后端同时托管 `boce/` 静态页）。
+
+### 部署
+
+静态页与后端分开部署，数据目录独立在代码目录之外，避免 `rsync --delete` 清掉账号：
+
+| 内容 | 服务器路径 | 部署命令 |
+| --- | --- | --- |
+| 静态页 | `/usr/Projects/web-tools/` | `./deploy-private.sh` |
+| 后端代码 | `/usr/Projects/web-tools-server/` | `./deploy-server.sh` |
+| 数据与 `.env` | `/usr/Projects/web-tools-data/boce/` | 手动维护，脚本不碰 |
+
+nginx 片段见 `deploy/nginx-boce.conf`，要点：`/boce/` 走静态，`/boce/api/` 反代到 `127.0.0.1:8899`，
+并挡掉站点根下的 `/server/` 源码目录。
+
+### 迁移旧版数据
+
+旧版（独立 `boce-tool` 仓库）是全局单池，按下述命令迁入指定口令的空间：
+
+```bash
+BOCE_SECRET=<线上同一个值> BOCE_DATA_DIR=<生产数据目录> \
+  node server/scripts/migrate-legacy.js <旧 boce-tool/data 路径> '<访问口令>'
+```
 
 ## 更新记录页面
 

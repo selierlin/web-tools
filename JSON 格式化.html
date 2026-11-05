@@ -398,6 +398,7 @@
                 <p><b>压缩 JSON</b>：移除空白字符</p>
                 <p><b>树形预览</b>：展开或折叠节点</p>
                 <p><b>双击编辑</b>：直接修改键名或值</p>
+                <p><b>toString 转换</b>：把 Java bean / Map 打印的 key=value 文本转成 JSON</p>
             </div>
         </aside>
 
@@ -430,6 +431,7 @@
             <button class="btn btn-danger" id="clearBtn">清空内容</button>
             <button class="btn btn-secondary" id="copyFormatBtn">复制格式化</button>
             <button class="btn btn-secondary" id="copyCompressBtn">复制压缩</button>
+            <button class="btn btn-secondary" id="toStringBtn">toString 转换</button>
         </div>
     </section>
 </main>
@@ -448,6 +450,8 @@
     const expandAllBtn = document.getElementById('expandAllBtn');
     const collapseAllBtn = document.getElementById('collapseAllBtn');
     const resultTip = document.getElementById('resultTip');
+    // toString 转换后的一次性提示，避免被实时格式化的提示覆盖
+    let convertNote = '';
 
     function showTip(message, isError = false) {
         const icon = isError ? '⚠ ' : '✓ ';
@@ -543,6 +547,165 @@
             i = end + 1;
         }
         return { segments: found, limited: found.length >= MAX_SEGMENTS && i < text.length };
+    }
+
+    // Java toString（bean / Map 打印的 key=value 文本）转 JSON 值；Bean(…) 与 Bean{…} 都视为对象
+    function parseJavaToString(text) {
+        const s = text;
+        let i = 0;
+        let pairCount = 0;
+        const skipSpace = () => { while (i < s.length && /\s/.test(s[i])) i++; };
+        const isNameChar = (c) => /[A-Za-z0-9_$.]/.test(c);
+        const isDelimiter = (c) => c === ',' || c === ')' || c === ']' || c === '}';
+        const castBare = (raw) => {
+            const token = raw.trim();
+            if (token === 'null') return null;
+            if (token === 'true') return true;
+            if (token === 'false') return false;
+            if (/^-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/.test(token)) return Number(token);
+            return token;
+        };
+        const readBare = () => {
+            const start = i;
+            while (i < s.length && !isDelimiter(s[i])) i++;
+            return castBare(s.slice(start, i));
+        };
+        const readKey = () => {
+            const start = i;
+            while (i < s.length && s[i] !== '=' && s[i] !== ':' && !isDelimiter(s[i])) i++;
+            return s.slice(start, i).trim();
+        };
+        const parseArray = () => {
+            const list = [];
+            for (;;) {
+                skipSpace();
+                if (i >= s.length) return list;
+                if (s[i] === ']') { i++; return list; }
+                const before = i;
+                if (s[i] === ',') { i++; continue; }
+                list.push(parseValue());
+                if (i === before) i++;              // 兜底：保证指针前进
+                skipSpace();
+                if (s[i] === ',') { i++; continue; }
+                if (i >= s.length) return list;
+                if (s[i] === ']') { i++; return list; }
+                return list;
+            }
+        };
+        const parsePairs = (closer) => {
+            const result = {};
+            for (;;) {
+                skipSpace();
+                if (i >= s.length) return result;
+                if (s[i] === closer) { i++; return result; }
+                if (s[i] === ',') { i++; continue; }
+                const key = readKey();
+                if (!key) { i++; continue; }
+                // 没有分隔符说明不是 key=value 对，跳过（同时保证指针已前进）
+                if (s[i] !== '=' && s[i] !== ':') continue;
+                i++;
+                result[key] = parseValue();
+                pairCount++;
+                skipSpace();
+                if (s[i] === ',') { i++; continue; }
+                if (i >= s.length) return result;
+                if (s[i] === closer) { i++; return result; }
+                return result;
+            }
+        };
+        function parseValue() {
+            skipSpace();
+            const c = s[i];
+            if (c === '{' || c === '[') {
+                // 内嵌的原始 JSON（如 linkConfig={"eventId":"1"}）优先按 JSON 解析
+                const end = scanBalanced(s, i);
+                if (end > i) {
+                    try {
+                        const value = JSON.parse(s.slice(i, end + 1));
+                        i = end + 1;
+                        return value;
+                    } catch (error) { /* 不是 JSON，按 Java 容器继续 */ }
+                }
+                i++;
+                return c === '[' ? parseArray() : parsePairs('}');
+            }
+            if (c && isNameChar(c)) {
+                const start = i;
+                while (i < s.length && isNameChar(s[i])) i++;
+                if (s[i] === '(') { i++; return parsePairs(')'); }
+                if (s[i] === '{') { i++; return parsePairs('}'); }
+                i = start;
+            }
+            return readBare();
+        }
+
+        // 日志前缀：首个 "=" 之前、且它前面没有 { [ 时，前缀视为来源说明
+        let prefix = '';
+        const firstEq = s.indexOf('=');
+        const firstBrace = s.search(/[{[]/);
+        if (firstEq > 0 && (firstBrace < 0 || firstBrace > firstEq)) {
+            let keyStart = firstEq;
+            while (keyStart > 0 && isNameChar(s[keyStart - 1])) keyStart--;
+            if (keyStart > 0 && /\s/.test(s[keyStart - 1])) {
+                prefix = s.slice(0, keyStart).trim();
+                i = keyStart;
+            }
+        }
+        skipSpace();
+        const rootMatch = /^[A-Za-z_$][\w$.]*\s*[({]/.exec(s.slice(i));
+        const className = rootMatch ? rootMatch[0].slice(0, -1).trim() : '';
+        let value = className ? parseValue() : parsePairs('\u0000');
+        // 根 bean 后面还挂着同级字段的写法，如 R(...),activityId=null，继续并入根对象
+        if (className) {
+            skipSpace();
+            if (s[i] === ',') {
+                i++;
+                value = { ...value, ...parsePairs('\u0000') };
+            }
+        }
+        if (!pairCount) return null;            // 一个 key=value 都没有，判定不是 toString
+        return { value, className, prefix, rest: s.slice(i) };
+    }
+
+    // 把输入框里的 toString 就地转成 JSON；不是 toString 时返回 false，交给原有多段识别
+    function applyJavaToString() {
+        const text = jsonInput.value.trim();
+        if (!text) return false;
+        try {
+            JSON.parse(text);
+            return false;
+        } catch (error) { /* 不是 JSON，继续按 toString 解析 */ }
+        let parsed;
+        try {
+            parsed = parseJavaToString(text);
+        } catch (error) {
+            return false;
+        }
+        if (!parsed || parsed.rest.trim()) return false;
+        jsonInput.value = JSON.stringify(parsed.value, null, 4);
+        convertNote = [parsed.prefix, parsed.className].filter(Boolean).join(' · ');
+        jsonInput.dispatchEvent(new Event('input'));
+        return true;
+    }
+
+    function convertJavaToString() {
+        if (!jsonInput.value.trim()) {
+            showTip('请先粘贴 Java toString 文本', true);
+            return;
+        }
+        let isJson = true;
+        try {
+            JSON.parse(jsonInput.value.trim());
+        } catch (error) {
+            isJson = false;
+        }
+        if (isJson) {
+            showTip('内容已是标准 JSON，无需转换');
+            return;
+        }
+        if (!applyJavaToString()) {
+            showTip('未识别为 Java toString 结构，请确认内容是 key=value 形式', true);
+        }
     }
 
     function isEmptyContainer(value) {
@@ -1018,6 +1181,15 @@
     }
 
     let formatTimer = null;
+
+    // 粘贴 Java toString 时直接转换，避免被当成日志只抽出一段内嵌 JSON 当成结果
+    jsonInput.addEventListener('paste', function() {
+        setTimeout(() => {
+            if (!/[A-Za-z_$][\w$.]*\s*[=:]/.test(this.value)) return;
+            applyJavaToString();
+        }, 0);
+    });
+
     jsonInput.addEventListener('input', function() {
         clearTimeout(formatTimer);
         formatTimer = setTimeout(() => {
@@ -1039,7 +1211,12 @@
                 analysis = analyzeInput();
             }
             renderOutput(analysis);
-            if (!analysis.segments.length) return; // 错误提示已由 renderOutput 给出
+            if (!analysis.segments.length) { convertNote = ''; return; } // 错误提示已由 renderOutput 给出
+            if (convertNote) {
+                showTip(`已按 Java toString 解析：${convertNote}`);
+                convertNote = '';
+                return;
+            }
             if (analysis.single) {
                 showTip('实时格式化完成');
             } else {
@@ -1082,6 +1259,7 @@
 
     copyFormatBtn.addEventListener('click', () => copyText(formattedCache, '格式化代码已复制'));
     copyCompressBtn.addEventListener('click', () => copyText(compressedCache, '压缩代码已复制'));
+    document.getElementById('toStringBtn').addEventListener('click', convertJavaToString);
     expandAllBtn.addEventListener('click', () => setAllNodesExpanded(true));
     collapseAllBtn.addEventListener('click', () => setAllNodesExpanded(false));
 

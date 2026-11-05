@@ -1,0 +1,20 @@
+{
+  "name": "web-tools-boce-server",
+  "version": "1.1.0",
+  "private": true,
+  "description": "BOCE 92 节点拨测控制台后端 · 多账号轮换 · 口令分空间",
+  "main": "boce/index.js",
+  "scripts": {
+    "start": "node boce/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "express": "^5.3.0",
+    "ws": "^8.22.1"
+  }
+}
