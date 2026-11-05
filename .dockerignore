@@ -12,3 +12,7 @@ deploy
 **/.DS_Store
 README.md
 DESIGN-SYSTEM.md
+# 部署脚本含服务器地址，不能随静态目录一起下发
+deploy.sh
+deploy-private.sh
+deploy-server.sh

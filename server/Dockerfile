@@ -8,7 +8,6 @@ FROM ${NODE_IMAGE}
 #             改了依赖先在有外网的机器执行 bash server/scripts/vendor-deps.sh
 #
 # 构建上下文是仓库根目录（静态页一起打进镜像），不是 server/。
-# 新增顶层静态目录/文件时，记得在下面补一条 COPY，否则线上 404。
 
 WORKDIR /app
 
@@ -20,14 +19,12 @@ RUN tar -xzf /tmp/node_modules.tgz -C /app && rm -f /tmp/node_modules.tgz \
 
 COPY server/boce ./boce
 
-# 前端静态页随镜像发布，由 Node 直接托管（BOCE_WEB_DIR），部署不再 rsync 到宿主机
-COPY *.html ./web/
-COPY boce ./web/boce
-COPY styles ./web/styles
-COPY scripts ./web/scripts
-COPY vendor ./web/vendor
-COPY json ./web/json
-COPY map ./web/map
+# 前端静态页随镜像发布，由 Node 直接托管（BOCE_WEB_DIR），部署不再 rsync 到宿主机。
+# 整个上下文一次性拷贝再剔除后端源码，而不是逐个目录 COPY：main 与 lite 的静态目录
+# 并不一致（lite 没有 json/ 等），逐目录 COPY 缺一个就构建失败。
+COPY . ./web/
+# server 是后端源码，不能留在静态目录里（express.static 会直接下发这些文件）
+RUN rm -rf /app/web/server
 
 ENV NODE_ENV=production \
     TZ=Asia/Shanghai \
