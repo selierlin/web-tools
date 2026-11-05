@@ -18,6 +18,9 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.static(process.env.BOCE_WEB_DIR || path.join(__dirname, '..', '..', 'boce')));
 
 /* ---------------- 鉴权 ---------------- */
+/** 存活检查：供容器部署后的健康探测使用，不需要口令 */
+app.get('/api/health', (req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
+
 /** 口令换会话，首次使用自动建空间 */
 app.post('/api/login', auth.login);
 app.post('/api/logout', auth.logout);
