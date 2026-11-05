@@ -12,9 +12,14 @@ const app = express();
 const PORT = process.env.PORT || 8899;
 
 app.set('trust proxy', 1);
+// 页面在 /boce/ 下用相对路径请求 api/xxx，浏览器会带上 /boce 前缀；
+// 统一削掉，保证容器直接访问（不经 nginx 改写）也能命中同一套接口。
+app.use((req, res, next) => {
+  if (req.url.startsWith('/boce/api/')) req.url = req.url.slice('/boce'.length);
+  next();
+});
 app.use(express.json({ limit: '2mb' }));
-// 本地 npm start 时顺便托管页面；容器里由 BOCE_WEB_DIR 指向的目录可能不存在，
-// 生产环境的静态文件一律由 nginx 出
+// 静态页随镜像发布（BOCE_WEB_DIR=/app/web），本地 npm start 时回退到仓库里的 boce/
 app.use(express.static(process.env.BOCE_WEB_DIR || path.join(__dirname, '..', '..', 'boce')));
 
 /* ---------------- 鉴权 ---------------- */
