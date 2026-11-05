@@ -77,13 +77,13 @@ npm start                 # 默认 http://127.0.0.1:8899
 
 静态页与后端分开部署，数据目录独立在代码目录之外，避免 `rsync --delete` 清掉账号。
 
-**zzw（手动脚本，前后端目录平级）**
+**zzw（手动脚本，be 内再分 app/data）**
 
 | 内容 | 服务器路径 | 部署命令 |
 | --- | --- | --- |
-| 静态页 | `/usr/Projects/web-tools/` | `./deploy-private.sh` |
-| 后端代码 | `/usr/Projects/web-tools-server/` | `./deploy-server.sh` |
-| 数据与 `.env` | `/usr/Projects/web-tools-data/boce/` | 手动维护，脚本不碰 |
+| 静态页 | `/usr/Projects/web-tools/fe/` | `./deploy-private.sh` |
+| 后端代码 | `/usr/Projects/web-tools/be/app/` | `./deploy-server.sh` |
+| 数据与 `.env` | `/usr/Projects/web-tools/be/data/` | 手动维护，脚本不碰 |
 
 **内网（Jenkins `Test_web-tools_test`，同一个项目目录下 fe/be 分家）**
 
