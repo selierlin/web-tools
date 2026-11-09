@@ -7,11 +7,14 @@ const { fetchResult } = require('./boce');
 const history = require('./history');
 const daily = require('./daily');
 const auth = require('./auth');
+const nacos = require('./nacos');
 
 const app = express();
 const PORT = process.env.PORT || 8899;
 
 app.set('trust proxy', 1);
+// 不对外公布后端框架
+app.disable('x-powered-by');
 // 页面在 /boce/ 下用相对路径请求 api/xxx，浏览器会带上 /boce 前缀；
 // 统一削掉，保证容器直接访问（不经 nginx 改写）也能命中同一套接口。
 app.use((req, res, next) => {
@@ -36,6 +39,10 @@ app.use('/api', auth.guard);
 app.get('/api/me', (req, res) => {
   res.json({ ok: true, spaceId: req.sid.slice(0, 8), needInvite: auth.hasInvite() });
 });
+
+/* ---------------- Nacos 管理页配置（服务地址 / namespace / 操作令牌） ---------------- */
+app.get('/api/nacos/config', nacos.getConfig);
+app.put('/api/nacos/config', nacos.saveConfig);
 
 const wrap = (fn) => (req, res) => {
   Promise.resolve(fn(req, res)).catch((e) => {

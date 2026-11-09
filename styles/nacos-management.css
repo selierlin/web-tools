@@ -62,3 +62,214 @@
   .nacos-tabs { overflow-x: auto; }
   .nacos-tabs #tab-list { flex-wrap: nowrap; }
 }
+
+/* 访问口令与配置弹窗：沿用 boce 登录卡的尺寸/间距/投影，主色用本页的墨绿 */
+.nacos-auth-card {
+  width: min(380px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 22px;
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: var(--wb-radius);
+  box-shadow: 0 12px 32px rgba(31, 41, 55, .10);
+}
+.nacos-auth-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--wb-ink);
+  font-size: 17px;
+  font-weight: 600;
+}
+.nacos-auth-title .fa-lock { color: var(--wb-accent); }
+.nacos-auth-hint {
+  margin: 0;
+  color: var(--wb-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.nacos-auth-card input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 6px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-size: 14px;
+}
+.nacos-auth-card input::placeholder { color: #9aa8a1; }
+.nacos-auth-card input:focus {
+  outline: none;
+  border-color: var(--wb-accent);
+  box-shadow: 0 0 0 3px #17654e1f;
+}
+.nacos-auth-submit {
+  height: 38px;
+  border: 1px solid var(--wb-accent);
+  border-radius: 6px;
+  background: var(--wb-accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nacos-auth-submit:hover { background: var(--wb-accent-hover); border-color: var(--wb-accent-hover); }
+.nacos-auth-submit:disabled { opacity: .65; cursor: default; }
+.nacos-auth-err {
+  min-height: 16px;
+  margin: 0;
+  color: #b3261e;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* 配置弹窗：头部/滚动区/底部三段，外框与登录卡同一套观感 */
+.nacos-settings-card {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--wb-surface);
+  border: 1px solid var(--wb-line);
+  border-radius: var(--wb-radius);
+  box-shadow: 0 12px 32px rgba(31, 41, 55, .10);
+}
+.nacos-settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--wb-line);
+}
+.nacos-settings-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--wb-ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+.nacos-settings-head .fa-gear { color: var(--wb-accent); }
+.nacos-settings-x {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--wb-muted);
+  cursor: pointer;
+}
+.nacos-settings-x:hover { background: var(--wb-tint); color: var(--wb-accent); }
+.nacos-settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  overflow-y: auto;
+}
+.nacos-field { display: flex; flex-direction: column; gap: 6px; }
+.nacos-field > label {
+  color: var(--wb-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.nacos-settings-body input[type="password"],
+.nacos-settings-body textarea {
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 6px;
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+  font-size: 14px;
+}
+.nacos-settings-body input[type="password"] { height: 38px; }
+.nacos-settings-body textarea {
+  padding: 10px 12px;
+  font-family: var(--wb-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.nacos-settings-body input[type="password"]:focus,
+.nacos-settings-body textarea:focus {
+  outline: none;
+  border-color: var(--wb-accent);
+  box-shadow: 0 0 0 3px #17654e1f;
+}
+.nacos-field-hint {
+  margin: 0;
+  color: var(--wb-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.nacos-field-hint code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--wb-tint);
+  color: var(--wb-accent);
+  font-family: var(--wb-mono);
+  font-size: 11.5px;
+}
+.nacos-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--wb-muted) !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  cursor: pointer;
+}
+.nacos-check input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--wb-accent);
+}
+.nacos-settings-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--wb-line);
+  background: #f7f9f7;
+}
+.nacos-btn-ghost, .nacos-btn-primary {
+  min-height: 36px;
+  padding: 0 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nacos-btn-ghost {
+  border: 1px solid var(--wb-line);
+  background: var(--wb-surface);
+  color: var(--wb-ink);
+}
+.nacos-btn-ghost:hover { border-color: var(--wb-accent); color: var(--wb-accent); }
+.nacos-btn-primary {
+  border: 1px solid var(--wb-accent);
+  background: var(--wb-accent);
+  color: #fff;
+}
+.nacos-btn-primary:hover { background: var(--wb-accent-hover); border-color: var(--wb-accent-hover); }
+.nacos-btn-primary:disabled { opacity: .65; cursor: default; }
+
+@media (max-width: 600px) {
+  .nacos-auth-card { padding: 20px 18px; }
+  .nacos-settings-head, .nacos-settings-body, .nacos-settings-foot { padding-left: 16px; padding-right: 16px; }
+}
+
+.nacos-page #settings-btn { min-height: 38px; border-color: var(--wb-line); border-radius: 6px; font-size: 14px; }
+.nacos-page #settings-btn:hover { border-color: var(--wb-accent); color: var(--wb-accent); }

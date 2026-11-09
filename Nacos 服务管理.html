@@ -51,6 +51,10 @@
             </div>
         </div>
         <div class="flex items-center space-x-4">
+            <button id="settings-btn" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-3 py-1 rounded flex items-center" title="配置 Nacos 地址与操作令牌">
+                <i class="fa-solid fa-gear mr-1"></i>
+                <span>配置</span>
+            </button>
                 <span id="connection-status" class="text-sm flex items-center">
                     <i class="fa-solid fa-circle text-gray-400 mr-1"></i>
                     <span>未连接</span>
@@ -265,6 +269,58 @@
             </div>
         </div>
     </div>
+
+    <!-- 访问口令：复用 boce 的空间鉴权，配置数据随后端下发 -->
+    <div id="nacos-login-mask" class="nacos-modal fixed inset-0 z-[60] flex items-center justify-center">
+        <form id="nacos-login-form" class="nacos-auth-card" autocomplete="off">
+            <h3 class="nacos-auth-title">
+                <i class="fa-solid fa-lock"></i>输入访问口令
+            </h3>
+            <p class="nacos-auth-hint">
+                与「拨测」共用同一口令与空间。首次输入会自动创建空间，忘记口令将无法找回其中的配置。
+            </p>
+            <input id="nacos-login-password" type="password" placeholder="至少 8 位" autocomplete="current-password" required>
+            <input id="nacos-login-invite" type="password" placeholder="邀请码（未开启可留空）" autocomplete="off">
+            <button type="submit" id="nacos-login-btn" class="nacos-auth-submit">进入</button>
+            <p id="nacos-login-err" class="nacos-auth-err"></p>
+        </form>
+    </div>
+
+    <!-- 配置：服务地址 / Namespace / 操作令牌，保存后由后端按空间下发 -->
+    <div id="nacos-settings-mask" class="nacos-modal fixed inset-0 z-[55] flex items-center justify-center hidden">
+        <div class="nacos-settings-card">
+            <div class="nacos-settings-head">
+                <h3>
+                    <i class="fa-solid fa-gear"></i>Nacos 配置
+                </h3>
+                <button id="nacos-settings-close" class="nacos-settings-x" aria-label="关闭">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="nacos-settings-body">
+                <div class="nacos-field">
+                    <label for="nacos-settings-token">Actuator 操作令牌</label>
+                    <input id="nacos-settings-token" type="password" placeholder="留空则不启用上下线操作" autocomplete="off">
+                    <p class="nacos-field-hint">用于实例上下线（<code>/actuator/server/shutdown?state=…</code>）。保存后不会再出现在页面源码里。</p>
+                    <label class="nacos-check">
+                        <input type="checkbox" id="nacos-settings-token-clear">
+                        清除已保存的令牌
+                    </label>
+                </div>
+                <div class="nacos-field">
+                    <label>Namespace 列表</label>
+                    <textarea data-role="namespaces" rows="5" spellcheck="false" aria-label="Namespace 列表"
+                              placeholder='[{"namespace":"","namespaceShowName":"public"}]'></textarea>
+                    <p class="nacos-field-hint">JSON 数组，<code>namespace</code> 为空或省略即为 public。填了就不再实时拉取。</p>
+                </div>
+                <p class="nacos-field-hint">Nacos 服务器地址与当前 Namespace 在页面上直接修改并点「保存配置并连接」即可持久化。</p>
+            </div>
+            <div class="nacos-settings-foot">
+                <button id="nacos-settings-cancel" class="nacos-btn-ghost">取消</button>
+                <button id="nacos-settings-save" class="nacos-btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
 </main>
 
 <footer class="nacos-footer bg-white border-t border-gray-200 py-4 mt-auto">
@@ -279,8 +335,36 @@
     let sortField = '', sortDirection = 'asc', allServices = [];
     let configCurrentPage = 1, configTotalPages = 0, configTotalConfigs = 0;
     let configSortField = '', configSortDirection = 'asc', allConfigs = [];
-    const STATE_TOKEN = 'IhyDP9Bv3mMOLNJY6n1QfUbiklAurRZo';
     const OFFLINE_EXPIRE_DAYS = 1;
+
+    /*
+     * 后端按访问口令分空间下发配置（服务地址 / namespace / actuator 令牌），
+     * 页面里不再保存任何密钥。上下文见 server/boce/nacos.js。
+     */
+    const state = { server: '', namespaces: [], token: '', hasToken: false };
+    let configReady = false;   // 配置下发完成前不触发任何拉取（form-persist 会提前派发 change）
+
+    /** 接口用相对路径：部署在站点根与 /boce/ 下都能命中同一个后端 */
+    /*
+     * 接口固定走 /boce/api：nginx 只把该前缀反代到后端（裸 /api 会 404）。
+     * 后端会用中间件剥掉 /boce 前缀，所以本页放在站点根或 /boce/ 下都能命中同一套接口。
+     */
+    const rel = (url) => '/boce/api/' + String(url).replace(/^\/?(boce\/)?api\//, '');
+
+    async function api(url, opts = {}) {
+        const res = await fetch(rel(url), {
+            headers: { 'Content-Type': 'application/json' },
+            ...opts,
+            body: opts.body ? JSON.stringify(opts.body) : undefined,
+        });
+        if (res.status === 401) {
+            showLogin(true);
+            throw new Error('请先输入访问口令');
+        }
+        const j = await res.json().catch(() => ({ ok: false, error: '响应解析失败' }));
+        if (!j.ok && j.error) throw new Error(j.error);
+        return j;
+    }
 
     const elements = {
         // 基础元素
@@ -289,8 +373,17 @@
         servicePanel: document.getElementById('service-panel'),
         configPanel: document.getElementById('config-panel'),
         nacosServer: document.getElementById('nacos-server'),
-        accessToken: document.getElementById('access-token'),
         namespaceSelect: document.getElementById('namespace-select'),
+        settingsBtn: document.getElementById('settings-btn'),
+        settingsMask: document.getElementById('nacos-settings-mask'),
+        settingsClose: document.getElementById('nacos-settings-close'),
+        settingsCancel: document.getElementById('nacos-settings-cancel'),
+        settingsSave: document.getElementById('nacos-settings-save'),
+        settingsToken: document.getElementById('nacos-settings-token'),
+        settingsTokenClear: document.getElementById('nacos-settings-token-clear'),
+        settingsNamespaces: document.querySelector('[data-role="namespaces"]'),
+        loginMask: document.getElementById('nacos-login-mask'),
+        loginForm: document.getElementById('nacos-login-form'),
         saveConfig: document.getElementById('save-config'),
         connectionStatus: document.getElementById('connection-status'),
         refreshBtn: document.getElementById('refresh-btn'),
@@ -337,18 +430,115 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         bindEvents();
-        loadLocalConfig();
-        loadNamespaceList();
         cleanExpiredOfflineInstances();
-        const savedServer = localStorage.getItem('nacosServer');
-        const savedNamespace = localStorage.getItem('namespaceId');
-        if (savedServer && savedNamespace) {
-            setTimeout(() => {
-                elements.namespaceSelect.value = savedNamespace;
-                connectToNacos(true);
-            }, 1000);
-        }
+        // 服务地址与 namespace 都要等后端下发，不能再用 localStorage
+        boot();
     });
+
+    async function boot() {
+        try {
+            await loadRemoteConfig();
+            showLogin(false);
+            applyConfigToPage();
+            if (savedNamespace()) setTimeout(() => connectToNacos(true), 0);        } catch (e) {
+            const err = document.getElementById('nacos-login-err');
+            // 401 是正常的“未登录”；其他错误（后端连不上）要告知原因
+            if (err) err.textContent = e.message === '请先输入访问口令' ? '' : `后端不可用：${e.message}`;
+            showLogin(true);
+        }
+    }
+
+    /* ==================== 访问口令与配置下发 ==================== */
+    function showLogin(show) {
+        if (!elements.loginMask) return;
+        elements.loginMask.classList.toggle('hidden', !show);
+        if (show) setTimeout(() => document.getElementById('nacos-login-password')?.focus(), 60);
+    }
+
+    async function doLogin(password, invite) {
+        const r = await api('/api/login', { method: 'POST', body: { password, invite } });
+        await loadRemoteConfig();
+        applyConfigToPage();
+        showLogin(false);
+        return r;
+    }
+
+    async function loadRemoteConfig() {
+        const r = await api('/api/nacos/config');
+        const c = r.config || {};
+        state.server = c.server || '';
+        state.namespaces = Array.isArray(c.namespaces) ? c.namespaces : [];
+        state.token = c.stateToken || '';
+        state.hasToken = !!c.hasToken;
+        return state;
+    }
+
+    function namespaceKey() { return state.server ? `nacos:namespace:${state.server}` : ''; }
+
+    function savedNamespace() {
+        const k = namespaceKey();
+        if (!k) return null;
+        try { return localStorage.getItem(k); } catch (e) { return null; }
+    }
+
+    function applyConfigToPage() {
+        elements.nacosServer.value = state.server || '';
+        configReady = true;
+
+        // 优先用后端下发的 namespace 列表；没配就退回调 Nacos 的 /v1/console/namespaces
+        if (state.namespaces.length) {
+            renderNamespaceSelect(state.namespaces);
+            const saved = savedNamespace();
+            if (saved !== null) elements.namespaceSelect.value = saved;
+        } else {
+            loadNamespaceList();
+        }
+    }
+
+    function toggleSettings(show) {
+        if (show) {
+            elements.settingsToken.value = '';
+            elements.settingsToken.placeholder = state.hasToken
+                ? '已保存令牌，留空则不修改'
+                : '留空则不启用上下线操作';
+            elements.settingsTokenClear.checked = false;
+            elements.settingsTokenClear.disabled = !state.hasToken;
+            elements.settingsNamespaces.value = state.namespaces.length
+                ? JSON.stringify(state.namespaces, null, 2) : '';
+        }
+        elements.settingsMask.classList.toggle('hidden', !show);
+    }
+
+    async function saveSettings() {
+        const body = {};
+        const typed = elements.settingsToken.value.trim();
+        if (elements.settingsTokenClear.checked) body.stateToken = '';
+        else if (typed) body.stateToken = typed;
+
+        const raw = elements.settingsNamespaces.value.trim();
+        if (raw) {
+            let arr;
+            try { arr = JSON.parse(raw); } catch (e) { return alert('Namespace 列表必须是合法 JSON 数组'); }
+            if (!Array.isArray(arr)) return alert('Namespace 列表必须是 JSON 数组');
+            body.namespaces = arr;
+        } else {
+            body.namespaces = [];
+        }
+
+        elements.settingsSave.disabled = true;
+        try {
+            await api('/api/nacos/config', { method: 'PUT', body });
+            // 重新拉一次，确认服务端真实落盘状态（不把 token 明文留在本地）
+            await loadRemoteConfig();
+            applyConfigToPage();
+            toggleSettings(false);
+            alert(state.hasToken ? '已保存，实例上下线操作已启用' : '已保存，未设置操作令牌（上下线操作将不可用）');
+        } catch (e) {
+            alert('保存失败：' + e.message);
+        } finally {
+            elements.settingsSave.disabled = false;
+        }
+    }
 
     function bindEvents() {
         // 基础标签切换
@@ -381,14 +571,50 @@
 
         // Namespace切换
         elements.nacosServer.addEventListener('change', () => {
-            localStorage.setItem('nacosServer', elements.nacosServer.value);
             loadNamespaceList();
         });
         elements.namespaceSelect.addEventListener('change', () => {
-            localStorage.setItem('namespaceId', elements.namespaceSelect.value);
+            // namespace 只是本机偏好，按服务器地址分键存
+            const k = namespaceKey();
+            if (k) {
+                try { localStorage.setItem(k, elements.namespaceSelect.value); } catch (e) {}
+            }
             configCurrentPage = 1;
             loadConfigs();
         });
+
+        // 访问口令登录
+        elements.loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('nacos-login-btn');
+            const err = document.getElementById('nacos-login-err');
+            err.textContent = '';
+            btn.disabled = true;
+            btn.textContent = '验证中…';
+            try {
+                const r = await doLogin(
+                    document.getElementById('nacos-login-password').value,
+                    document.getElementById('nacos-login-invite').value
+                );
+                document.getElementById('nacos-login-password').value = '';
+                document.getElementById('nacos-login-invite').value = '';
+                if (r.isNew) alert(`已创建新空间 ${r.spaceId}`);
+                if (savedNamespace() !== null) connectToNacos(true);
+                else if (state.server) loadNamespaceList();
+            } catch (ex) {
+                err.textContent = ex.message;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '进入';
+            }
+        });
+
+        // 配置弹窗
+        elements.settingsBtn.addEventListener('click', () => toggleSettings(true));
+        elements.settingsClose.addEventListener('click', () => toggleSettings(false));
+        elements.settingsCancel.addEventListener('click', () => toggleSettings(false));
+        elements.settingsSave.addEventListener('click', saveSettings);
+        elements.settingsMask.addEventListener('click', (e) => { if (e.target === elements.settingsMask) toggleSettings(false); });
 
         // 通用点击事件委托
         document.addEventListener('click', (e) => {
@@ -484,16 +710,15 @@
         }
     }
 
-    function loadLocalConfig() {
-        const savedServer = localStorage.getItem('nacosServer');
-        const savedToken = localStorage.getItem('accessToken');
-        if (savedServer) elements.nacosServer.value = savedServer;
-        if (savedToken) elements.accessToken.value = savedToken;
-    }
-
     async function loadNamespaceList() {
+        if (!configReady) return;
         const serverUrl = elements.nacosServer.value;
         if (!serverUrl) return;
+        // 后端已下发固定的 namespace 列表（内网环境通常无法跨域实时拉取）
+        if (state.namespaces.length) {
+            renderNamespaceSelect(state.namespaces);
+            return;
+        }
         try {
             const baseUrl = serverUrl.replace(/\/$/, '');
             const response = await fetch(`${baseUrl}/v1/console/namespaces`, {
@@ -513,10 +738,7 @@
     }
 
     function fallbackLoadNamespace() {
-        namespaceList = [
-            { "namespace": "", "namespaceShowName": "public（默认命名空间）" },
-            { "namespace": "e411ed8d-c4b3-4535-af8b-7559cafdf22d", "namespaceShowName": "lmb-toc-test（测试环境）" }
-        ];
+        namespaceList = [{ "namespace": "", "namespaceShowName": "public（默认命名空间）" }];
         renderNamespaceSelect(namespaceList);
     }
 
@@ -532,18 +754,32 @@
             option.dataset.id = displayId;
             elements.namespaceSelect.appendChild(option);
         });
-        const savedNamespace = localStorage.getItem('namespaceId');
-        if (savedNamespace) elements.namespaceSelect.value = savedNamespace;
+        const saved = savedNamespace();
+        if (saved !== null) elements.namespaceSelect.value = saved;
     }
 
-    function connectToNacos(isAuto) {
+    async function connectToNacos(isAuto) {
         const selectedNamespace = elements.namespaceSelect.value;
         if (!selectedNamespace && !isAuto) {
             alert('请先选择一个Namespace！');
             return;
         }
-        localStorage.setItem('nacosServer', elements.nacosServer.value);
-        localStorage.setItem('namespaceId', selectedNamespace);
+        const serverVal = elements.nacosServer.value.trim().replace(/\/$/, '');
+        if (serverVal !== state.server) {
+            // 服务地址改了：先落盘，否则下次刷新又回到旧值
+            try {
+                await api('/api/nacos/config', { method: 'PUT', body: { server: serverVal } });
+                state.server = serverVal;
+                elements.nacosServer.value = serverVal;
+            } catch (e) {
+                alert('保存服务器地址失败：' + e.message);
+                return;
+            }
+        }
+        const k = namespaceKey();
+        if (k) {
+            try { localStorage.setItem(k, selectedNamespace); } catch (e) {}
+        }
         elements.connectionStatus.innerHTML = `<i class="fa-solid fa-circle text-yellow-500 mr-1"></i><span>${isAuto ? '自动连接中...' : '连接中...'}</span>`;
         currentPage = 1;
         configCurrentPage = 1;
@@ -754,10 +990,14 @@
 
     window.doInstanceOperation = async function(instance, serviceName, groupName, type) {
         if (!instance || !serviceName) return;
+        if (!state.token) {
+            alert('未配置 Actuator 操作令牌，无法上下线实例。请点右上角「配置」填写后再试。');
+            return;
+        }
         const { ip, port } = instance;
         const apiUrl = type === 'offline'
-            ? `http://${ip}:${port}/actuator/server/shutdown?state=${STATE_TOKEN}`
-            : `http://${ip}:${port}/actuator/server/up?state=${STATE_TOKEN}`;
+            ? `http://${ip}:${port}/actuator/server/shutdown?state=${encodeURIComponent(state.token)}`
+            : `http://${ip}:${port}/actuator/server/up?state=${encodeURIComponent(state.token)}`;
         const btn = document.querySelector(`.${type}-btn[data-ip="${ip}"][data-port="${port}"]`);
         if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>处理中...`; }
 

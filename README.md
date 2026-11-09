@@ -58,6 +58,18 @@ server/scripts/migrate-legacy.js  旧版单池数据迁入指定口令的空间
 deploy/          nginx 片段与部署说明
 ```
 
+### Nacos 管理页
+
+`Nacos 服务管理.html` 里不再有服务器地址、namespace 列表和 actuator 操作令牌，
+这些都由后端在登录后按空间下发（`server/boce/nacos.js`）：
+
+- 口令复用拨测的同一套（同一空间，一次登录两边通用）
+- 服务器地址 / namespace 在页面上改完点「保存配置并连接」即持久化
+- 操作令牌在右上角「配置」里填，AES-256-GCM 加密后落 `data/spaces/<sid>/nacos.json`（0600）
+- 站点级默认值只能通过 `.env` 的 `NACOS_SERVER` / `NACOS_NAMESPACES` 给，令牌必须用户自己填
+
+> 旧版本曾把 `STATE_TOKEN` 硬编码在页面里，该值应视为已泄露，需要在 Nacos 侧更换。
+
 ### 访问口令即空间
 
 没有注册流程。输入任意 ≥8 位的口令，服务端用 scrypt 派生出一个稳定的空间 ID，
