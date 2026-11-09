@@ -38,6 +38,14 @@ function spaceIdOf(password) {
     .toString('hex');
 }
 
+/**
+ * 空间级加密密钥：用于加密各空间下的小体量凭据（如 Nacos 操作令牌）。
+ * 由 BOCE_SECRET 派生，且不含随机成分——否则重启后密钥变化、已存密文全部解不开。
+ */
+function spaceKey(sid) {
+  return crypto.scryptSync(KEY, 'nacos-config:' + sid, 32, { N: 16384, r: 8, p: 1 });
+}
+
 function sign(payload) {
   return crypto.createHmac('sha256', KEY).update(payload).digest('base64url');
 }
@@ -103,8 +111,9 @@ function bucket(ip) {
 }
 
 function clientIp(req) {
-  const xff = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return xff || req.socket.remoteAddress || 'unknown';
+  // 不能用 X-Forwarded-For：nginx 是「追加」真实 IP，第一段永远是客户端伪造的。
+  // express 已按 trust proxy 把可信代理链解完，直接用它算好的。
+  return req.ip || req.socket.remoteAddress || 'unknown';
 }
 
 /* ---------------- 中间件 ---------------- */
@@ -157,4 +166,7 @@ function logout(req, res) {
   res.json({ ok: true });
 }
 
-module.exports = { guard, login, logout, spaceIdOf, MIN_LEN, hasInvite: () => !!INVITE };
+module.exports = {
+  guard, login, logout, spaceIdOf, spaceKey,
+  MIN_LEN, hasInvite: () => !!INVITE,
+};
