@@ -107,8 +107,18 @@ function list({ host, limit = 50, offset = 0 } = {}) {
   return { total: items.length, items: items.slice(offset, offset + limit) };
 }
 
+/**
+ * 记录 id 白名单。id 由 save() 生成为 'h' + 时间戳36进制 + 4 位随机，
+ * 形如 h1a2b3c4xyzw。
+ * 不校验的话，:id 里的 ..%2F 会被 Express 解码成斜杠，path.join 直接跳出
+ * history 目录，读到 accounts.json（内含明文密码）乃至别的空间。
+ */
+const ID_RE = /^h[0-9a-z]{5,32}$/;
+const validId = (id) => ID_RE.test(String(id || ''));
+
 /** 读取明细 */
 function get(id) {
+  if (!validId(id)) return null;
   ensure();
   const f = path.join(dir(), id + '.json');
   if (!fs.existsSync(f)) return null;
@@ -116,6 +126,7 @@ function get(id) {
 }
 
 function remove(id) {
+  if (!validId(id)) return false;
   const idx = loadIndex();
   const i = idx.items.findIndex((x) => x.id === id);
   if (i < 0) return false;

@@ -108,6 +108,22 @@ app.post('/api/accounts/:id/toggle', wrap(async (req, res) => {
 const jobs = new Map();
 let jobSeq = 1;
 
+/** 任务完成后保留 30 分钟供轮询，过期清掉（否则 events 只增不减，内存一路涨） */
+const JOB_TTL = 30 * 60_000;
+function sweepJobs() {
+  const now = Date.now();
+  for (const [id, j] of jobs) {
+    if (j.done && now - j.createdAt > JOB_TTL) jobs.delete(id);
+  }
+}
+setInterval(sweepJobs, 5 * 60_000).unref();
+
+/** 只返回属于当前空间的任务，别人的当作不存在 */
+function ownJob(req) {
+  const job = jobs.get(req.params.jobId);
+  return job && job.sid === req.sid ? job : null;
+}
+
 app.post('/api/probe', wrap(async (req, res) => {
   const { hosts, isp, nodeType, type } = req.body || {};
   const list = (Array.isArray(hosts) ? hosts : String(hosts || '').split(/[\n,]/))
@@ -115,9 +131,10 @@ app.post('/api/probe', wrap(async (req, res) => {
   if (!list.length) return res.status(400).json({ ok: false, error: '请填写至少一个域名' });
   if (list.length > 200) return res.status(400).json({ ok: false, error: '单次最多 200 个域名' });
 
+  sweepJobs();
   const jobId = 'job' + (jobSeq++);
   const events = [];
-  const job = { id: jobId, createdAt: Date.now(), events, result: null, done: false };
+  const job = { id: jobId, sid: req.sid, createdAt: Date.now(), events, result: null, done: false };
   jobs.set(jobId, job);
 
   // 异步执行
@@ -151,7 +168,7 @@ app.post('/api/probe', wrap(async (req, res) => {
 
 /** 轮询进度 */
 app.get('/api/probe/:jobId', wrap(async (req, res) => {
-  const job = jobs.get(req.params.jobId);
+  const job = ownJob(req);
   if (!job) return res.status(404).json({ ok: false, error: 'job 不存在' });
   const since = +(req.query.since || 0);
   res.json({
@@ -264,15 +281,17 @@ app.get('/api/trend', wrap(async (req, res) => {
   res.json({ ok: true, rows: history.trend(host, +(limit || 30)) });
 }));
 
-/* 历史任务列表 */
+/* 历史任务列表（只看自己空间的） */
 app.get('/api/jobs', wrap(async (req, res) => {
   res.json({
     ok: true,
-    jobs: [...jobs.values()].map((j) => ({
-      id: j.id, createdAt: j.createdAt, done: j.done,
-      hosts: j.result ? j.result.hosts : [],
-      ok: j.result ? j.result.ok : null,
-    })).sort((a, b) => b.createdAt - a.createdAt).slice(0, 30),
+    jobs: [...jobs.values()]
+      .filter((j) => j.sid === req.sid)
+      .map((j) => ({
+        id: j.id, createdAt: j.createdAt, done: j.done,
+        hosts: j.result ? j.result.hosts : [],
+        ok: j.result ? j.result.ok : null,
+      })).sort((a, b) => b.createdAt - a.createdAt).slice(0, 30),
   });
 }));
 

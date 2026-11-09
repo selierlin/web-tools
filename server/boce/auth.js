@@ -103,8 +103,9 @@ function bucket(ip) {
 }
 
 function clientIp(req) {
-  const xff = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return xff || req.socket.remoteAddress || 'unknown';
+  // 不能用 X-Forwarded-For：nginx 是「追加」真实 IP，第一段永远是客户端伪造的。
+  // express 已按 trust proxy 把可信代理链解完，直接用它算好的。
+  return req.ip || req.socket.remoteAddress || 'unknown';
 }
 
 /* ---------------- 中间件 ---------------- */
