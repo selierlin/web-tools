@@ -33,6 +33,12 @@ app.get('/api/health', (req, res) => res.json({ ok: true, uptime: Math.round(pro
 app.post('/api/login', auth.login);
 app.post('/api/logout', auth.logout);
 
+// /api 响应可能含明文令牌或口令校验信息，一律禁止缓存（含 401）
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 // 以下所有 /api 接口都要求已登录，并把请求绑定到对应空间
 app.use('/api', auth.guard);
 
