@@ -24,6 +24,10 @@ async function api(url, opts = {}) {
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   if (res.status === 401) {
+    const j = await res.json().catch(() => null);
+    // 登录接口的 401 是口令/邀请码错误，必须原样透出原因；
+    // 其它接口的 401 才是「未登录」，统一弹登录框。
+    if (/\/api\/login$/.test(String(url))) throw new Error(j?.error || '登录失败');
     showLogin(true);
     throw new Error('请先输入访问口令');
   }

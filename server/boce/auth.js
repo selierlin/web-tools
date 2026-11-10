@@ -145,10 +145,15 @@ function login(req, res) {
   };
 
   if (pwd.length < MIN_LEN) return reject(`访问口令至少 ${MIN_LEN} 位`);
-  if (INVITE && String(invite || '') !== INVITE) return reject('邀请码不正确');
 
   const sid = spaceIdOf(pwd);
   const isNew = !space.exists(sid);
+
+  // 邀请码只拦「陌生口令新建空间」。已存在的空间只要口令对就放行：
+  // sid 是口令的慢哈希，能算出一个已存在的 sid 本身就已证明口令正确，
+  // 这时再要邀请码既防不了刷（空间早建好了），又凭空多一道必填。
+  if (INVITE && isNew && String(invite || '') !== INVITE) return reject('邀请码不正确');
+
   if (isNew) {
     if (b.created >= 3) return reject('今日新建空间次数已达上限，请明天再试');
     b.created += 1;
