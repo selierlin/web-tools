@@ -313,6 +313,13 @@
                               placeholder='[{"namespace":"","namespaceShowName":"public"}]'></textarea>
                     <p class="nacos-field-hint">JSON 数组，<code>namespace</code> 为空或省略即为 public。填了就不再实时拉取。</p>
                 </div>
+                <div class="nacos-field">
+                    <label class="nacos-check">
+                        <input type="checkbox" id="nacos-settings-hide-ip">
+                        隐藏实例 IP 与操作按钮（截图/录屏时使用）
+                    </label>
+                    <p class="nacos-field-hint">勾选后实例列表只显示健康状态与数量，不渲染 IP、端口，也不提供上下线按钮。</p>
+                </div>
                 <p class="nacos-field-hint">Nacos 服务器地址与当前 Namespace 在页面上直接修改并点「保存配置并连接」即可持久化。</p>
             </div>
             <div class="nacos-settings-foot">
@@ -342,6 +349,7 @@
      * 页面里不再保存任何密钥。上下文见 server/boce/nacos.js。
      */
     const state = { server: '', namespaces: [], token: '', hasToken: false };
+    let hideInstanceIp = false;   // 隐藏实例 IP 与操作按钮：截图/录屏时避免泄露内网拓扑
     let configReady = false;   // 配置下发完成前不触发任何拉取（form-persist 会提前派发 change）
 
     /** 接口用相对路径：部署在站点根与 /boce/ 下都能命中同一个后端 */
@@ -382,6 +390,7 @@
         settingsToken: document.getElementById('nacos-settings-token'),
         settingsTokenClear: document.getElementById('nacos-settings-token-clear'),
         settingsNamespaces: document.querySelector('[data-role="namespaces"]'),
+        settingsHideIp: document.getElementById('nacos-settings-hide-ip'),
         loginMask: document.getElementById('nacos-login-mask'),
         loginForm: document.getElementById('nacos-login-form'),
         saveConfig: document.getElementById('save-config'),
@@ -505,6 +514,7 @@
             elements.settingsTokenClear.disabled = !state.hasToken;
             elements.settingsNamespaces.value = state.namespaces.length
                 ? JSON.stringify(state.namespaces, null, 2) : '';
+            elements.settingsHideIp.checked = hideInstanceIp;
         }
         elements.settingsMask.classList.toggle('hidden', !show);
     }
@@ -524,6 +534,8 @@
         } else {
             body.namespaces = [];
         }
+
+        hideInstanceIp = elements.settingsHideIp.checked;
 
         elements.settingsSave.disabled = true;
         try {
@@ -1076,7 +1088,8 @@
             const statusClass = isHealthy ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger';
             const statusText = isHealthy ? '健康' : '已下线';
             const statusTip = inst.source === 'local' ? '（本地记录，有效期1天）' : '';
-            const opBtn = isHealthy ? `
+            const masked = hideInstanceIp;
+            const opBtn = masked ? '' : isHealthy ? `
                 <button class="offline-btn bg-danger/10 hover:bg-danger/20 text-danger px-2 py-1 rounded text-xs flex items-center" data-ip="${inst.ip}" data-port="${inst.port}" onclick="doInstanceOperation({ip: '${inst.ip}', port: '${inst.port}', clusterName: '${inst.clusterName || 'DEFAULT'}', weight: ${inst.weight || 1.0}}, '${serviceName}', '${groupName}', 'offline')">
                     <i class="fa-solid fa-power-off mr-1"></i>下线
                 </button>
@@ -1088,8 +1101,8 @@
             const tr = document.createElement('tr');
             tr.className = 'border-b border-gray-100 hover:bg-gray-50';
             tr.innerHTML = `
-                <td class="px-4 py-3 text-sm font-medium">${inst.ip || '-'}</td>
-                <td class="px-4 py-3 text-sm">${inst.port || '-'}</td>
+                <td class="px-4 py-3 text-sm font-medium">${masked ? '***.***.***.***' : (inst.ip || '-')}</td>
+                <td class="px-4 py-3 text-sm">${masked ? '****' : (inst.port || '-')}</td>
                 <td class="px-4 py-3 text-sm"><span class="${statusClass} px-2 py-1 rounded-full text-xs" title="${statusTip}">${statusText}${statusTip}</span></td>
                 <td class="px-4 py-3 text-sm">${inst.weight || 1.0}</td>
                 <td class="px-4 py-3 text-sm">${inst.clusterName || 'DEFAULT'}</td>
