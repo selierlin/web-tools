@@ -42,6 +42,40 @@
 .workspace input.invalid { border-color: #d92d20; background: #fff7f6; }
 .workspace input::placeholder { color: #7a867f; }
 
+.combo { position: relative; }
+.combo-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 30;
+    width: max(100%, 340px);
+    max-width: calc(100vw - 40px);
+    max-height: 340px;
+    overflow-y: auto;
+    background: var(--wb-surface);
+    border: 1px solid var(--wb-line);
+    border-radius: 6px;
+    box-shadow: 0 10px 28px rgba(23, 62, 49, .14);
+}
+.combo-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+.combo-option:hover,
+.combo-option.is-active { background: var(--wb-tint); }
+.combo-flag { flex: 0 0 20px; font-size: 16px; line-height: 1; text-align: center; }
+.combo-text { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+.combo-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.combo-code { font: 11px var(--wb-mono); color: var(--wb-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-offset { flex: 0 0 auto; font: 11px var(--wb-mono); color: var(--wb-accent); white-space: nowrap; }
+.combo-more,
+.combo-empty { padding: 8px 10px; font-size: 12px; color: var(--wb-muted); }
+.combo-more { border-top: 1px solid var(--wb-line); background: #fafbf9; }
+.combo-empty { text-align: center; }
+
 .workspace button {
     color: var(--wb-ink);
     background: var(--wb-surface);
@@ -68,7 +102,7 @@
 .result-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
 .zone-picker { display: flex; align-items: center; gap: 8px; flex: 1 1 360px; max-width: 560px; min-width: 0; }
 .zone-picker .section-label { white-space: nowrap; }
-.zone-picker input { flex: 1 1 160px; min-width: 0; }
+.zone-picker .combo { flex: 1 1 160px; min-width: 0; }
 .zone-picker button { flex: 0 0 auto; white-space: nowrap; }
 .head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -90,6 +124,9 @@
 .zone-row.is-source .zone-offset { background: var(--wb-surface); }
 .zone-name { min-width: 0; }
 .zone-title { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.zone-flag { flex: 0 0 auto; font-size: 16px; line-height: 1; }
+.zone-flag img,
+.combo-flag img { display: block; width: 20px; height: 15px; border-radius: 2px; object-fit: cover; }
 .zone-title strong { font-size: 15px; font-weight: 650; }
 .zone-source-badge {
     flex: 0 0 auto;
@@ -175,6 +212,7 @@
     .toolbar-note { grid-column: 1 / -1; margin-top: 6px; }
     .result-area { padding: 18px 14px; }
     .result-head { align-items: stretch; }
+    .combo-panel { max-height: 240px; }
     .zone-picker { flex: 1 1 100%; max-width: none; }
     .zone-list { min-height: 200px; }
     .zone-row {
