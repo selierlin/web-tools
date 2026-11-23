@@ -20,8 +20,12 @@
         <aside class="workspace-toolbar">
             <div class="tz-field">
                 <label class="section-label" for="sourceZone">源时区</label>
-                <input type="text" id="sourceZone" list="tzOptions" autocomplete="off" spellcheck="false"
-                       placeholder="如 北京 / Asia/Shanghai" aria-describedby="sourceStatus">
+                <div class="combo">
+                    <input type="text" id="sourceZone" autocomplete="off" spellcheck="false"
+                           placeholder="如 北京 / Asia/Shanghai" aria-describedby="sourceStatus"
+                           role="combobox" aria-expanded="false" aria-controls="sourceComboList" aria-autocomplete="list">
+                    <div class="combo-panel" id="sourceComboList" role="listbox" hidden></div>
+                </div>
                 <p class="field-note" id="sourceStatus"></p>
             </div>
 
@@ -42,8 +46,12 @@
             <div class="result-head">
                 <div class="zone-picker">
                     <label class="section-label" for="addZone">目标时区</label>
-                    <input type="text" id="addZone" list="tzOptions" autocomplete="off" spellcheck="false"
-                           placeholder="搜索并添加时区，如 纽约">
+                    <div class="combo">
+                        <input type="text" id="addZone" autocomplete="off" spellcheck="false"
+                               placeholder="搜索并添加时区，如 纽约"
+                               role="combobox" aria-expanded="false" aria-controls="addComboList" aria-autocomplete="list">
+                        <div class="combo-panel" id="addComboList" role="listbox" hidden></div>
+                    </div>
                     <button type="button" class="btn-primary" id="addZoneBtn">添加</button>
                 </div>
                 <div class="head-actions">
@@ -61,7 +69,6 @@
     </section>
 </main>
 
-<datalist id="tzOptions"></datalist>
 <div class="copy-toast" id="copyToast" role="status" aria-live="polite">已复制到剪贴板</div>
 
 <script src="scripts/form-persist.js"></script>
@@ -92,6 +99,118 @@
             { id: 'Pacific/Auckland', name: '奥克兰' },
             { id: 'UTC', name: 'UTC' }
         ];
+
+        // IANA 时区 → ISO 3166-1 两位国家码，仅用于展示国旗和辅助搜索。
+        // 未收录的时区不显示旗帜，不影响换算。同一时区跨多国时取主要国家。
+        var ZONE_COUNTRY = {
+            // 美洲
+            'America/New_York': 'US', 'America/Detroit': 'US', 'America/Chicago': 'US',
+            'America/Denver': 'US', 'America/Phoenix': 'US', 'America/Los_Angeles': 'US',
+            'America/Anchorage': 'US', 'America/Juneau': 'US', 'America/Adak': 'US',
+            'Pacific/Honolulu': 'US', 'America/Indianapolis': 'US', 'America/Boise': 'US',
+            'America/Toronto': 'CA', 'America/Vancouver': 'CA', 'America/Edmonton': 'CA',
+            'America/Winnipeg': 'CA', 'America/Halifax': 'CA', 'America/St_Johns': 'CA',
+            'America/Regina': 'CA', 'America/Whitehorse': 'CA', 'America/Godthab': 'GL',
+            'America/Mexico_City': 'MX', 'America/Tijuana': 'MX', 'America/Cancun': 'MX',
+            'America/Chihuahua': 'MX', 'America/Monterrey': 'MX',
+            'America/Guatemala': 'GT', 'America/Belize': 'BZ', 'America/El_Salvador': 'SV',
+            'America/Tegucigalpa': 'HN', 'America/Managua': 'NI', 'America/Costa_Rica': 'CR',
+            'America/Panama': 'PA', 'America/Havana': 'CU', 'America/Jamaica': 'JM',
+            'America/Santo_Domingo': 'DO', 'America/Port-au-Prince': 'HT', 'America/Puerto_Rico': 'PR',
+            'America/Nassau': 'BS', 'America/Barbados': 'BB', 'America/Port_of_Spain': 'TT',
+            'America/Bogota': 'CO', 'America/Caracas': 'VE', 'America/Guayaquil': 'EC',
+            'America/Lima': 'PE', 'America/La_Paz': 'BO', 'America/Santiago': 'CL',
+            'America/Asuncion': 'PY', 'America/Montevideo': 'UY',
+            'America/Buenos_Aires': 'AR', 'America/Argentina/Buenos_Aires': 'AR',
+            'America/Sao_Paulo': 'BR', 'America/Manaus': 'BR', 'America/Fortaleza': 'BR',
+            'America/Recife': 'BR', 'America/Bahia': 'BR',
+            'Atlantic/Bermuda': 'BM', 'Atlantic/Azores': 'PT', 'Atlantic/Canary': 'ES',
+            'Atlantic/Reykjavik': 'IS', 'Atlantic/Cape_Verde': 'CV',
+            // 欧洲
+            'Europe/London': 'GB', 'Europe/Dublin': 'IE', 'Europe/Paris': 'FR',
+            'Europe/Monaco': 'MC', 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL',
+            'Europe/Brussels': 'BE', 'Europe/Luxembourg': 'LU', 'Europe/Zurich': 'CH',
+            'Europe/Vaduz': 'LI', 'Europe/Vienna': 'AT', 'Europe/Rome': 'IT',
+            'Europe/Vatican': 'VA', 'Europe/San_Marino': 'SM', 'Europe/Madrid': 'ES',
+            'Europe/Lisbon': 'PT', 'Europe/Stockholm': 'SE', 'Europe/Oslo': 'NO',
+            'Europe/Copenhagen': 'DK', 'Europe/Helsinki': 'FI', 'Europe/Tallinn': 'EE',
+            'Europe/Riga': 'LV', 'Europe/Vilnius': 'LT', 'Europe/Warsaw': 'PL',
+            'Europe/Prague': 'CZ', 'Europe/Bratislava': 'SK', 'Europe/Budapest': 'HU',
+            'Europe/Bucharest': 'RO', 'Europe/Sofia': 'BG', 'Europe/Belgrade': 'RS',
+            'Europe/Zagreb': 'HR', 'Europe/Ljubljana': 'SI', 'Europe/Sarajevo': 'BA',
+            'Europe/Skopje': 'MK', 'Europe/Podgorica': 'ME', 'Europe/Tirane': 'AL',
+            'Europe/Athens': 'GR', 'Europe/Istanbul': 'TR', 'Europe/Kiev': 'UA',
+            'Europe/Kyiv': 'UA', 'Europe/Minsk': 'BY', 'Europe/Chisinau': 'MD',
+            'Europe/Moscow': 'RU', 'Europe/Kaliningrad': 'RU', 'Europe/Samara': 'RU',
+            'Europe/Volgograd': 'RU', 'Europe/Saratov': 'RU', 'Europe/Kirov': 'RU',
+            'Europe/Astrakhan': 'RU', 'Europe/Ulyanovsk': 'RU', 'Europe/Simferopol': 'UA',
+            'Europe/Malta': 'MT', 'Europe/Gibraltar': 'GI', 'Europe/Andorra': 'AD',
+            'Europe/Jersey': 'JE', 'Europe/Guernsey': 'GG', 'Europe/Isle_of_Man': 'IM',
+            'Atlantic/Faeroe': 'FO',
+            // 亚洲
+            'Asia/Shanghai': 'CN', 'Asia/Urumqi': 'CN', 'Asia/Hong_Kong': 'HK',
+            'Asia/Macau': 'MO', 'Asia/Taipei': 'TW', 'Asia/Tokyo': 'JP',
+            'Asia/Seoul': 'KR', 'Asia/Pyongyang': 'KP', 'Asia/Singapore': 'SG',
+            'Asia/Bangkok': 'TH', 'Asia/Kuala_Lumpur': 'MY', 'Asia/Kuching': 'MY',
+            'Asia/Jakarta': 'ID', 'Asia/Makassar': 'ID', 'Asia/Jayapura': 'ID',
+            'Asia/Pontianak': 'ID', 'Asia/Manila': 'PH', 'Asia/Saigon': 'VN',
+            'Asia/Ho_Chi_Minh': 'VN', 'Asia/Phnom_Penh': 'KH', 'Asia/Vientiane': 'LA',
+            'Asia/Rangoon': 'MM', 'Asia/Yangon': 'MM', 'Asia/Dhaka': 'BD',
+            'Asia/Calcutta': 'IN', 'Asia/Kolkata': 'IN', 'Asia/Katmandu': 'NP',
+            'Asia/Kathmandu': 'NP', 'Asia/Thimphu': 'BT', 'Asia/Colombo': 'LK',
+            'Asia/Karachi': 'PK', 'Asia/Kabul': 'AF', 'Asia/Tehran': 'IR',
+            'Asia/Dubai': 'AE', 'Asia/Muscat': 'OM', 'Asia/Riyadh': 'SA',
+            'Asia/Qatar': 'QA', 'Asia/Kuwait': 'KW', 'Asia/Bahrain': 'BH',
+            'Asia/Baghdad': 'IQ', 'Asia/Amman': 'JO', 'Asia/Beirut': 'LB',
+            'Asia/Damascus': 'SY', 'Asia/Jerusalem': 'IL', 'Asia/Gaza': 'PS',
+            'Asia/Hebron': 'PS', 'Asia/Aden': 'YE', 'Asia/Baku': 'AZ',
+            'Asia/Tbilisi': 'GE', 'Asia/Yerevan': 'AM', 'Asia/Almaty': 'KZ',
+            'Asia/Aqtobe': 'KZ', 'Asia/Aqtau': 'KZ', 'Asia/Tashkent': 'UZ',
+            'Asia/Samarkand': 'UZ', 'Asia/Ashgabat': 'TM', 'Asia/Dushanbe': 'TJ',
+            'Asia/Bishkek': 'KG', 'Asia/Ulaanbaatar': 'MN', 'Asia/Hovd': 'MN',
+            'Asia/Novosibirsk': 'RU', 'Asia/Omsk': 'RU', 'Asia/Krasnoyarsk': 'RU',
+            'Asia/Irkutsk': 'RU', 'Asia/Yakutsk': 'RU', 'Asia/Vladivostok': 'RU',
+            'Asia/Magadan': 'RU', 'Asia/Kamchatka': 'RU', 'Asia/Yekaterinburg': 'RU',
+            'Asia/Barnaul': 'RU', 'Asia/Tomsk': 'RU', 'Asia/Chita': 'RU',
+            'Asia/Sakhalin': 'RU', 'Asia/Srednekolymsk': 'RU', 'Asia/Anadyr': 'RU',
+            'Asia/Nicosia': 'CY', 'Asia/Famagusta': 'CY', 'Asia/Brunei': 'BN',
+            'Asia/Dili': 'TL',
+            // 非洲
+            'Africa/Cairo': 'EG', 'Africa/Casablanca': 'MA', 'Africa/El_Aaiun': 'EH',
+            'Africa/Algiers': 'DZ', 'Africa/Tunis': 'TN', 'Africa/Tripoli': 'LY',
+            'Africa/Khartoum': 'SD', 'Africa/Juba': 'SS', 'Africa/Addis_Ababa': 'ET',
+            'Africa/Asmera': 'ER', 'Africa/Djibouti': 'DJ', 'Africa/Mogadishu': 'SO',
+            'Africa/Nairobi': 'KE', 'Africa/Kampala': 'UG', 'Africa/Dar_es_Salaam': 'TZ',
+            'Africa/Kigali': 'RW', 'Africa/Bujumbura': 'BI', 'Africa/Lagos': 'NG',
+            'Africa/Accra': 'GH', 'Africa/Abidjan': 'CI', 'Africa/Dakar': 'SN',
+            'Africa/Bamako': 'ML', 'Africa/Ouagadougou': 'BF', 'Africa/Niamey': 'NE',
+            'Africa/Ndjamena': 'TD', 'Africa/Nouakchott': 'MR', 'Africa/Conakry': 'GN',
+            'Africa/Bissau': 'GW', 'Africa/Banjul': 'GM', 'Africa/Freetown': 'SL',
+            'Africa/Monrovia': 'LR', 'Africa/Lome': 'TG', 'Africa/Porto-Novo': 'BJ',
+            'Africa/Douala': 'CM', 'Africa/Libreville': 'GA', 'Africa/Malabo': 'GQ',
+            'Africa/Bangui': 'CF', 'Africa/Brazzaville': 'CG', 'Africa/Kinshasa': 'CD',
+            'Africa/Luanda': 'AO', 'Africa/Lubumbashi': 'CD', 'Africa/Sao_Tome': 'ST',
+            'Africa/Blantyre': 'MW', 'Africa/Lusaka': 'ZM', 'Africa/Harare': 'ZW',
+            'Africa/Maputo': 'MZ', 'Africa/Gaborone': 'BW', 'Africa/Windhoek': 'NA',
+            'Africa/Johannesburg': 'ZA', 'Africa/Maseru': 'LS', 'Africa/Mbabane': 'SZ',
+            'Indian/Antananarivo': 'MG', 'Indian/Mauritius': 'MU', 'Indian/Reunion': 'RE',
+            'Indian/Mayotte': 'YT', 'Indian/Comoro': 'KM', 'Indian/Maldives': 'MV',
+            'Indian/Mahe': 'SC',
+            // 大洋洲
+            'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU', 'Australia/Brisbane': 'AU',
+            'Australia/Adelaide': 'AU', 'Australia/Perth': 'AU', 'Australia/Darwin': 'AU',
+            'Australia/Hobart': 'AU', 'Pacific/Auckland': 'NZ', 'Pacific/Chatham': 'NZ',
+            'Pacific/Fiji': 'FJ', 'Pacific/Port_Moresby': 'PG', 'Pacific/Bougainville': 'PG',
+            'Pacific/Noumea': 'NC', 'Pacific/Guam': 'GU', 'Pacific/Saipan': 'MP',
+            'Pacific/Palau': 'PW', 'Pacific/Nauru': 'NR', 'Pacific/Tarawa': 'KI',
+            'Pacific/Kiritimati': 'KI', 'Pacific/Majuro': 'MH', 'Pacific/Kwajalein': 'MH',
+            'Pacific/Ponape': 'FM', 'Pacific/Truk': 'FM', 'Pacific/Kosrae': 'FM',
+            'Pacific/Funafuti': 'TV', 'Pacific/Apia': 'WS', 'Pacific/Tongatapu': 'TO',
+            'Pacific/Niue': 'NU', 'Pacific/Rarotonga': 'CK', 'Pacific/Tahiti': 'PF',
+            'Pacific/Gambier': 'PF', 'Pacific/Marquesas': 'PF', 'Pacific/Easter': 'CL',
+            'Pacific/Galapagos': 'EC', 'Pacific/Norfolk': 'NF', 'Pacific/Pitcairn': 'PN',
+            'Pacific/Wallis': 'WF', 'Pacific/Midway': 'UM', 'Pacific/Wake': 'UM'
+        };
         var DEFAULT_TARGETS = ['Asia/Shanghai', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo', 'UTC'];
         var TARGETS_KEY = 'timezone-converter:targets';
 
@@ -107,12 +226,14 @@
         var copyBtn = document.getElementById('copyAllBtn');
         var resetBtn = document.getElementById('resetBtn');
         var toast = document.getElementById('copyToast');
-        var datalist = document.getElementById('tzOptions');
+        var sourcePanel = document.getElementById('sourceComboList');
+        var addPanel = document.getElementById('addComboList');
 
+        var zoneValidCache = new Map();
+        var canonicalCache = new Map();
         var targets = loadTargets();
         var currentRows = [];
         var toastTimer = null;
-        var zoneValidCache = new Map();
 
         function pad(n) {
             return String(n).padStart(2, '0');
@@ -133,10 +254,59 @@
         }
 
         var COMMON_MAP = new Map(COMMON_ZONES.map(function (z) { return [z.id, z.name]; }));
-        var COMMON_IDS = new Set(COMMON_ZONES.map(function (z) { return z.id; }));
+
+        function nameOf(zone) {
+            return COMMON_MAP.get(zone) || zone;
+        }
+
+        function canonicalOf(zone) {
+            if (canonicalCache.has(zone)) return canonicalCache.get(zone);
+            var canonical = zone;
+            try {
+                canonical = new Intl.DateTimeFormat('en-US', { timeZone: zone }).resolvedOptions().timeZone || zone;
+            } catch (e) { /* 非法时区保留原值 */ }
+            canonicalCache.set(zone, canonical);
+            return canonical;
+        }
+
+        function countryOf(zone) {
+            return ZONE_COUNTRY[zone] || ZONE_COUNTRY[canonicalOf(zone)] || '';
+        }
+
+        function flagOf(zone) {
+            var code = countryOf(zone);
+            if (!code || code.length !== 2) return '';
+            return String.fromCodePoint(
+                code.charCodeAt(0) + 127397,
+                code.charCodeAt(1) + 127397
+            );
+        }
+
+        // Windows 的 Segoe UI Emoji 不渲染 Emoji 国旗，以下国家改用本地 SVG，
+        // 其余时区继续用 Emoji（macOS/移动端正常，Windows 显示字母）。
+        var FLAG_SVG_COUNTRIES = ['CN', 'HK', 'TW', 'JP', 'KR', 'SG', 'TH', 'IN', 'AE', 'GB', 'FR', 'DE', 'RU', 'US', 'BR', 'AU', 'NZ'];
+
+        function buildFlag(zone, className) {
+            var flag = document.createElement('span');
+            flag.className = className || 'zone-flag';
+            var code = countryOf(zone);
+            if (code && FLAG_SVG_COUNTRIES.indexOf(code) !== -1) {
+                var img = document.createElement('img');
+                img.src = 'vendor/flags/' + code.toLowerCase() + '.svg';
+                img.alt = '';
+                img.width = 20;
+                img.height = 15;
+                flag.appendChild(img);
+            } else {
+                flag.textContent = flagOf(zone) || '🌐';
+            }
+            return flag;
+        }
 
         function allZoneIds() {
-            var list = COMMON_ZONES.map(function (z) { return z.id; });
+            // 以 ICU 规范名去重，避免 Kolkata/Calcutta 这类新旧别名同时出现
+            var seen = new Map();
+            COMMON_ZONES.forEach(function (z) { seen.set(canonicalOf(z.id), z.id); });
             var supported = [];
             try {
                 supported = Intl.supportedValuesOf('timeZone') || [];
@@ -144,16 +314,13 @@
                 supported = [];
             }
             supported.forEach(function (id) {
-                if (!COMMON_IDS.has(id) && list.indexOf(id) === -1) list.push(id);
+                var canonical = canonicalOf(id);
+                if (!seen.has(canonical)) seen.set(canonical, id);
             });
-            return list;
+            return Array.from(seen.values());
         }
 
         var ALL_ZONE_IDS = allZoneIds();
-
-        function nameOf(zone) {
-            return COMMON_MAP.get(zone) || zone;
-        }
 
         function resolveZone(raw) {
             var value = (raw || '').trim();
@@ -176,13 +343,159 @@
             return { error: '无法识别时区“' + value + '”' };
         }
 
-        function buildDatalist() {
-            datalist.innerHTML = ALL_ZONE_IDS.map(function (id) {
-                var name = nameOf(id);
-                return name === id
-                    ? '<option value="' + id + '"></option>'
-                    : '<option value="' + id + '">' + name + '</option>';
-            }).join('');
+        var COMBO_LIMIT = 8;
+
+        function buildComboOption(zone) {
+            var item = document.createElement('div');
+            item.className = 'combo-option';
+            item.setAttribute('role', 'option');
+            item.setAttribute('data-zone', zone);
+
+            item.appendChild(buildFlag(zone, 'combo-flag'));
+
+            var text = document.createElement('span');
+            text.className = 'combo-text';
+            var label = document.createElement('span');
+            label.className = 'combo-name';
+            label.textContent = nameOf(zone);
+            text.appendChild(label);
+            if (nameOf(zone) !== zone) {
+                var code = document.createElement('span');
+                code.className = 'combo-code';
+                code.textContent = zone;
+                text.appendChild(code);
+            }
+            item.appendChild(text);
+
+            var offset = document.createElement('span');
+            offset.className = 'combo-offset';
+            offset.textContent = offsetLabel(offsetMinutes(new Date(), zone));
+            item.appendChild(offset);
+
+            return item;
+        }
+
+        function filterZones(query) {
+            var q = (query || '').trim().toLowerCase();
+            if (!q) return COMMON_ZONES.map(function (z) { return z.id; });
+            var results = [];
+            for (var i = 0; i < ALL_ZONE_IDS.length; i++) {
+                var id = ALL_ZONE_IDS[i];
+                var haystack = (id + ' ' + nameOf(id) + ' ' + countryOf(id)).toLowerCase();
+                if (haystack.indexOf(q) !== -1) results.push(id);
+            }
+            return results;
+        }
+
+        function createCombo(input, panel, onEnter) {
+            var activeIndex = -1;
+
+            function openPanel() {
+                panel.hidden = false;
+                input.setAttribute('aria-expanded', 'true');
+            }
+
+            function closePanel() {
+                panel.hidden = true;
+                input.setAttribute('aria-expanded', 'false');
+                activeIndex = -1;
+            }
+
+            function renderPanel(query) {
+                var matches = filterZones(query);
+                var shown = matches.slice(0, COMBO_LIMIT);
+                panel.innerHTML = '';
+                activeIndex = -1;
+
+                if (!shown.length) {
+                    var empty = document.createElement('div');
+                    empty.className = 'combo-empty';
+                    empty.textContent = '未找到匹配的时区';
+                    panel.appendChild(empty);
+                } else {
+                    shown.forEach(function (zone) {
+                        panel.appendChild(buildComboOption(zone));
+                    });
+                }
+
+                var more = document.createElement('div');
+                more.className = 'combo-more';
+                if (!(query || '').trim()) {
+                    more.textContent = '输入城市名、中文名或 IANA 名称，可搜索全部 ' + ALL_ZONE_IDS.length + ' 个时区';
+                } else if (matches.length > shown.length) {
+                    more.textContent = '还有 ' + (matches.length - shown.length) + ' 个结果，继续输入缩小范围';
+                } else {
+                    more.textContent = '共 ' + matches.length + ' 个结果';
+                }
+                panel.appendChild(more);
+                openPanel();
+            }
+
+            function highlight(index) {
+                var options = panel.querySelectorAll('.combo-option');
+                if (!options.length) return;
+                activeIndex = (index + options.length) % options.length;
+                for (var i = 0; i < options.length; i++) {
+                    options[i].classList.toggle('is-active', i === activeIndex);
+                    options[i].setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
+                }
+                options[activeIndex].scrollIntoView({ block: 'nearest' });
+            }
+
+            function choose(zone) {
+                input.value = zone;
+                closePanel();
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            input.addEventListener('focus', function () {
+                renderPanel('');
+            });
+            input.addEventListener('click', function () {
+                if (panel.hidden) renderPanel('');
+            });
+            input.addEventListener('input', function () {
+                // form-persist 恢复值时会派发合成 input，此时输入框未聚焦，不应弹面板
+                if (document.activeElement !== input) return;
+                renderPanel(input.value);
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    if (panel.hidden) renderPanel(input.value);
+                    e.preventDefault();
+                    var down = e.key === 'ArrowDown';
+                    highlight(activeIndex === -1 ? (down ? 0 : -1) : activeIndex + (down ? 1 : -1));
+                } else if (e.key === 'Enter') {
+                    if (!panel.hidden && activeIndex >= 0) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        var option = panel.querySelectorAll('.combo-option')[activeIndex];
+                        if (option) choose(option.getAttribute('data-zone'));
+                    } else if (typeof onEnter === 'function') {
+                        e.preventDefault();
+                        closePanel();
+                        onEnter();
+                    }
+                } else if (e.key === 'Escape' && !panel.hidden) {
+                    e.preventDefault();
+                    closePanel();
+                } else if (e.key === 'Tab') {
+                    closePanel();
+                }
+            });
+
+            panel.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+            });
+            panel.addEventListener('click', function (e) {
+                var option = e.target.closest('[data-zone]');
+                if (option) choose(option.getAttribute('data-zone'));
+            });
+
+            document.addEventListener('mousedown', function (e) {
+                if (!panel.hidden && !input.parentNode.contains(e.target)) closePanel();
+            });
         }
 
         function partsOf(date, timeZone) {
@@ -321,6 +634,7 @@
                 name.className = 'zone-name';
                 var title = document.createElement('div');
                 title.className = 'zone-title';
+                title.appendChild(buildFlag(item.zone));
                 var strong = document.createElement('strong');
                 strong.textContent = nameOf(item.zone);
                 title.appendChild(strong);
@@ -452,13 +766,6 @@
             render();
         });
 
-        addInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addBtn.click();
-            }
-        });
-
         listEl.addEventListener('click', function (e) {
             var btn = e.target.closest('[data-remove-zone]');
             if (!btn) return;
@@ -506,7 +813,9 @@
 
         setInterval(updateNowCells, 1000);
 
-        buildDatalist();
+        createCombo(sourceInput, sourcePanel);
+        createCombo(addInput, addPanel, function () { addBtn.click(); });
+
         if (!sourceInput.value.trim()) {
             var localZone = '';
             try { localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { localZone = ''; }
