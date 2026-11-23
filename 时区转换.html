@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时区转换工具 - 精确到秒的跨时区时间换算</title>
+    <meta name="description" content="选择源时区并输入年月日时分秒，一次换算到多个常用或 IANA 时区，结果精确到秒，同时显示各时区当前时间。">
+    <link rel="stylesheet" href="styles/workbench.css">
+    <link rel="stylesheet" href="styles/timezone.css">
+</head>
+<body class="timezone">
+
+<main class="container">
+    <header class="page-heading">
+        <h1>时区转换<span class="title-dot">.</span></h1>
+        <p class="page-description">选源时区，输入年月日时分秒，一次换算到多个时区</p>
+    </header>
+
+    <section class="workspace" aria-label="时区转换工作区">
+        <aside class="workspace-toolbar">
+            <div class="tz-field">
+                <label class="section-label" for="sourceZone">源时区</label>
+                <input type="text" id="sourceZone" list="tzOptions" autocomplete="off" spellcheck="false"
+                       placeholder="如 北京 / Asia/Shanghai" aria-describedby="sourceStatus">
+                <p class="field-note" id="sourceStatus"></p>
+            </div>
+
+            <div class="tz-field">
+                <label class="section-label" for="inputTime">输入时间（精确到秒）</label>
+                <input type="datetime-local" id="inputTime" step="1">
+                <button type="button" class="btn-secondary" id="btnNow">使用当前时间</button>
+            </div>
+
+            <div class="toolbar-note">
+                <h2>换算方式</h2>
+                <p>输入的时间按源时区解释，切换源时区不会改写输入的数字。</p>
+                <p>结果保留年月日与时分秒。夏令时切换造成的空档或重复时间，以浏览器内置时区规则为准。</p>
+            </div>
+        </aside>
+
+        <div class="result-area">
+            <div class="result-head">
+                <div class="zone-picker">
+                    <label class="section-label" for="addZone">目标时区</label>
+                    <input type="text" id="addZone" list="tzOptions" autocomplete="off" spellcheck="false"
+                           placeholder="搜索并添加时区，如 纽约">
+                    <button type="button" class="btn-primary" id="addZoneBtn">添加</button>
+                </div>
+                <div class="head-actions">
+                    <button type="button" class="btn-primary" id="copyAllBtn">复制全部结果</button>
+                    <button type="button" class="btn-secondary" id="resetBtn">恢复默认</button>
+                </div>
+            </div>
+
+            <p class="field-note" id="zoneStatus" role="status" aria-live="polite"></p>
+
+            <div class="zone-list" id="zoneList"></div>
+
+            <p class="result-note" id="resultNote" role="status" aria-live="polite"></p>
+        </div>
+    </section>
+</main>
+
+<datalist id="tzOptions"></datalist>
+<div class="copy-toast" id="copyToast" role="status" aria-live="polite">已复制到剪贴板</div>
+
+<script src="scripts/form-persist.js"></script>
+<script>
+    (function () {
+        'use strict';
+
+        var COMMON_ZONES = [
+            { id: 'Asia/Shanghai', name: '北京' },
+            { id: 'Asia/Hong_Kong', name: '香港' },
+            { id: 'Asia/Taipei', name: '台北' },
+            { id: 'Asia/Tokyo', name: '东京' },
+            { id: 'Asia/Seoul', name: '首尔' },
+            { id: 'Asia/Singapore', name: '新加坡' },
+            { id: 'Asia/Bangkok', name: '曼谷' },
+            { id: 'Asia/Kolkata', name: '印度' },
+            { id: 'Asia/Dubai', name: '迪拜' },
+            { id: 'Europe/London', name: '伦敦' },
+            { id: 'Europe/Paris', name: '巴黎' },
+            { id: 'Europe/Berlin', name: '柏林' },
+            { id: 'Europe/Moscow', name: '莫斯科' },
+            { id: 'America/New_York', name: '纽约' },
+            { id: 'America/Chicago', name: '芝加哥' },
+            { id: 'America/Denver', name: '丹佛' },
+            { id: 'America/Los_Angeles', name: '洛杉矶' },
+            { id: 'America/Sao_Paulo', name: '圣保罗' },
+            { id: 'Australia/Sydney', name: '悉尼' },
+            { id: 'Pacific/Auckland', name: '奥克兰' },
+            { id: 'UTC', name: 'UTC' }
+        ];
+        var DEFAULT_TARGETS = ['Asia/Shanghai', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo', 'UTC'];
+        var TARGETS_KEY = 'timezone-converter:targets';
+
+        var sourceInput = document.getElementById('sourceZone');
+        var timeInput = document.getElementById('inputTime');
+        var addInput = document.getElementById('addZone');
+        var addBtn = document.getElementById('addZoneBtn');
+        var nowBtn = document.getElementById('btnNow');
+        var listEl = document.getElementById('zoneList');
+        var sourceStatus = document.getElementById('sourceStatus');
+        var zoneStatus = document.getElementById('zoneStatus');
+        var resultNote = document.getElementById('resultNote');
+        var copyBtn = document.getElementById('copyAllBtn');
+        var resetBtn = document.getElementById('resetBtn');
+        var toast = document.getElementById('copyToast');
+        var datalist = document.getElementById('tzOptions');
+
+        var targets = loadTargets();
+        var currentRows = [];
+        var toastTimer = null;
+        var zoneValidCache = new Map();
+
+        function pad(n) {
+            return String(n).padStart(2, '0');
+        }
+
+        function isValidZone(zone) {
+            if (!zone) return false;
+            if (zoneValidCache.has(zone)) return zoneValidCache.get(zone);
+            var ok = false;
+            try {
+                new Intl.DateTimeFormat('en-US', { timeZone: zone });
+                ok = true;
+            } catch (e) {
+                ok = false;
+            }
+            zoneValidCache.set(zone, ok);
+            return ok;
+        }
+
+        var COMMON_MAP = new Map(COMMON_ZONES.map(function (z) { return [z.id, z.name]; }));
+        var COMMON_IDS = new Set(COMMON_ZONES.map(function (z) { return z.id; }));
+
+        function allZoneIds() {
+            var list = COMMON_ZONES.map(function (z) { return z.id; });
+            var supported = [];
+            try {
+                supported = Intl.supportedValuesOf('timeZone') || [];
+            } catch (e) {
+                supported = [];
+            }
+            supported.forEach(function (id) {
+                if (!COMMON_IDS.has(id) && list.indexOf(id) === -1) list.push(id);
+            });
+            return list;
+        }
+
+        var ALL_ZONE_IDS = allZoneIds();
+
+        function nameOf(zone) {
+            return COMMON_MAP.get(zone) || zone;
+        }
+
+        function resolveZone(raw) {
+            var value = (raw || '').trim();
+            if (!value) return { error: '请填写时区' };
+            if (isValidZone(value)) return { zone: value };
+
+            var lower = value.toLowerCase();
+            var exact = ALL_ZONE_IDS.find(function (id) { return id.toLowerCase() === lower; });
+            if (exact) return { zone: exact };
+
+            var byName = COMMON_ZONES.filter(function (z) { return z.name.indexOf(value) !== -1; });
+            if (byName.length === 1) return { zone: byName[0].id };
+            if (byName.length > 1) {
+                return { error: '“' + value + '”匹配到多个时区：' + byName.map(function (z) { return z.name; }).join('、') };
+            }
+
+            var byId = ALL_ZONE_IDS.filter(function (id) { return id.toLowerCase().indexOf(lower) !== -1; });
+            if (byId.length === 1) return { zone: byId[0] };
+            if (byId.length > 1) return { error: '“' + value + '”匹配到多个时区，请输入更完整的名称' };
+            return { error: '无法识别时区“' + value + '”' };
+        }
+
+        function buildDatalist() {
+            datalist.innerHTML = ALL_ZONE_IDS.map(function (id) {
+                var name = nameOf(id);
+                return name === id
+                    ? '<option value="' + id + '"></option>'
+                    : '<option value="' + id + '">' + name + '</option>';
+            }).join('');
+        }
+
+        function partsOf(date, timeZone) {
+            var parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: timeZone,
+                hourCycle: 'h23',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }).formatToParts(date);
+            var out = {};
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].type !== 'literal') out[parts[i].type] = parts[i].value;
+            }
+            return {
+                year: Number(out.year),
+                month: Number(out.month),
+                day: Number(out.day),
+                hour: Number(out.hour),
+                minute: Number(out.minute),
+                second: Number(out.second)
+            };
+        }
+
+        function offsetMinutes(date, timeZone) {
+            var p = partsOf(date, timeZone);
+            var asUTC = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+            return Math.round((asUTC - date.getTime()) / 60000);
+        }
+
+        function offsetLabel(minutes) {
+            var sign = minutes < 0 ? '-' : '+';
+            var abs = Math.abs(minutes);
+            return 'UTC' + sign + pad(Math.floor(abs / 60)) + ':' + pad(abs % 60);
+        }
+
+        function formatZoned(date, timeZone) {
+            var p = partsOf(date, timeZone);
+            return p.year + '-' + pad(p.month) + '-' + pad(p.day) + ' ' +
+                pad(p.hour) + ':' + pad(p.minute) + ':' + pad(p.second);
+        }
+
+        function wallTimeToDate(y, month, day, hour, minute, second, timeZone) {
+            var guess = Date.UTC(y, month - 1, day, hour, minute, second);
+            var first = guess - offsetMinutes(new Date(guess), timeZone) * 60000;
+            var second2 = guess - offsetMinutes(new Date(first), timeZone) * 60000;
+            return new Date(second2);
+        }
+
+        function parseInputValue(value) {
+            var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/.exec(value || '');
+            if (!m) return null;
+            return {
+                year: Number(m[1]),
+                month: Number(m[2]),
+                day: Number(m[3]),
+                hour: Number(m[4]),
+                minute: Number(m[5]),
+                second: m[6] ? Number(m[6]) : 0
+            };
+        }
+
+        function formatWall(p) {
+            return p.year + '-' + pad(p.month) + '-' + pad(p.day) + ' ' +
+                pad(p.hour) + ':' + pad(p.minute) + ':' + pad(p.second);
+        }
+
+        function setInputToNow(timeZone) {
+            var p = partsOf(new Date(), timeZone);
+            timeInput.value = p.year + '-' + pad(p.month) + '-' + pad(p.day) + 'T' +
+                pad(p.hour) + ':' + pad(p.minute) + ':' + pad(p.second);
+        }
+
+        function loadTargets() {
+            try {
+                var raw = JSON.parse(localStorage.getItem(TARGETS_KEY) || 'null');
+                if (Array.isArray(raw) && raw.length) {
+                    var valid = raw.filter(isValidZone);
+                    if (valid.length) return valid;
+                }
+            } catch (e) { /* 忽略损坏的本地数据 */ }
+            return DEFAULT_TARGETS.slice();
+        }
+
+        function saveTargets() {
+            try {
+                localStorage.setItem(TARGETS_KEY, JSON.stringify(targets));
+            } catch (e) { /* localStorage 不可用时忽略 */ }
+        }
+
+        function showStatus(el, message, isError) {
+            el.textContent = message;
+            el.classList.toggle('is-error', !!isError);
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2000);
+        }
+
+        function renderEmpty(message) {
+            currentRows = [];
+            listEl.innerHTML = '';
+            var empty = document.createElement('p');
+            empty.className = 'zone-empty';
+            empty.textContent = message;
+            listEl.appendChild(empty);
+        }
+
+        function updateNowCells() {
+            if (!currentRows.length) return;
+            var now = new Date();
+            var cells = listEl.querySelectorAll('[data-now-zone]');
+            for (var i = 0; i < cells.length; i++) {
+                cells[i].textContent = '现在 ' + formatZoned(now, cells[i].getAttribute('data-now-zone')).slice(5);
+            }
+        }
+
+        function renderRows(date, sourceZone) {
+            listEl.innerHTML = '';
+            currentRows = targets.map(function (zone) {
+                return { zone: zone, date: date };
+            });
+
+            currentRows.forEach(function (item) {
+                var isSource = item.zone === sourceZone;
+                var row = document.createElement('div');
+                row.className = 'zone-row' + (isSource ? ' is-source' : '');
+
+                var name = document.createElement('div');
+                name.className = 'zone-name';
+                var title = document.createElement('div');
+                title.className = 'zone-title';
+                var strong = document.createElement('strong');
+                strong.textContent = nameOf(item.zone);
+                title.appendChild(strong);
+                if (isSource) {
+                    var badge = document.createElement('span');
+                    badge.className = 'zone-source-badge';
+                    badge.textContent = '源';
+                    title.appendChild(badge);
+                }
+                name.appendChild(title);
+                if (nameOf(item.zone) !== item.zone) {
+                    var code = document.createElement('span');
+                    code.textContent = item.zone;
+                    name.appendChild(code);
+                }
+
+                var offset = document.createElement('span');
+                offset.className = 'zone-offset';
+                offset.textContent = offsetLabel(offsetMinutes(item.date, item.zone));
+
+                var time = document.createElement('span');
+                time.className = 'zone-time';
+                time.textContent = formatZoned(item.date, item.zone);
+
+                var now = document.createElement('span');
+                now.className = 'zone-now';
+                now.setAttribute('data-now-zone', item.zone);
+                now.textContent = '现在 ' + formatZoned(new Date(), item.zone).slice(5);
+
+                var remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'zone-remove';
+                remove.setAttribute('data-remove-zone', item.zone);
+                remove.setAttribute('aria-label', '移除 ' + nameOf(item.zone));
+                remove.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
+                row.appendChild(name);
+                row.appendChild(offset);
+                row.appendChild(time);
+                row.appendChild(now);
+                row.appendChild(remove);
+                listEl.appendChild(row);
+            });
+        }
+
+        function render() {
+            resultNote.textContent = '';
+            resultNote.classList.remove('is-error');
+
+            var sourceRes = resolveZone(sourceInput.value);
+            sourceInput.classList.toggle('invalid', !!sourceRes.error && sourceInput.value.trim() !== '');
+            if (sourceRes.error) {
+                showStatus(sourceStatus, sourceRes.error, true);
+                renderEmpty(sourceRes.error);
+                return;
+            }
+            var sourceZone = sourceRes.zone;
+            sourceStatus.classList.remove('is-error');
+            sourceStatus.textContent = sourceZone === sourceInput.value.trim()
+                ? '源时区：' + nameOf(sourceZone)
+                : '已识别为 ' + nameOf(sourceZone) + '（' + sourceZone + '）';
+
+            var parsed = parseInputValue(timeInput.value);
+            if (!parsed) {
+                renderEmpty('请选择输入时间');
+                return;
+            }
+
+            var resultDate = wallTimeToDate(parsed.year, parsed.month, parsed.day, parsed.hour, parsed.minute, parsed.second, sourceZone);
+            renderRows(resultDate, sourceZone);
+
+            var roundTrip = partsOf(resultDate, sourceZone);
+            var isGap = roundTrip.year !== parsed.year || roundTrip.month !== parsed.month ||
+                roundTrip.day !== parsed.day || roundTrip.hour !== parsed.hour ||
+                roundTrip.minute !== parsed.minute || roundTrip.second !== parsed.second;
+            if (isGap) {
+                resultNote.textContent = '提示：该时间在源时区因夏令时切换并不存在，已按相邻时段的规则换算。';
+            }
+        }
+
+        function buildCopyText() {
+            var sourceRes = resolveZone(sourceInput.value);
+            var parsed = parseInputValue(timeInput.value);
+            if (sourceRes.error || !parsed || !currentRows.length) return '';
+            var lines = ['源时区：' + nameOf(sourceRes.zone) + ' (' + sourceRes.zone + ')', '输入时间：' + formatWall(parsed), ''];
+            currentRows.forEach(function (item) {
+                lines.push(offsetLabel(offsetMinutes(item.date, item.zone)) + '  ' + formatZoned(item.date, item.zone) + '  ' + nameOf(item.zone) + ' (' + item.zone + ')');
+            });
+            return lines.join('\n');
+        }
+
+        function legacyCopy(text, done) {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try { document.execCommand('copy'); } catch (e) { /* 忽略 */ }
+            document.body.removeChild(textarea);
+            done();
+        }
+
+        function copyText(text) {
+            if (!text) return;
+            var done = function () { showToast('已复制到剪贴板'); };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text, done); });
+            } else {
+                legacyCopy(text, done);
+            }
+        }
+
+        addBtn.addEventListener('click', function () {
+            var res = resolveZone(addInput.value);
+            if (res.error) {
+                showStatus(zoneStatus, res.error, true);
+                return;
+            }
+            if (targets.indexOf(res.zone) !== -1) {
+                showStatus(zoneStatus, nameOf(res.zone) + ' 已在列表中', true);
+                return;
+            }
+            targets.push(res.zone);
+            saveTargets();
+            addInput.value = '';
+            showStatus(zoneStatus, '已添加 ' + nameOf(res.zone), false);
+            render();
+        });
+
+        addInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addBtn.click();
+            }
+        });
+
+        listEl.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-remove-zone]');
+            if (!btn) return;
+            var zone = btn.getAttribute('data-remove-zone');
+            targets = targets.filter(function (z) { return z !== zone; });
+            saveTargets();
+            showStatus(zoneStatus, '已移除 ' + nameOf(zone), false);
+            render();
+        });
+
+        copyBtn.addEventListener('click', function () {
+            var text = buildCopyText();
+            if (!text) {
+                showStatus(zoneStatus, '没有可复制的结果', true);
+                return;
+            }
+            copyText(text);
+        });
+
+        resetBtn.addEventListener('click', function () {
+            targets = DEFAULT_TARGETS.slice();
+            saveTargets();
+            showStatus(zoneStatus, '已恢复默认时区', false);
+            render();
+        });
+
+        nowBtn.addEventListener('click', function () {
+            var res = resolveZone(sourceInput.value);
+            if (res.error) {
+                showStatus(sourceStatus, res.error, true);
+                return;
+            }
+            setInputToNow(res.zone);
+            render();
+        });
+
+        var sourceTimer = null;
+        sourceInput.addEventListener('input', function () {
+            clearTimeout(sourceTimer);
+            sourceTimer = setTimeout(render, 250);
+        });
+        sourceInput.addEventListener('change', render);
+        timeInput.addEventListener('input', render);
+        timeInput.addEventListener('change', render);
+
+        setInterval(updateNowCells, 1000);
+
+        buildDatalist();
+        if (!sourceInput.value.trim()) {
+            var localZone = '';
+            try { localZone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { localZone = ''; }
+            sourceInput.value = isValidZone(localZone) ? localZone : 'Asia/Shanghai';
+        }
+        if (!timeInput.value) {
+            setInputToNow(resolveZone(sourceInput.value).zone || 'Asia/Shanghai');
+        }
+        render();
+    })();
+</script>
+</body>
+</html>
