@@ -8,6 +8,7 @@ const history = require('./history');
 const daily = require('./daily');
 const auth = require('./auth');
 const nacos = require('./nacos');
+const ipApi = require('./ip');
 
 const app = express();
 const PORT = process.env.PORT || 8899;
@@ -38,6 +39,11 @@ app.use('/api', (req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
+
+/* ---------------- IP 查询（公开，不需要口令） ---------------- */
+app.get('/api/ip/whoami', ipApi.rateLimit, ipApi.whoami);
+app.get('/api/ip/lookup', ipApi.rateLimit, ipApi.lookupIp);
+app.get('/api/ip/resolve', ipApi.rateLimit, ipApi.resolveDomain);
 
 // 以下所有 /api 接口都要求已登录，并把请求绑定到对应空间
 app.use('/api', auth.guard);

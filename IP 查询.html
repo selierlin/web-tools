@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP 查询工具 - 我的 IP、归属地与域名解析</title>
+    <meta name="description" content="查询当前访问 IP、IPv4 归属地（省市区、运营商）以及域名对应的 A/AAAA 解析记录。">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/workbench.css">
+    <link rel="stylesheet" href="styles/ip-query.css?v=2">
+</head>
+<body class="ip-page">
+
+<main class="container">
+    <header class="page-heading">
+        <h1>IP 查询<span class="title-dot">.</span></h1>
+        <p class="page-description">查当前 IP、IP 归属地，以及域名解析结果</p>
+    </header>
+
+    <!-- 我的 IP -->
+    <section class="ip-card" aria-labelledby="myIpTitle">
+        <div class="card-head">
+            <h2 id="myIpTitle"><i class="fas fa-location-crosshairs"></i> 我的 IP</h2>
+            <button type="button" class="btn btn-ghost" id="btnRefreshMe">
+                <i class="fas fa-rotate"></i> 刷新
+            </button>
+        </div>
+        <div class="my-ip-body">
+            <div class="ip-value" id="myIp">--</div>
+            <p class="geo-line" id="myGeo">正在获取…</p>
+        </div>
+        <div class="card-actions">
+            <button type="button" class="btn btn-primary" id="btnCopyMe">
+                <i class="fas fa-copy"></i> 复制 IP
+            </button>
+            <span class="hint">这是服务端看到的来源 IP，经代理时可能为内网地址</span>
+        </div>
+    </section>
+
+    <!-- IP 归属地 -->
+    <section class="ip-card" aria-labelledby="lookupTitle">
+        <div class="card-head">
+            <h2 id="lookupTitle"><i class="fas fa-magnifying-glass-location"></i> IP 归属地</h2>
+        </div>
+        <form class="search-row" id="formLookup" novalidate>
+            <label class="sr-only" for="inputIp">IPv4 地址</label>
+            <input type="text" id="inputIp" placeholder="输入 IPv4，如 114.114.114.114"
+                   autocomplete="off" spellcheck="false">
+            <button type="submit" class="btn btn-primary" id="btnLookup">
+                <i class="fas fa-search"></i> 查询
+            </button>
+        </form>
+        <div class="result" id="lookupResult" hidden></div>
+    </section>
+
+    <!-- 域名反查 -->
+    <section class="ip-card" aria-labelledby="resolveTitle">
+        <div class="card-head">
+            <h2 id="resolveTitle"><i class="fas fa-globe"></i> 域名反查 IP</h2>
+        </div>
+        <form class="search-row" id="formResolve" novalidate>
+            <label class="sr-only" for="inputDomain">域名</label>
+            <input type="text" id="inputDomain" placeholder="输入域名，如 baidu.com"
+                   autocomplete="off" spellcheck="false">
+            <button type="submit" class="btn btn-primary" id="btnResolve">
+                <i class="fas fa-search"></i> 解析
+            </button>
+        </form>
+        <div class="result" id="resolveResult" hidden></div>
+    </section>
+
+    <p class="foot-note">
+        归属地数据来自离线 IP 库，精确到省/市，仅供参考；IP 归属地仅支持 IPv4。
+    </p>
+</main>
+
+<script>
+(function () {
+    var myIp = document.getElementById('myIp');
+    var myGeo = document.getElementById('myGeo');
+    var lookupResult = document.getElementById('lookupResult');
+    var resolveResult = document.getElementById('resolveResult');
+
+    // 统一走根路径 /api：zzw 静态直出、内网整站反代、
+    // 容器直连三种部署都能到后端
+    function getJson(path) {
+        return fetch(path, { headers: { Accept: 'application/json' } }).then(function (res) {
+            if (res.status === 404) throw new Error('当前部署未启用 IP 接口');
+            return res.text().then(function (text) {
+                var data = {};
+                try { data = text ? JSON.parse(text) : {}; } catch (e) { /* 非 JSON 响应 */ }
+                if (!res.ok || data.ok === false) {
+                    throw new Error(data.error || ('请求失败（' + res.status + '）'));
+                }
+                return data;
+            });
+        }, function () {
+            throw new Error('无法连接后端服务，请通过 http 访问本页');
+        });
+    }
+
+    function showError(el, message) {
+        el.hidden = false;
+        el.innerHTML = '<p class="result-error"><i class="fas fa-circle-exclamation"></i> ' + escapeHtml(message) + '</p>';
+    }
+
+    function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function geoText(geo) {
+        if (!geo) return '';
+        return [geo.country, geo.province, geo.city, geo.isp].filter(Boolean).join(' · ');
+    }
+
+    function setLoading(btn, loading, text) {
+        btn.disabled = loading;
+        btn.dataset.label = btn.dataset.label || btn.innerHTML;
+        btn.innerHTML = loading ? '<i class="fas fa-spinner fa-spin"></i> ' + text : btn.dataset.label;
+    }
+
+    /* ---------- 我的 IP ---------- */
+    function loadMe() {
+        myIp.textContent = '--';
+        myGeo.textContent = '正在获取…';
+        myGeo.classList.remove('error');
+        getJson('/api/ip/whoami').then(function (data) {
+            myIp.textContent = data.ip || '未知';
+            myGeo.textContent = geoText(data.geo) || data.note || '未收录（可能是内网或保留地址）';
+        }).catch(function (err) {
+            myGeo.textContent = err.message;
+            myGeo.classList.add('error');
+        });
+    }
+
+    document.getElementById('btnRefreshMe').addEventListener('click', loadMe);
+
+    document.getElementById('btnCopyMe').addEventListener('click', function () {
+        var text = myIp.textContent;
+        if (!text || text === '--') return;
+        var done = function () {
+            var btn = document.getElementById('btnCopyMe');
+            var old = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+            setTimeout(function () { btn.innerHTML = old; }, 1200);
+        };
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(done, function () { prompt('复制失败，请手动复制：', text); });
+        } else {
+            prompt('请手动复制：', text);
+        }
+    });
+
+    /* ---------- IP 归属地 ---------- */
+    document.getElementById('formLookup').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var ip = document.getElementById('inputIp').value.trim();
+        if (!ip) {
+            showError(lookupResult, '请输入 IPv4 地址');
+            return;
+        }
+        var btn = document.getElementById('btnLookup');
+        setLoading(btn, true, '查询中');
+        lookupResult.hidden = true;
+        getJson('/api/ip/lookup?ip=' + encodeURIComponent(ip)).then(function (data) {
+            if (!data.geo) {
+                lookupResult.hidden = false;
+                lookupResult.innerHTML = '<p class="result-empty">未收录该地址（内网、保留地址或库中缺失）</p>';
+                return;
+            }
+            var g = data.geo;
+            lookupResult.hidden = false;
+            lookupResult.innerHTML =
+                '<dl class="geo-grid">' +
+                '<div><dt>IP</dt><dd class="mono">' + escapeHtml(data.ip) + '</dd></div>' +
+                '<div><dt>国家</dt><dd>' + escapeHtml(g.country) + '</dd></div>' +
+                '<div><dt>省/州</dt><dd>' + escapeHtml(g.province || '—') + '</dd></div>' +
+                '<div><dt>城市</dt><dd>' + escapeHtml(g.city || '—') + '</dd></div>' +
+                '<div><dt>运营商</dt><dd>' + escapeHtml(g.isp || '—') + '</dd></div>' +
+                '<div><dt>国家码</dt><dd>' + escapeHtml(g.countryCode || '—') + '</dd></div>' +
+                '</dl>';
+        }).catch(function (err) {
+            showError(lookupResult, err.message);
+        }).finally(function () {
+            setLoading(btn, false);
+        });
+    });
+
+    /* ---------- 域名反查 ---------- */
+    var lastResolve = { domain: '', more: false };
+    var STATUS_TEXT = { NOERROR: '解析成功', NXDOMAIN: '域名不存在', TIMEOUT: '查询超时', SERVFAIL: 'DNS 服务器故障' };
+    var RECORD_ORDER = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SOA'];
+
+    function renderGroup(type, meta, body) {
+        return '<div class="dns-group"><div class="group-head">' +
+            '<span class="rtype">' + type + '</span>' +
+            '<span class="group-meta">' + escapeHtml(meta) + '</span></div>' + body + '</div>';
+    }
+
+    function renderGroupBody(type, list) {
+        if (type === 'NS') {
+            return '<div class="rec-inline">' + list.map(function (r) {
+                return '<span class="mono">' + escapeHtml(r.value) + '</span>';
+            }).join('') + '</div>';
+        }
+        if (type === 'SOA') {
+            var r = list[0];
+            // 后端新版直接给结构化字段，旧进程只给一行文本，按空格兜底
+            var parts = r.nsname != null ? [r.nsname, r.hostmaster, r.serial] : String(r.value || '').split(' ');
+            return '<dl class="soa-fields">' +
+                '<dt>主 NS</dt><dd>' + escapeHtml(parts[0]) + '</dd>' +
+                '<dt>管理员</dt><dd>' + escapeHtml(parts[1]) + '</dd>' +
+                '<dt>序列号</dt><dd>' + escapeHtml(parts[2]) + '</dd>' +
+                '</dl>';
+        }
+        return '<ul class="rec-list">' + list.map(function (r) {
+            var prio = r.priority != null ? '<span class="prio">优先级 ' + escapeHtml(r.priority) + '</span>' : '';
+            var act = type === 'A'
+                ? '<button type="button" class="btn btn-ghost btn-sm" data-ip="' + escapeHtml(r.value) + '">查归属地</button>'
+                : '';
+            return '<li>' + prio + '<span class="rec-value mono">' + escapeHtml(r.value) + '</span>' + act + '</li>';
+        }).join('') + '</ul>';
+    }
+
+    function renderDns(data, more) {
+        var statusText = STATUS_TEXT[data.status] || data.status || '未知状态';
+        var badgeClass = data.status === 'NOERROR' ? 'ok' : (data.status === 'NXDOMAIN' ? 'warn' : 'bad');
+        var html = '<div class="dns-head">' +
+            '<span class="dns-domain mono">' + escapeHtml(data.domain) + '</span>' +
+            '<span class="dns-meta"><span class="status-badge ' + badgeClass + '">' + escapeHtml(statusText) + '</span>' +
+            '<span class="dns-time">' + (data.elapsed || 0) + ' ms</span></span></div>';
+
+        var hasRecord = false;
+
+        // CNAME 展示整条链，单条记录看不出去重后的终点
+        var chain = data.cnameChain || [];
+        if (chain.length) {
+            hasRecord = true;
+            html += renderGroup('CNAME', chain.length + ' 跳', '<ul class="rec-list">' + chain.map(function (h) {
+                return '<li><span class="rec-value mono">' +
+                    escapeHtml(h.from) + ' → ' + escapeHtml(h.to) + '</span></li>';
+            }).join('') + '</ul>');
+        }
+
+        RECORD_ORDER.forEach(function (type) {
+            if (type === 'CNAME') return;
+            var list = (data.records && data.records[type]) || [];
+            if (!list.length) return;
+            hasRecord = true;
+            // 只有 A/AAAA 带 TTL；MX/TXT/NS/SOA 后端拿不到，组头就不显示
+            var ttl = list[0].ttl;
+            var meta = (ttl != null ? 'TTL ' + ttl + ' · ' : '') + list.length + ' 条';
+            // NS/SOA 可能取自父域的区顶点，标出来
+            var zone = data.zones && data.zones[type];
+            if (zone && zone !== data.domain) meta = '区 ' + zone + ' · ' + list.length + ' 条';
+            html += renderGroup(type, meta, renderGroupBody(type, list));
+        });
+
+        if (!hasRecord) {
+            html += '<p class="result-empty">' +
+                (data.status === 'NXDOMAIN' ? '域名不存在，或没有可展示的记录' : '未解析到记录') + '</p>';
+        }
+
+        if (!more && data.status !== 'NXDOMAIN') {
+            html += '<div class="dns-more"><button type="button" class="btn btn-ghost btn-sm" id="btnMoreDns">' +
+                '加载 MX / TXT / NS / SOA</button></div>';
+        } else if (more && data.status === 'NOERROR') {
+            var hasExtra = ['MX', 'TXT', 'NS', 'SOA'].some(function (type) {
+                return (data.records[type] || []).length > 0;
+            });
+            if (!hasExtra) html += '<p class="result-empty">该域名没有 MX / TXT / NS / SOA 记录</p>';
+        }
+
+        resolveResult.hidden = false;
+        resolveResult.innerHTML = html;
+
+        var moreBtn = document.getElementById('btnMoreDns');
+        if (moreBtn) {
+            moreBtn.addEventListener('click', function () { doResolve(lastResolve.domain, true); });
+        }
+    }
+
+    function doResolve(domain, more) {
+        var btn = document.getElementById('btnResolve');
+        setLoading(btn, true, '解析中');
+        resolveResult.hidden = true;
+        lastResolve = { domain: domain, more: more };
+        var url = '/api/ip/resolve?domain=' + encodeURIComponent(domain) + (more ? '&more=1' : '');
+        getJson(url).then(function (data) {
+            renderDns(data, more);
+        }).catch(function (err) {
+            showError(resolveResult, err.message);
+        }).finally(function () {
+            setLoading(btn, false);
+        });
+    }
+
+    document.getElementById('formResolve').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var domain = document.getElementById('inputDomain').value.trim();
+        if (!domain) {
+            showError(resolveResult, '请输入域名');
+            return;
+        }
+        doResolve(domain, false);
+    });
+
+    // 解析结果里点「查归属地」时，只有 IPv4 能查，IPv6 直接提示
+    resolveResult.addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-ip]');
+        if (!btn) return;
+        var ip = btn.dataset.ip;
+        if (ip.indexOf(':') !== -1) {
+            showError(lookupResult, '暂只支持 IPv4 归属地查询');
+            lookupResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        document.getElementById('inputIp').value = ip;
+        document.getElementById('formLookup').requestSubmit();
+        lookupResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    loadMe();
+})();
+</script>
+</body>
+</html>
