@@ -14,8 +14,8 @@ function toast(msg, type = '') {
   setTimeout(() => { el.style.opacity = '0'; el.style.transition = '.3s'; setTimeout(() => el.remove(), 320); }, 2800);
 }
 
-/* 接口用相对路径：部署在 /boce/ 下与本地根路径都能命中同一个后端 */
-const rel = (url) => String(url).replace(/^\//, '');
+/* 接口统一走根路径 /api：nginx 一条 /api/ 反代即可，不再依赖页面所在目录 */
+const rel = (url) => '/api/' + String(url).replace(/^\/?(boce\/)?api\//, '');
 
 async function api(url, opts = {}) {
   const res = await fetch(rel(url), {

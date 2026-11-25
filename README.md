@@ -32,13 +32,14 @@
 - Cron表达式工具：Cron表达式生成和解析
 - Nacos服务管理：Nacos配置和服务管理工具
 - HTTP请求测试：支持类似IDEA HTTP工具写法的API测试工具
+- IP查询：查当前 IP、IPv4 归属地（省/市/运营商），以及域名的 A/AAAA/CNAME 等解析记录（含 TTL）
 
 ### 实用工具
 - 颜色转换：支持多种颜色格式转换（HEX/RGB/HSL/CMYK等）、颜色拾取、渐变生成、对比度检测
 
 ## 技术特点
 
-- 除拨测外均为纯前端实现，无需后端支持
+- 除拨测、IP 查询外均为纯前端实现，无需后端支持
 - 响应式设计，支持移动端访问
 - 界面美观，采用现代化设计风格
 - 功能实用，覆盖开发常用场景
@@ -46,7 +47,26 @@
 
 ## 使用方法
 
-直接打开 index.html 文件即可使用所有工具（拨测需先启动后端，见下节）。
+直接打开 index.html 文件即可使用所有工具（拨测、IP 查询需先启动后端，见下节）。
+
+## IP 查询
+
+`IP 查询.html` 的三项能力都走后端接口：
+
+- `GET /api/ip/whoami`：服务端看到的来源 IP + 归属地
+- `GET /api/ip/lookup?ip=`：IPv4 归属地（省/市/运营商）
+- `GET /api/ip/resolve?domain=`：域名 A/AAAA 解析（带 TTL、状态与耗时），`cnameChain` 给出逐跳的完整 CNAME 链；加 `&more=1` 时附带 MX/TXT/NS/SOA，NS/SOA 会向上回溯到持有该区的父域，并在 `zones` 里标明归属区
+
+归属地由 `server/boce/ip.js` 读取离线库 `ip2region_v4.xdb`（约 11MB）。库文件不进仓库，
+运行时按 `IPDB_PATH`、`${BOCE_DATA_DIR}/ip2region_v4.xdb`、仓库根 `data/` 的顺序查找；
+文件缺失时接口返回 503，不影响其他功能。数据来自
+[ip2region](https://github.com/lionsoul2014/ip2region)，替换该文件后需重启后端进程才会生效。
+
+三个接口公开访问、不需要口令，按来源 IP 限流 60 次/分钟。
+
+所有接口统一走根路径 `/api/*`，nginx 只需一条 `location ^~ /api/` 反代到后端：
+zzw 需要新增这一条，内网整站反代到 56095 不用改。后端仍保留 `/boce/api/` 前缀的兼容处理，
+旧缓存页面不会失效；上线时先加 nginx 规则，再发布前端。
 
 ## 拨测（boce）
 

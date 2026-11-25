@@ -352,12 +352,8 @@
     let hideInstanceIp = false;   // 隐藏实例 IP 与操作按钮：截图/录屏时避免泄露内网拓扑
     let configReady = false;   // 配置下发完成前不触发任何拉取（form-persist 会提前派发 change）
 
-    /** 接口用相对路径：部署在站点根与 /boce/ 下都能命中同一个后端 */
-    /*
-     * 接口固定走 /boce/api：nginx 只把该前缀反代到后端（裸 /api 会 404）。
-     * 后端会用中间件剥掉 /boce 前缀，所以本页放在站点根或 /boce/ 下都能命中同一套接口。
-     */
-    const rel = (url) => '/boce/api/' + String(url).replace(/^\/?(boce\/)?api\//, '');
+    /* 接口统一走根路径 /api：nginx 一条 /api/ 反代到后端，页面放哪都能命中同一套接口 */
+    const rel = (url) => '/api/' + String(url).replace(/^\/?(boce\/)?api\//, '');
 
     async function api(url, opts = {}) {
         const res = await fetch(rel(url), {
