@@ -3,74 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP 查询工具 - 我的 IP、归属地与域名解析</title>
-    <meta name="description" content="查询当前访问 IP、IPv4 归属地（省市区、运营商）以及域名对应的 A/AAAA 解析记录。">
+    <title>IP 查询工具 - 我的 IP、归属地、地址结构与域名解析</title>
+    <meta name="description" content="查询当前访问 IP、IPv4/IPv6 归属地（省市区、运营商）、IPv6 地址结构（压缩/展开/网段/反向域名）以及域名的 A/AAAA 解析记录。">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles/workbench.css">
-    <link rel="stylesheet" href="styles/ip-query.css?v=2">
+    <link rel="stylesheet" href="styles/ip-query.css?v=4">
 </head>
 <body class="ip-page">
 
 <main class="container">
     <header class="page-heading">
         <h1>IP 查询<span class="title-dot">.</span></h1>
-        <p class="page-description">查当前 IP、IP 归属地，以及域名解析结果</p>
+        <p class="page-description">当前 IP、归属地与地址结构，以及域名的 A / AAAA 记录</p>
     </header>
 
     <!-- 我的 IP -->
-    <section class="ip-card" aria-labelledby="myIpTitle">
+    <section class="ip-card card-me" aria-labelledby="myIpTitle">
         <div class="card-head">
             <h2 id="myIpTitle"><i class="fas fa-location-crosshairs"></i> 我的 IP</h2>
-            <button type="button" class="btn btn-ghost" id="btnRefreshMe">
-                <i class="fas fa-rotate"></i> 刷新
-            </button>
+            <div class="head-actions">
+                <span class="ver-badge" id="myVer" hidden>IPv4</span>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnRefreshMe">
+                    <i class="fas fa-rotate"></i> 刷新
+                </button>
+            </div>
         </div>
         <div class="my-ip-body">
             <div class="ip-value" id="myIp">--</div>
             <p class="geo-line" id="myGeo">正在获取…</p>
+            <p class="ptr-line" id="myPtr" hidden></p>
         </div>
         <div class="card-actions">
             <button type="button" class="btn btn-primary" id="btnCopyMe">
                 <i class="fas fa-copy"></i> 复制 IP
             </button>
-            <span class="hint">这是服务端看到的来源 IP，经代理时可能为内网地址</span>
+            <button type="button" class="btn" id="btnUseMe">
+                <i class="fas fa-arrow-up-right-from-square"></i> 在下面解析
+            </button>
+            <span class="hint">服务端看到的来源 IP，经代理时可能是内网地址</span>
         </div>
     </section>
 
-    <!-- IP 归属地 -->
-    <section class="ip-card" aria-labelledby="lookupTitle">
-        <div class="card-head">
-            <h2 id="lookupTitle"><i class="fas fa-magnifying-glass-location"></i> IP 归属地</h2>
-        </div>
-        <form class="search-row" id="formLookup" novalidate>
-            <label class="sr-only" for="inputIp">IPv4 地址</label>
-            <input type="text" id="inputIp" placeholder="输入 IPv4，如 114.114.114.114"
-                   autocomplete="off" spellcheck="false">
-            <button type="submit" class="btn btn-primary" id="btnLookup">
-                <i class="fas fa-search"></i> 查询
-            </button>
-        </form>
-        <div class="result" id="lookupResult" hidden></div>
-    </section>
+    <div class="ip-grid">
+        <!-- IP 解析 -->
+        <section class="ip-card" aria-labelledby="lookupTitle">
+            <div class="card-head">
+                <h2 id="lookupTitle"><i class="fas fa-magnifying-glass-location"></i> IP 解析</h2>
+                <span class="card-sub">归属地 · IPv6 结构 · PTR</span>
+            </div>
+            <form class="search-row" id="formLookup" novalidate>
+                <label class="sr-only" for="inputIp">IP 地址</label>
+                <input type="text" id="inputIp" placeholder="IPv4 / IPv6，如 240e:f7::1"
+                       autocomplete="off" spellcheck="false">
+                <button type="submit" class="btn btn-primary" id="btnLookup">
+                    <i class="fas fa-search"></i> 查询
+                </button>
+            </form>
+            <div class="chips" id="lookupChips">
+                <span class="chips-label">示例</span>
+                <button type="button" class="chip" data-ip="114.114.114.114">114.114.114.114</button>
+                <button type="button" class="chip" data-ip="223.5.5.5">223.5.5.5</button>
+                <button type="button" class="chip" data-ip="240e:f7::1">240e:f7::1</button>
+                <button type="button" class="chip" data-ip="::1">::1</button>
+            </div>
+            <div class="result" id="lookupResult" hidden></div>
+        </section>
 
-    <!-- 域名反查 -->
-    <section class="ip-card" aria-labelledby="resolveTitle">
-        <div class="card-head">
-            <h2 id="resolveTitle"><i class="fas fa-globe"></i> 域名反查 IP</h2>
-        </div>
-        <form class="search-row" id="formResolve" novalidate>
-            <label class="sr-only" for="inputDomain">域名</label>
-            <input type="text" id="inputDomain" placeholder="输入域名，如 baidu.com"
-                   autocomplete="off" spellcheck="false">
-            <button type="submit" class="btn btn-primary" id="btnResolve">
-                <i class="fas fa-search"></i> 解析
-            </button>
-        </form>
-        <div class="result" id="resolveResult" hidden></div>
-    </section>
+        <!-- 域名反查 -->
+        <section class="ip-card" aria-labelledby="resolveTitle">
+            <div class="card-head">
+                <h2 id="resolveTitle"><i class="fas fa-globe"></i> 域名反查 IP</h2>
+                <span class="card-sub">A / AAAA / CNAME</span>
+            </div>
+            <form class="search-row" id="formResolve" novalidate>
+                <label class="sr-only" for="inputDomain">域名</label>
+                <input type="text" id="inputDomain" placeholder="域名，如 baidu.com"
+                       autocomplete="off" spellcheck="false">
+                <button type="submit" class="btn btn-primary" id="btnResolve">
+                    <i class="fas fa-search"></i> 解析
+                </button>
+            </form>
+            <div class="chips" id="resolveChips">
+                <span class="chips-label">示例</span>
+                <button type="button" class="chip" data-domain="baidu.com">baidu.com</button>
+                <button type="button" class="chip" data-domain="ipv6.google.com">ipv6.google.com</button>
+                <button type="button" class="chip" data-domain="linliang.top">linliang.top</button>
+            </div>
+            <div class="result" id="resolveResult" hidden></div>
+        </section>
+    </div>
 
     <p class="foot-note">
-        归属地数据来自离线 IP 库，精确到省/市，仅供参考；IP 归属地仅支持 IPv4。
+        归属地来自离线 IP 库（ip2region，含 IPv4 / IPv6），精确到省/市，仅供参考；地址结构由浏览器本地计算，PTR 为实时 DNS 反查。
     </p>
 </main>
 
@@ -78,11 +102,15 @@
 (function () {
     var myIp = document.getElementById('myIp');
     var myGeo = document.getElementById('myGeo');
+    var myPtr = document.getElementById('myPtr');
+    var myVer = document.getElementById('myVer');
     var lookupResult = document.getElementById('lookupResult');
     var resolveResult = document.getElementById('resolveResult');
+    var inputIp = document.getElementById('inputIp');
 
-    // 统一走根路径 /api：zzw 静态直出、内网整站反代、
-    // 容器直连三种部署都能到后端
+    /* ================= 通用 ================= */
+
+    // 统一走根路径 /api：zzw 静态直出、内网整站反代、容器直连三种部署都能到后端
     function getJson(path) {
         return fetch(path, { headers: { Accept: 'application/json' } }).then(function (res) {
             if (res.status === 404) throw new Error('当前部署未启用 IP 接口');
@@ -101,7 +129,8 @@
 
     function showError(el, message) {
         el.hidden = false;
-        el.innerHTML = '<p class="result-error"><i class="fas fa-circle-exclamation"></i> ' + escapeHtml(message) + '</p>';
+        el.innerHTML = '<p class="result-error"><i class="fas fa-circle-exclamation"></i> '
+            + escapeHtml(message) + '</p>';
     }
 
     function escapeHtml(s) {
@@ -121,14 +150,228 @@
         btn.innerHTML = loading ? '<i class="fas fa-spinner fa-spin"></i> ' + text : btn.dataset.label;
     }
 
-    /* ---------- 我的 IP ---------- */
+    function copyText(text, btn) {
+        if (!text || text === '--') return;
+        var done = function () {
+            if (!btn) return;
+            var old = btn.dataset.raw || btn.innerHTML;
+            btn.dataset.raw = old;
+            btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+            setTimeout(function () { btn.innerHTML = old; }, 1200);
+        };
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(done, function () { prompt('复制失败，请手动复制：', text); });
+        } else {
+            prompt('请手动复制：', text);
+        }
+    }
+
+    /* ================= IP 地址本地解析 ================= */
+
+    function parseIPv4(s) {
+        var parts = String(s || '').split('.');
+        if (parts.length !== 4) return null;
+        var nums = [];
+        for (var i = 0; i < 4; i++) {
+            if (!/^\d{1,3}$/.test(parts[i])) return null;
+            var n = Number(parts[i]);
+            if (n > 255) return null;
+            nums.push(n);
+        }
+        return nums;
+    }
+
+    // 返回 8 组 16 位整数，非 IPv6 返回 null（支持内嵌 IPv4 写法）
+    function parseIPv6(input) {
+        var s = String(input || '').trim().toLowerCase();
+        if (s.indexOf(':') === -1) return null;
+
+        var v4 = null;
+        var lastColon = s.lastIndexOf(':');
+        var tail = s.slice(lastColon + 1);
+        if (tail.indexOf('.') !== -1) {
+            v4 = parseIPv4(tail);
+            if (!v4) return null;
+            s = s.slice(0, lastColon + 1) + '0:0';
+        }
+
+        var halves = s.split('::');
+        if (halves.length > 2) return null;
+        var left = halves[0] ? halves[0].split(':') : [];
+        var right = (halves.length === 2 && halves[1]) ? halves[1].split(':') : [];
+        var all = left.concat(right);
+        for (var i = 0; i < all.length; i++) {
+            if (!/^[0-9a-f]{1,4}$/.test(all[i])) return null;
+        }
+        var missing = 8 - all.length;
+        if (halves.length === 2) {
+            if (missing < 1) return null; // 「::」至少要省略一组
+        } else if (missing !== 0) {
+            return null;
+        }
+        var filler = [];
+        for (var k = 0; k < (halves.length === 2 ? missing : 0); k++) filler.push('0');
+        var groups = left.concat(filler, right);
+        if (groups.length !== 8) return null;
+
+        var nums = groups.map(function (g) { return parseInt(g, 16); });
+        if (v4) {
+            nums[6] = (v4[0] << 8) | v4[1];
+            nums[7] = (v4[2] << 8) | v4[3];
+        }
+        return nums;
+    }
+
+    function ipVersion(input) {
+        var s = String(input || '').trim();
+        if (!s) return 0;
+        if (parseIPv4(s)) return 4;
+        if (parseIPv6(s)) return 6;
+        return 0;
+    }
+
+    // RFC 5952：小写、去前导零、最长零段压成「::」（等长取最前）
+    function compressIPv6(nums) {
+        var hex = nums.map(function (n) { return n.toString(16); });
+        var bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
+        for (var i = 0; i < 8; i++) {
+            if (nums[i] === 0) {
+                if (curStart === -1) { curStart = i; curLen = 0; }
+                curLen++;
+                if (curLen > bestLen) { bestLen = curLen; bestStart = curStart; }
+            } else {
+                curStart = -1; curLen = 0;
+            }
+        }
+        if (bestLen < 2) return hex.join(':');
+        var head = hex.slice(0, bestStart).join(':');
+        var rest = hex.slice(bestStart + bestLen).join(':');
+        if (!head && !rest) return '::';
+        return head + '::' + rest;
+    }
+
+    function expandIPv6(nums) {
+        return nums.map(function (n) {
+            var h = n.toString(16);
+            while (h.length < 4) h = '0' + h;
+            return h;
+        }).join(':');
+    }
+
+    // /64 前缀：留 4 组，尾部 0 组用「::」收尾
+    function prefix64(nums) {
+        var hex = nums.slice(0, 4).map(function (n) { return n.toString(16); });
+        while (hex.length && hex[hex.length - 1] === '0') hex.pop();
+        if (!hex.length) return '::/64';
+        return hex.join(':') + '::/64';
+    }
+
+    // 反向解析域名：IPv4 用 in-addr.arpa，IPv6 按半字节倒序拼 ip6.arpa
+    function arpaName(input, ver) {
+        if (ver === 4) {
+            return parseIPv4(input).slice().reverse().join('.') + '.in-addr.arpa';
+        }
+        var nums = parseIPv6(input);
+        var nibbles = [];
+        for (var i = 0; i < 8; i++) {
+            var h = nums[i].toString(16);
+            while (h.length < 4) h = '0' + h;
+            for (var j = 3; j >= 0; j--) nibbles.push(h.charAt(j));
+        }
+        return nibbles.reverse().join('.') + '.ip6.arpa';
+    }
+
+    function v4Kind(o) {
+        if (o[0] === 0) return '保留（本网络）';
+        if (o[0] === 10) return '内网（10/8）';
+        if (o[0] === 127) return '回环';
+        if (o[0] === 169 && o[1] === 254) return '链路本地（APIPA）';
+        if (o[0] === 172 && o[1] >= 16 && o[1] <= 31) return '内网（172.16/12）';
+        if (o[0] === 192 && o[1] === 168) return '内网（192.168/16）';
+        if (o[0] === 100 && o[1] >= 64 && o[1] <= 127) return '运营商 NAT（100.64/10）';
+        if (o[0] >= 224 && o[0] <= 239) return '组播';
+        if (o[0] >= 240) return '保留';
+        return '公网';
+    }
+
+    function v6Kind(nums) {
+        var top = nums[0], i;
+        var allZero = true, loopback = true;
+        for (i = 0; i < 8; i++) {
+            if (nums[i] !== 0) allZero = false;
+            if (i < 7 && nums[i] !== 0) loopback = false;
+        }
+        if (allZero) return '未指定地址（::）';
+        if (loopback && nums[7] === 1) return '回环（::1）';
+        if ((top & 0xffc0) === 0xfe80) return '链路本地（fe80::/10）';
+        if ((top & 0xfe00) === 0xfc00) return '内网（ULA，fc00::/7）';
+        if ((top & 0xff00) === 0xff00) return '组播（ff00::/8）';
+        if (top === 0x0064 && nums[1] === 0xff9b) return 'NAT64（64:ff9b::/96）';
+        if (top === 0x2002) return '6to4 隧道（2002::/16）';
+        if (top === 0x2001 && nums[1] === 0x0db8) return '文档示例（2001:db8::/32）';
+        if (top === 0x2001 && nums[1] === 0) return 'Teredo 隧道（2001::/32）';
+        if (nums[0] === 0 && nums[1] === 0 && nums[2] === 0 && nums[3] === 0 &&
+            nums[4] === 0 && nums[5] === 0xffff) return 'IPv4 映射（::ffff:0:0/96）';
+        if ((top & 0xe000) === 0x2000) return '全球单播（2000::/3）';
+        return '其他用途';
+    }
+
+    // 把地址拆成展示用的结构行，前端算，不额外请求后端
+    function addressStruct(input, ver) {
+        var rows = [];
+        if (ver === 4) {
+            var o = parseIPv4(input);
+            if (!o) return rows;
+            var num = ((o[0] * 256 + o[1]) * 256 + o[2]) * 256 + o[3];
+            rows.push(['地址类型', 'IPv4 · ' + v4Kind(o)]);
+            rows.push(['规范写法', o.join('.')]);
+            rows.push(['/24 网段', [o[0], o[1], o[2], 0].join('.') + '/24']);
+            rows.push(['十进制整数', String(num >>> 0)]);
+            rows.push(['十六进制', '0x' + ('00000000' + (num >>> 0).toString(16)).slice(-8).toUpperCase()]);
+            rows.push(['反向域名', arpaName(input, 4)]);
+            return rows;
+        }
+        var nums = parseIPv6(input);
+        if (!nums) return rows;
+        var ipv4mapped = (nums[0] === 0 && nums[1] === 0 && nums[2] === 0 &&
+            nums[3] === 0 && nums[4] === 0 && nums[5] === 0xffff)
+            ? [nums[6] >> 8, nums[6] & 0xff, nums[7] >> 8, nums[7] & 0xff].join('.')
+            : null;
+        rows.push(['地址类型', 'IPv6 · ' + v6Kind(nums)]);
+        rows.push(['规范写法', compressIPv6(nums)]);
+        rows.push(['完整展开', expandIPv6(nums)]);
+        rows.push(['/64 网段', prefix64(nums)]);
+        rows.push(['接口标识', expandIPv6([nums[4], nums[5], nums[6], nums[7]])]);
+        if (ipv4mapped) rows.push(['IPv4 形式', ipv4mapped]);
+        rows.push(['反向域名', arpaName(input, 6)]);
+        return rows;
+    }
+
+    /* ================= 我的 IP ================= */
+
+    var myIpValue = '';
+
     function loadMe() {
         myIp.textContent = '--';
         myGeo.textContent = '正在获取…';
         myGeo.classList.remove('error');
+        myPtr.hidden = true;
+        myVer.hidden = true;
         getJson('/api/ip/whoami').then(function (data) {
-            myIp.textContent = data.ip || '未知';
+            myIpValue = data.ip || '';
+            myIp.textContent = myIpValue || '未知';
+            var ver = ipVersion(myIpValue);
+            if (ver) {
+                myVer.hidden = false;
+                myVer.textContent = 'IPv' + ver;
+                myVer.className = 'ver-badge v' + ver;
+            }
             myGeo.textContent = geoText(data.geo) || data.note || '未收录（可能是内网或保留地址）';
+            if (data.ptr && data.ptr.length) {
+                myPtr.hidden = false;
+                myPtr.innerHTML = '<i class="fas fa-turn-up"></i> PTR '
+                    + data.ptr.map(escapeHtml).join(' / ');
+            }
         }).catch(function (err) {
             myGeo.textContent = err.message;
             myGeo.classList.add('error');
@@ -138,57 +381,102 @@
     document.getElementById('btnRefreshMe').addEventListener('click', loadMe);
 
     document.getElementById('btnCopyMe').addEventListener('click', function () {
-        var text = myIp.textContent;
-        if (!text || text === '--') return;
-        var done = function () {
-            var btn = document.getElementById('btnCopyMe');
-            var old = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
-            setTimeout(function () { btn.innerHTML = old; }, 1200);
-        };
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(done, function () { prompt('复制失败，请手动复制：', text); });
-        } else {
-            prompt('请手动复制：', text);
-        }
+        copyText(myIpValue, this);
     });
 
-    /* ---------- IP 归属地 ---------- */
-    document.getElementById('formLookup').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var ip = document.getElementById('inputIp').value.trim();
-        if (!ip) {
-            showError(lookupResult, '请输入 IPv4 地址');
-            return;
-        }
-        var btn = document.getElementById('btnLookup');
-        setLoading(btn, true, '查询中');
-        lookupResult.hidden = true;
-        getJson('/api/ip/lookup?ip=' + encodeURIComponent(ip)).then(function (data) {
-            if (!data.geo) {
-                lookupResult.hidden = false;
-                lookupResult.innerHTML = '<p class="result-empty">未收录该地址（内网、保留地址或库中缺失）</p>';
-                return;
-            }
-            var g = data.geo;
-            lookupResult.hidden = false;
-            lookupResult.innerHTML =
-                '<dl class="geo-grid">' +
-                '<div><dt>IP</dt><dd class="mono">' + escapeHtml(data.ip) + '</dd></div>' +
-                '<div><dt>国家</dt><dd>' + escapeHtml(g.country) + '</dd></div>' +
+    document.getElementById('btnUseMe').addEventListener('click', function () {
+        if (!myIpValue) return;
+        inputIp.value = myIpValue;
+        document.getElementById('formLookup').requestSubmit();
+        lookupResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    /* ================= IP 解析结果 ================= */
+
+    function renderStruct(input, ver) {
+        var rows = addressStruct(input, ver);
+        return '<div class="res-block">' +
+            '<div class="block-head"><span class="block-title">地址结构</span>' +
+            '<span class="block-meta">浏览器本地计算</span></div>' +
+            '<dl class="struct-grid">' + rows.map(function (r) {
+                return '<dt>' + escapeHtml(r[0]) + '</dt><dd class="mono">' + escapeHtml(r[1]) + '</dd>';
+            }).join('') + '</dl></div>';
+    }
+
+    function renderLookup(data) {
+        var ver = ipVersion(data.ip);
+        var g = data.geo;
+        var html = '<div class="res-head">' +
+            '<span class="res-ip mono">' + escapeHtml(data.ip) + '</span>' +
+            '<span class="ver-badge v' + ver + '">IPv' + ver + '</span></div>';
+
+        // 归属地
+        html += '<div class="res-block">' +
+            '<div class="block-head"><span class="block-title">归属地</span>' +
+            '<span class="block-meta">ip2region 离线库</span></div>';
+        if (g) {
+            html += '<dl class="geo-grid">' +
+                '<div><dt>国家</dt><dd>' + escapeHtml(g.country || '—') + '</dd></div>' +
                 '<div><dt>省/州</dt><dd>' + escapeHtml(g.province || '—') + '</dd></div>' +
                 '<div><dt>城市</dt><dd>' + escapeHtml(g.city || '—') + '</dd></div>' +
                 '<div><dt>运营商</dt><dd>' + escapeHtml(g.isp || '—') + '</dd></div>' +
                 '<div><dt>国家码</dt><dd>' + escapeHtml(g.countryCode || '—') + '</dd></div>' +
                 '</dl>';
-        }).catch(function (err) {
+        } else {
+            html += '<p class="result-empty">未收录该地址（内网、保留地址或库中缺失）</p>';
+        }
+        html += '</div>';
+
+        // PTR
+        html += '<div class="res-block">' +
+            '<div class="block-head"><span class="block-title">PTR 反向解析</span>' +
+            '<span class="block-meta">实时 DNS</span></div>';
+        if (data.ptr && data.ptr.length) {
+            html += '<ul class="ptr-list">' + data.ptr.map(function (n) {
+                return '<li class="mono">' + escapeHtml(n) + '</li>';
+            }).join('') + '</ul>';
+        } else {
+            html += '<p class="result-empty">没有 PTR 记录（内网地址或该网段未配置反解）</p>';
+        }
+        html += '</div>';
+
+        // 结构（本地算，非法输入不会走到这里）
+        if (ver) html += renderStruct(data.ip, ver);
+
+        lookupResult.hidden = false;
+        lookupResult.innerHTML = html;
+    }
+
+    document.getElementById('formLookup').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var ip = inputIp.value.trim();
+        if (!ip) {
+            showError(lookupResult, '请输入 IP 地址');
+            return;
+        }
+        if (!ipVersion(ip)) {
+            showError(lookupResult, '不是合法的 IPv4 / IPv6 地址');
+            return;
+        }
+        var btn = document.getElementById('btnLookup');
+        setLoading(btn, true, '查询中');
+        lookupResult.hidden = true;
+        getJson('/api/ip/lookup?ip=' + encodeURIComponent(ip)).then(renderLookup).catch(function (err) {
             showError(lookupResult, err.message);
         }).finally(function () {
             setLoading(btn, false);
         });
     });
 
-    /* ---------- 域名反查 ---------- */
+    document.getElementById('lookupChips').addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-ip]');
+        if (!btn) return;
+        inputIp.value = btn.dataset.ip;
+        document.getElementById('formLookup').requestSubmit();
+    });
+
+    /* ================= 域名反查 ================= */
+
     var lastResolve = { domain: '', more: false };
     var STATUS_TEXT = { NOERROR: '解析成功', NXDOMAIN: '域名不存在', TIMEOUT: '查询超时', SERVFAIL: 'DNS 服务器故障' };
     var RECORD_ORDER = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SOA'];
@@ -217,8 +505,11 @@
         }
         return '<ul class="rec-list">' + list.map(function (r) {
             var prio = r.priority != null ? '<span class="prio">优先级 ' + escapeHtml(r.priority) + '</span>' : '';
-            var act = type === 'A'
-                ? '<button type="button" class="btn btn-ghost btn-sm" data-ip="' + escapeHtml(r.value) + '">查归属地</button>'
+            // IPv4 和 IPv6 地址记录都能直接查归属地与结构
+            var addrKind = ipVersion(r.value);
+            var act = (type === 'A' || type === 'AAAA') && addrKind
+                ? '<button type="button" class="btn btn-ghost btn-sm" data-ip="' + escapeHtml(r.value) + '">'
+                  + '查归属地</button>'
                 : '';
             return '<li>' + prio + '<span class="rec-value mono">' + escapeHtml(r.value) + '</span>' + act + '</li>';
         }).join('') + '</ul>';
@@ -307,17 +598,19 @@
         doResolve(domain, false);
     });
 
-    // 解析结果里点「查归属地」时，只有 IPv4 能查，IPv6 直接提示
+    document.getElementById('resolveChips').addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-domain]');
+        if (!btn) return;
+        document.getElementById('inputDomain').value = btn.dataset.domain;
+        document.getElementById('formResolve').requestSubmit();
+    });
+
+    // 解析结果里点「查归属地」时，A / AAAA 记录都能查（后端 v4/v6 双库）
     resolveResult.addEventListener('click', function (e) {
         var btn = e.target.closest('button[data-ip]');
         if (!btn) return;
         var ip = btn.dataset.ip;
-        if (ip.indexOf(':') !== -1) {
-            showError(lookupResult, '暂只支持 IPv4 归属地查询');
-            lookupResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-        document.getElementById('inputIp').value = ip;
+        inputIp.value = ip;
         document.getElementById('formLookup').requestSubmit();
         lookupResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });

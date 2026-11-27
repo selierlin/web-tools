@@ -1,25 +1,43 @@
-/* IP 查询页，沿用 workbench 视觉变量。 */
+/* IP 查询页，沿用 workbench 视觉变量。
+   布局：我的 IP 全宽置顶，其下「IP 解析 / 域名反查」双栏；960px 以下单栏。 */
 .ip-page { min-height: 100dvh; padding: 28px 20px 48px; background: var(--wb-bg); color: var(--wb-ink); font-family: var(--wb-font); }
-.ip-page .container { max-width: 960px; margin: 0 auto; }
+.ip-page .container { max-width: 1180px; margin: 0 auto; }
 .ip-page .page-heading { margin-bottom: 20px; }
 .ip-page .page-heading h1 { margin: 0; font-size: 28px; line-height: 1.3; font-weight: 650; letter-spacing: -.5px; }
 .ip-page .title-dot { color: var(--wb-accent); }
 .ip-page .page-description { margin: 6px 0 0; color: var(--wb-muted); font-size: 14px; }
 
-.ip-card { margin-bottom: 16px; padding: 20px 22px; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); }
+/* ---------- 卡片 ---------- */
+.ip-card { padding: 18px 22px 20px; border: 1px solid var(--wb-line); border-radius: var(--wb-radius); background: var(--wb-surface); }
 .ip-page .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ip-page .card-head h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 650; }
 .ip-page .card-head h2 i { color: var(--wb-accent); font-size: 14px; }
+.ip-page .card-sub { color: var(--wb-muted); font: 12px var(--wb-mono); white-space: nowrap; }
+.ip-page .head-actions { display: flex; align-items: center; gap: 8px; }
 
-.ip-page .my-ip-body { margin-top: 14px; }
-.ip-page .ip-value { font-family: var(--wb-mono); font-size: clamp(22px, 4vw, 32px); line-height: 1.25; font-weight: 600; word-break: break-all; }
-.ip-page .geo-line { margin: 8px 0 0; color: var(--wb-muted); font-size: 14px; }
+/* 双栏 */
+.ip-grid { display: grid; grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.card-me { margin-bottom: 16px; }
+
+/* ---------- 我的 IP ---------- */
+.ip-page .my-ip-body { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-top: 12px; }
+.ip-page .ip-value { font-family: var(--wb-mono); font-size: clamp(20px, 3vw, 26px); line-height: 1.3; font-weight: 600; word-break: break-all; }
+.ip-page .geo-line { margin: 0; color: var(--wb-muted); font-size: 14px; }
 .ip-page .geo-line.error { color: #b42318; }
-.ip-page .card-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.ip-page .ptr-line { flex-basis: 100%; margin: 2px 0 0; color: var(--wb-muted); font: 12px var(--wb-mono); word-break: break-all; }
+.ip-page .ptr-line i { color: var(--wb-accent); margin-right: 4px; }
+.ip-page .card-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .ip-page .hint { color: var(--wb-muted); font-size: 12px; }
 
+/* ---------- 版本徽章 ---------- */
+.ip-page .ver-badge { padding: 2px 8px; border: 1px solid var(--wb-line); border-radius: 999px; font: 600 12px var(--wb-mono); color: var(--wb-muted); background: var(--wb-surface); }
+.ip-page .ver-badge.v4 { border-color: #c9d8d0; color: #2c5a49; background: #eef4f0; }
+.ip-page .ver-badge.v6 { border-color: #bcd7cb; color: var(--wb-accent); background: var(--wb-tint); }
+
+/* ---------- 输入 ---------- */
 .ip-page .search-row { display: flex; gap: 10px; margin-top: 14px; }
-.ip-page .search-row input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 12px; border: 1px solid var(--wb-line); border-radius: 6px; background: var(--wb-surface); color: var(--wb-ink); font-size: 14px; }
+.ip-page .search-row input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 12px; border: 1px solid var(--wb-line); border-radius: 6px; background: var(--wb-surface); color: var(--wb-ink); font: 14px var(--wb-mono); }
+.ip-page .search-row input::placeholder { font-family: var(--wb-font); color: #93a09a; }
 .ip-page .search-row input:focus { border-color: var(--wb-accent); box-shadow: 0 0 0 3px #17654e12; outline: none; }
 
 .ip-page .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 0 16px; border: 1px solid var(--wb-line); border-radius: 6px; background: var(--wb-surface); color: var(--wb-ink); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
@@ -27,13 +45,40 @@
 .ip-page .btn-primary { border-color: var(--wb-accent); background: var(--wb-accent); color: #fff; }
 .ip-page .btn-primary:hover:not(:disabled) { background: var(--wb-accent-hover); }
 .ip-page .btn-ghost:hover:not(:disabled) { background: var(--wb-tint); }
-.ip-page .btn-sm { min-height: 30px; padding: 0 10px; font-size: 13px; }
+.ip-page .btn-sm { min-height: 28px; padding: 0 10px; font-size: 13px; font-weight: 500; }
 
+/* ---------- 示例 chips ---------- */
+.ip-page .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.ip-page .chips-label { color: var(--wb-muted); font-size: 12px; margin-right: 2px; }
+.ip-page .chip { padding: 3px 10px; border: 1px solid var(--wb-line); border-radius: 999px; background: var(--wb-surface); color: var(--wb-muted); font: 12px var(--wb-mono); }
+.ip-page .chip:hover { border-color: var(--wb-accent); color: var(--wb-accent); background: var(--wb-tint); }
+
+/* ---------- 结果通用 ---------- */
 .ip-page .result { margin-top: 16px; }
-.ip-page .geo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px 18px; margin: 0; padding: 16px; border: 1px solid var(--wb-line); border-radius: 6px; background: #f7f9f7; }
-.ip-page .geo-grid dt { color: var(--wb-muted); font-size: 12px; }
-.ip-page .geo-grid dd { margin: 3px 0 0; font-size: 15px; }
+.ip-page .res-head { display: flex; align-items: center; gap: 8px; }
+.ip-page .res-ip { font-size: 15px; font-weight: 600; word-break: break-all; }
+.ip-page .res-block { margin-top: 12px; }
+.ip-page .block-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.ip-page .block-title { color: var(--wb-accent); font: 600 12px var(--wb-mono); letter-spacing: .5px; }
+.ip-page .block-meta { color: var(--wb-muted); font: 12px var(--wb-mono); }
 
+.ip-page .mono { font-family: var(--wb-mono); font-size: 13px; }
+
+.ip-page .geo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 12px 16px; margin: 0; padding: 12px 14px; border: 1px solid var(--wb-line); border-radius: 6px; background: #f7f9f7; }
+.ip-page .geo-grid dt { color: var(--wb-muted); font-size: 12px; }
+.ip-page .geo-grid dd { margin: 3px 0 0; font-size: 14px; word-break: break-all; }
+
+/* 地址结构：左标签右值，长串自动折行 */
+.ip-page .struct-grid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; padding: 12px 14px; border: 1px solid var(--wb-line); border-radius: 6px; background: #f7f9f7; }
+.ip-page .struct-grid dt { color: var(--wb-muted); font-size: 12px; }
+.ip-page .struct-grid dd { margin: 0; font: 13px var(--wb-mono); word-break: break-all; }
+.ip-page .struct-grid dd:last-child { color: #4c5a55; }
+
+.ip-page .ptr-list { margin: 0; padding: 10px 14px; border: 1px solid var(--wb-line); border-radius: 6px; background: #f7f9f7; list-style: none; }
+.ip-page .ptr-list li { padding: 2px 0; word-break: break-all; }
+.ip-page .ptr-list li + li { border-top: 1px dashed var(--wb-line); margin-top: 2px; padding-top: 4px; }
+
+/* ---------- 域名解析结果 ---------- */
 .ip-page .dns-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .ip-page .dns-domain { font-size: 15px; font-weight: 600; word-break: break-all; }
 .ip-page .dns-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -43,9 +88,7 @@
 .ip-page .status-badge.bad { background: #fdecea; color: #b42318; }
 .ip-page .dns-time { color: var(--wb-muted); font: 12px var(--wb-mono); }
 .ip-page .dns-more { margin-top: 10px; }
-.ip-page .mono { font-family: var(--wb-mono); font-size: 14px; }
 
-/* 解析结果按记录类型分组：类型做组头，值做列表 */
 .ip-page .dns-group { margin-top: 10px; padding: 10px 14px; border: 1px solid var(--wb-line); border-radius: 6px; background: #f7f9f7; }
 .ip-page .group-head { display: flex; align-items: baseline; gap: 8px; }
 .ip-page .group-head .rtype { color: var(--wb-accent); font: 600 12px var(--wb-mono); letter-spacing: .5px; }
@@ -55,22 +98,42 @@
 .ip-page .rec-list .prio { flex-shrink: 0; min-width: 68px; color: var(--wb-muted); font: 12px var(--wb-mono); }
 .ip-page .rec-value { flex: 1; min-width: 0; font: 13px var(--wb-mono); word-break: break-all; }
 .ip-page .rec-inline { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; }
-.ip-page .rec-inline .mono { font-size: 13px; word-break: break-all; }
+.ip-page .rec-inline .mono { word-break: break-all; }
 .ip-page .soa-fields { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0 0; }
 .ip-page .soa-fields dt { color: var(--wb-muted); font-size: 12px; }
 .ip-page .soa-fields dd { margin: 0; font: 13px var(--wb-mono); word-break: break-all; }
 .ip-page .rec-list .btn-sm { flex-shrink: 0; min-height: 24px; padding: 0 8px; font-size: 12px; }
 
 .ip-page .result-error { margin: 0; color: #b42318; font-size: 14px; }
-.ip-page .result-empty { margin: 0; color: var(--wb-muted); font-size: 14px; }
-.ip-page .foot-note { margin: 20px 0 0; color: var(--wb-muted); font-size: 12px; text-align: center; }
+.ip-page .result-empty { margin: 0; color: var(--wb-muted); font-size: 13px; }
+.ip-page .foot-note { margin: 20px 0 0; color: var(--wb-muted); font-size: 12px; text-align: center; line-height: 1.6; }
 
 .ip-page .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
 
+/* 宽屏把「复制 / 在下面解析」挪到 IP 右侧，避免卡片右侧大片留白 */
+@media (min-width: 760px) {
+    .card-me { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 20px; }
+    .card-me .card-head { grid-column: 1 / -1; }
+    .card-me .my-ip-body { margin-top: 10px; }
+    .card-me .card-actions { margin-top: 10px; justify-content: flex-end; max-width: 24rem; }
+    .card-me .hint { flex-basis: 100%; text-align: right; }
+}
+
+@media (max-width: 960px) {
+    .ip-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 640px) {
     .ip-page { padding: 18px 12px 32px; }
-    .ip-page .ip-card { padding: 16px; }
+    .ip-page .ip-card { padding: 16px 14px 18px; }
+    /* 窄屏把归属地压到 IP 下面，避免大字号与说明挤在一行 */
+    .ip-page .my-ip-body { flex-direction: column; gap: 2px; }
+    .ip-page .geo-line { font-size: 13px; }
+    .ip-page .card-sub { display: none; }
     .ip-page .search-row { flex-wrap: wrap; }
     .ip-page .search-row input { flex-basis: 100%; }
     .ip-page .search-row .btn { width: 100%; }
+    .ip-page .struct-grid { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .ip-page .struct-grid dt { margin-top: 6px; }
+    .ip-page .rec-list li { flex-wrap: wrap; }
 }

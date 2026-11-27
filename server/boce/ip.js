@@ -2,10 +2,11 @@
 /**
  * IP 归属地与域名反查
  *
- * xdb 数据文件约 11MB，不进仓库，运行时从数据目录加载：
- *   IPDB_PATH 优先，否则 ${BOCE_DATA_DIR}/ip2region_v4.xdb
- *   本地开发回退到仓库根 data/ip2region_v4.xdb
- * 文件缺失时接口返回 503，不影响其他接口。
+ * xdb 数据文件不进仓库，运行时从数据目录加载（v4 约 11MB、v6 约 36MB）：
+ *   v4：IPDB_PATH 优先，否则 ${BOCE_DATA_DIR}/ip2region_v4.xdb
+ *   v6：IPDB_PATH_V6 优先，否则 ${BOCE_DATA_DIR}/ip2region_v6.xdb
+ *   本地开发回退到仓库根 data/
+ * 单版本文件缺失时该版本接口返回 503，另一个版本和其他接口不受影响。
  */
 const fs = require('fs');
 const path = require('path');
@@ -13,19 +14,27 @@ const net = require('net');
 const dns = require('dns').promises;
 
 const { newWithBuffer } = require('./ipdb/searcher');
-const { IPv4 } = require('./ipdb/util');
+const { IPv4, IPv6 } = require('./ipdb/util');
 
-const DB_PATH = process.env.IPDB_PATH
-  || path.join(process.env.BOCE_DATA_DIR || path.join(__dirname, '..', '..', 'data'), 'ip2region_v4.xdb');
+const DB_DIR = process.env.BOCE_DATA_DIR || path.join(__dirname, '..', '..', 'data');
+const DB_V4 = process.env.IPDB_PATH || path.join(DB_DIR, 'ip2region_v4.xdb');
+const DB_V6 = process.env.IPDB_PATH_V6 || path.join(DB_DIR, 'ip2region_v6.xdb');
 
-let searcher = null;
-let loadError = null;
-try {
-  searcher = newWithBuffer(IPv4, fs.readFileSync(DB_PATH));
-} catch (e) {
-  loadError = e.message;
-  console.warn(`[ip] 未加载 IP 库 ${DB_PATH}: ${e.message}`);
+// 两个版本各一个 searcher，全内存；加载失败只影响对应版本
+const searchers = { 4: null, 6: null };
+const loadErrors = {};
+
+function loadDb(ver, Version, file) {
+  try {
+    searchers[ver] = newWithBuffer(Version, fs.readFileSync(file));
+  } catch (e) {
+    loadErrors[ver] = e.message;
+    console.warn(`[ip] 未加载 IPv${ver} 库 ${file}: ${e.message}`);
+  }
 }
+
+loadDb(4, IPv4, DB_V4);
+loadDb(6, IPv6, DB_V6);
 
 /* ---------------- 限流 ---------------- */
 
@@ -85,14 +94,54 @@ function parseRegion(region) {
   };
 }
 
-async function geoOf(ip) {
+async function geoOf(ip, ver) {
+  const searcher = searchers[ver];
   if (!searcher) {
-    const err = new Error('IP 库未安装，请把 ip2region_v4.xdb 放到数据目录');
+    const err = new Error(`IP 库未安装，请把 ip2region_v${ver}.xdb 放到数据目录`);
     err.status = 503;
-    err.code = loadError;
+    err.code = loadErrors[ver];
     throw err;
   }
   return parseRegion(await searcher.search(ip));
+}
+
+/* ---------------- 反向解析（PTR） ---------------- */
+
+function isPrivateV4(ip) {
+  const o = ip.split('.').map(Number);
+  if (o.length !== 4 || o.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
+  if (o[0] === 0 || o[0] === 10 || o[0] === 127) return true;
+  if (o[0] === 169 && o[1] === 254) return true;              // 链路本地
+  if (o[0] === 172 && o[1] >= 16 && o[1] <= 31) return true;  // 172.16/12
+  if (o[0] === 192 && o[1] === 168) return true;              // 192.168/16
+  if (o[0] === 100 && o[1] >= 64 && o[1] <= 127) return true; // 100.64/10 CGNAT
+  if (o[0] >= 224) return true;                               // 组播/保留
+  return false;
+}
+
+function isPrivate(ip, ver) {
+  if (ver === 4) return isPrivateV4(ip);
+  const v = ip.toLowerCase();
+  if (v === '::1' || v === '::') return true;
+  if (/^f[cd][0-9a-f]{0,2}:/.test(v)) return true;  // fc00::/7 ULA
+  if (/^fe[89ab][0-9a-f]?:/.test(v)) return true;   // fe80::/10 链路本地
+  if (v.startsWith('::ffff:')) {
+    const v4 = v.slice(7);
+    return net.isIP(v4) === 4 ? isPrivateV4(v4) : true;
+  }
+  return false;
+}
+
+// PTR 只是锦上添花：内网/保留地址直接跳过，超时按「没有」处理
+async function reverseOf(ip) {
+  const ver = net.isIP(ip);
+  if (!ver || isPrivate(ip, ver)) return [];
+  try {
+    const names = await withTimeout(dns.reverse(ip), 2500);
+    return (names || []).map((n) => String(n).replace(/\.$/, '')).slice(0, 5);
+  } catch (e) {
+    return [];
+  }
 }
 
 /* ---------------- 接口 ---------------- */
@@ -100,19 +149,24 @@ async function geoOf(ip) {
 async function whoami(req, res) {
   const ip = clientIp(req);
   const ver = net.isIP(ip);
-  if (ver !== 4) {
-    return res.json({ ok: true, ip, geo: null, note: ver === 6 ? '暂不支持 IPv6 归属地' : '无法识别来源 IP' });
+  if (ver !== 4 && ver !== 6) {
+    return res.json({ ok: true, ip, geo: null, note: '无法识别来源 IP' });
   }
-  const geo = await geoOf(ip);
-  res.json({ ok: true, ip, geo });
+  if (!searchers[ver]) {
+    // 库没装时不报错中断，只说明该版本不可用
+    return res.json({ ok: true, ip, geo: null, note: `暂不支持 IPv${ver} 归属地（库未安装）` });
+  }
+  res.json({ ok: true, ip, geo: await geoOf(ip, ver), ptr: await reverseOf(ip) });
 }
 
 async function lookupIp(req, res) {
   const ip = String(req.query.ip || '').trim();
   const ver = net.isIP(ip);
   if (!ver) return res.status(400).json({ ok: false, error: '请输入合法的 IP 地址' });
-  if (ver === 6) return res.status(400).json({ ok: false, error: '暂只支持 IPv4 归属地查询' });
-  res.json({ ok: true, ip, geo: await geoOf(ip) });
+
+  // 归属地和 PTR 并行查；PTR 慢/不存在都不该拖住归属地
+  const [geo, ptr] = await Promise.all([geoOf(ip, ver), reverseOf(ip)]);
+  res.json({ ok: true, ip, geo, ptr });
 }
 
 /* ---------------- 域名反查 ---------------- */
